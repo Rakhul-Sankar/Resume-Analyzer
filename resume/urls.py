@@ -17,17 +17,25 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from analyzer import views
-from .views import analyze_pdf
+from .views import upload_page, analyze_pdf  # Import the OCR PDF extraction view
 
 urlpatterns = [
+    # Dashboard
     path("dashboard/", views.dashboard_view, name="dashboard"),
-    path("upload/", views.upload_resume, name="upload"),  
-    path("analyze/", views.analyze_resume, name="analyze"),
+
+    # Upload & Analyze pages
+    path("upload/", views.upload_resume, name="upload"),        # Upload form page
+    path("analyze/", views.analyze_resume, name="analyze"),    # Frontend analysis page
+
+    # Authentication
     path("signup/", views.signup_view, name="signup"),
     path("", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
-    path("analyze_pdf/", analyze_pdf, name="analyze_pdf"),
+
+    # OCR PDF extraction endpoint
+    path("analyze_pdf/", analyze_pdf, name="analyze_pdf"),     # This is called via fetch() from upload.html
 ]
+
 
 
 
