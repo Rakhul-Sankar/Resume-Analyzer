@@ -163,6 +163,22 @@ def analyze_resume(request):
 
     return render(request, "upload.html")
 
+# views.py
+import pdfplumber
+from django.http import HttpResponse
+
+def analyze_pdf(request):
+    file = request.FILES.get('resume')  # uploaded file
+    text = ""
+
+    with pdfplumber.open(file) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+
+    return HttpResponse(text)
+
 
 
 

@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from analyzer import views
+from .views import analyze_pdf
 
 urlpatterns = [
     path("dashboard/", views.dashboard_view, name="dashboard"),
@@ -25,6 +26,7 @@ urlpatterns = [
     path("signup/", views.signup_view, name="signup"),
     path("", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
+    path("analyze_pdf/", analyze_pdf, name="analyze_pdf"),
 ]
 
 
