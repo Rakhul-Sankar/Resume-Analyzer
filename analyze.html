@@ -25,62 +25,79 @@
         <!-- Skills Found -->
         <div class="bg-white p-6 rounded-xl shadow">
             <h2 class="text-xl font-semibold mb-2">Skills Found</h2>
-            <ul id="skillsList" class="list-disc pl-5 mt-4"></ul>
+            <ul id="skillsList" class="list-disc pl-5 mt-4 text-gray-700 font-medium"></ul>
         </div>
 
     </div>
 
-    <a href="dashboard.html" class="mt-10 bg-gray-700 text-white px-6 py-3 rounded-xl hover:bg-gray-800">
-        Back to Dashboard
+    <a href="dashboard.html" 
+       class="mt-10 inline-block bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-black">
+       Back to Dashboard
     </a>
 
 </div>
 
 <script>
-/* 🔥 Get Resume From Local Storage */
-let resume = localStorage.getItem("resumeContent");
-let fileName = localStorage.getItem("uploadedFileName");
 
-/* 🛑 If no resume uploaded – redirect user */
-if (!resume || !fileName) {
-    alert("No resume detected! Please upload and analyze again.");
-    window.location.href = "upload.html";
+/* ===============================
+   FETCH LAST UPLOADED RESUME
+=============================== */
+let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+let latest = resumes[0];  // always take recently uploaded one
+
+if(!latest){
+    alert("No resume found! Please upload again.");
+    window.location.href="upload.html";
 }
 
-/* 🔥 Normalize text */
-resume = resume.toLowerCase().replace(/\n/g," ").replace(/\t/g," ").replace(/\s+/g," ");
+let resumeText = latest.content.toLowerCase();
 
-/* ⭐ Generate ATS Score */
-const atsScore = Math.floor(Math.random() * 21) + 80;
-document.getElementById("atsScore").innerText = atsScore + "%";
+/* ===============================
+   GENERATE ATS SCORE
+=============================== */
+const score = Math.floor(Math.random()*21)+80;
+document.getElementById("atsScore").innerText = score + "%";
 
-/* 🔍 Skill Matching */
-const skills = ["python","java","django","html","css","javascript","js","web development","sql","react","node.js","tailwindcss"];
-const foundSkills = skills.filter(skill => resume.includes(skill));
+/* ===============================
+   SKILL EXTRACTION
+=============================== */
+const skills = [
+    "python","java","django","html","css","javascript","js",
+    "web development","sql","mysql","react","node","tailwind",
+    "docker","git","machine learning","mongodb","typescript"
+];
 
-/* Display Skills */
-const skillsList = document.getElementById("skillsList");
-if(foundSkills.length > 0){
-    foundSkills.forEach(skill=>{
-        let li = document.createElement("li");
-        li.textContent = skill.charAt(0).toUpperCase()+skill.slice(1);
-        skillsList.appendChild(li);
+// detect present skills
+const matchedSkills = skills.filter(skill => resumeText.includes(skill));
+
+let list = document.getElementById("skillsList");
+if(matchedSkills.length){
+    matchedSkills.forEach(s=>{
+        let li=document.createElement("li");
+        li.textContent = s.charAt(0).toUpperCase()+s.slice(1);
+        list.appendChild(li);
     });
 }else{
-    skillsList.innerHTML = "<li>No matching skills found</li>";
+    list.innerHTML="<li>No skills detected</li>";
 }
 
-/* 🔥 Save Report For Reports.html */
+/* ==========================================
+   SAVE REPORT → Past History (ResumeReports)
+========================================== */
 let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-reports.push({
-    filename:fileName,
-    score:atsScore,
-    date:new Date().toLocaleString(),
-    filepath:"#"
+
+reports.unshift({
+    filename: latest.name,
+    score: score,
+    skills: matchedSkills,
+    date: new Date().toLocaleString()
 });
+
+// overwrite updated list
 localStorage.setItem("resumeReports",JSON.stringify(reports));
 
-console.log("Report Saved Successfully");
+console.log("Report added → Resume History Updated");
+
 </script>
 
 </body>
