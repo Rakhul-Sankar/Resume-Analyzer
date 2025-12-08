@@ -95,15 +95,22 @@ window.onload = () => {
         document.getElementById("joinDate").innerText = profile.joined;
     }
 
+    updateStats(profile, reports);
+};
+
+// Function to update stats
+function updateStats(profile, reports){
+    if(!profile) return;
+
     // Filter reports belonging to this user (by email)
-    let myReports = profile ? reports.filter(r => r.email === profile.email) : [];
+    const myReports = reports.filter(r => r.email === profile.email);
 
     document.getElementById("resumeCount").innerText = myReports.length;
     document.getElementById("avgScore").innerText = myReports.length ?
         Math.round(myReports.reduce((sum,r)=>sum+(r.score||0),0)/myReports.length)+"%" : "0%";
     document.getElementById("lastReviewed").innerText = myReports.length ?
         "🕒 Last Review: " + myReports[myReports.length-1].date : "No resume analyzed yet";
-};
+}
 
 // Save Profile
 profileForm.addEventListener("submit",(e)=>{
@@ -122,14 +129,9 @@ profileForm.addEventListener("submit",(e)=>{
     msg.classList.remove("hidden");
     setTimeout(()=> msg.classList.add("hidden"),2000);
 
-    // Recalculate stats after save
+    // Update stats
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-    const myReports = reports.filter(r => r.email === profile.email);
-    document.getElementById("resumeCount").innerText = myReports.length;
-    document.getElementById("avgScore").innerText = myReports.length ?
-        Math.round(myReports.reduce((sum,r)=>sum+(r.score||0),0)/myReports.length)+"%" : "0%";
-    document.getElementById("lastReviewed").innerText = myReports.length ?
-        "🕒 Last Review: " + myReports[myReports.length-1].date : "No resume analyzed yet";
+    updateStats(profile, reports);
 });
 
 // Upload Profile Image
@@ -140,7 +142,6 @@ imageUpload.addEventListener("change",function(){
     reader.onload = ()=> profileImage.src = reader.result;
     reader.readAsDataURL(file);
 });
-
 </script>
 </body>
 </html>
