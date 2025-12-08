@@ -27,47 +27,67 @@ async function saveResume() {
     const fileInput = document.getElementById("resumeFile");
     const file = fileInput.files[0];
 
-    if (!file) return alert("Please select a resume.");
+    if (!file) return alert("Please select a resume to upload.");
 
     const fileName = file.name.toLowerCase();
 
-    // Only allow TXT and DOCX
-    if (![".txt", ".docx"].some(ext => fileName.endsWith(ext))) {
-        return alert("Unsupported file type! Please upload a TXT or DOCX resume.");
+    // Allow only TXT & DOCX
+    if (![".txt",".docx"].some(ext => fileName.endsWith(ext))){
+        return alert("Only .txt or .docx resumes are allowed!");
     }
 
     let textContent = "";
 
     try {
-        // TXT file
+        // Handle TXT
         if (fileName.endsWith(".txt")) {
             textContent = await file.text();
         } 
-        // DOCX file
-        else if (fileName.endsWith(".docx")) {
+        // Handle DOCX
+        else {
             const arrayBuffer = await file.arrayBuffer();
             const result = await mammoth.extractRawText({ arrayBuffer });
             textContent = result.value;
         }
 
         textContent = textContent.trim();
+        if (!textContent) return alert("Could not read text — file may be empty!");
 
-        if (!textContent) {
-            return alert("Failed to extract text from resume. Make sure your file contains readable text.");
-        }
+        //-----------------------------------------
+        //  SAVE TO LOCAL STORAGE FOR DASHBOARD
+        //-----------------------------------------
+        const key = "advancedResumes_v2";
+        let resumes = JSON.parse(localStorage.getItem(key) || "[]");
 
-        // Save text to localStorage for analysis
-        localStorage.setItem("resumeContent", textContent);
-        localStorage.setItem("uploadedFileName", file.name);
+        resumes.unshift({
+            id: crypto.randomUUID(),
+            name: file.name,
+            text: textContent,
+            date: new Date().toLocaleDateString("en-CA"),
+            score: Math.floor(Math.random()*30)+70,  // Auto Score 70–100
+            status: "pending",
+            type: "Uploaded Resume"
+        });
 
-        alert("Resume uploaded successfully!");
-        window.location.href = "login.html"; // Go to analysis page
+        localStorage.setItem(key, JSON.stringify(resumes));
 
-    } catch (error) {
-        alert("Error processing resume: " + error);
+        //-----------------------------------------
+        // SEND TO DASHBOARD (LIVE UPDATE)
+        //-----------------------------------------
+        window.opener?.postMessage({
+            type:"NEW_RESUME",
+            name:file.name
+        },"*");
+
+        alert("Resume Uploaded Successfully ✔");
+        window.location.href = "dashboard.html"; // Redirect to view stored list
+
+    } catch (err) {
+        alert("Error reading file → " + err);
     }
 }
 </script>
+
 
 </body>
 </html>
