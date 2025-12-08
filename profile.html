@@ -76,12 +76,11 @@
 </div>
 
 <script>
-// Load Profile + Stats
+// ===== Load Profile & Stats =====
 window.onload = () => {
     const profile = JSON.parse(localStorage.getItem("userProfile"));
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
 
-    // Set join date if first time
     if(profile && !profile.joined){
         profile.joined = new Date().toLocaleDateString();
         localStorage.setItem("userProfile", JSON.stringify(profile));
@@ -98,23 +97,24 @@ window.onload = () => {
     updateStats(profile, reports);
 };
 
-// Function to update stats
+// ===== Update Stats Function =====
 function updateStats(profile, reports){
     if(!profile) return;
 
-    // Filter reports belonging to this user (by email)
+    // Filter reports for this user
     const myReports = reports.filter(r => r.email === profile.email);
 
     document.getElementById("resumeCount").innerText = myReports.length;
     document.getElementById("avgScore").innerText = myReports.length ?
         Math.round(myReports.reduce((sum,r)=>sum+(r.score||0),0)/myReports.length)+"%" : "0%";
     document.getElementById("lastReviewed").innerText = myReports.length ?
-        "🕒 Last Review: " + myReports[myReports.length-1].date : "No resume analyzed yet";
+        "🕒 Last Review: " + myReports[0].date : "No resume analyzed yet"; // latest first
 }
 
-// Save Profile
+// ===== Save Profile =====
 profileForm.addEventListener("submit",(e)=>{
     e.preventDefault();
+
     const profile = {
         name:name.value,
         email:email.value,
@@ -122,6 +122,7 @@ profileForm.addEventListener("submit",(e)=>{
         image:profileImage.src,
         joined: document.getElementById("joinDate").innerText || new Date().toLocaleDateString()
     };
+
     localStorage.setItem("userProfile",JSON.stringify(profile));
 
     // Success message
@@ -129,13 +130,13 @@ profileForm.addEventListener("submit",(e)=>{
     msg.classList.remove("hidden");
     setTimeout(()=> msg.classList.add("hidden"),2000);
 
-    // Update stats
+    // Update stats immediately
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
     updateStats(profile, reports);
 });
 
-// Upload Profile Image
-imageUpload.addEventListener("change",function(){
+// ===== Upload Profile Image =====
+imageUpload.addEventListener("change", function(){
     const file = this.files[0];
     if(!file) return;
     const reader = new FileReader();

@@ -13,11 +13,9 @@
     <h2 class="text-2xl font-bold mb-4">Upload Your Resume</h2>
 
     <!-- Accept only TXT and DOCX -->
-    <input type="file" id="resumeFile" accept=".txt,.docx"
-           class="mb-4 w-full p-2 border rounded-lg" />
+    <input type="file" id="resumeFile" accept=".txt,.docx" class="mb-4 w-full p-2 border rounded-lg" />
 
-    <button onclick="saveResume()" 
-            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+    <button onclick="saveResume()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
         Upload Resume
     </button>
 </div>
@@ -25,56 +23,51 @@
 <script>
 async function saveResume() {
     const file = document.getElementById("resumeFile").files[0];
-    if (!file) return alert("Please upload a file first!");
+    if(!file) return alert("Please upload a file first!");
 
     const fileName = file.name.toLowerCase();
-    if (!fileName.endsWith(".txt") && !fileName.endsWith(".docx"))
-        return alert("Only .txt & .docx allowed!");
+    if(!fileName.endsWith(".txt") && !fileName.endsWith(".docx")) return alert("Only .txt & .docx allowed!");
 
     let extractedText = "";
 
     try {
-        // TXT → read directly
-        if (fileName.endsWith(".txt")) {
+        if(fileName.endsWith(".txt")) {
             extractedText = await file.text();
-        } 
-        // DOCX → read using Mammoth
-        else {
+        } else {
             const buffer = await file.arrayBuffer();
             const result = await mammoth.extractRawText({ arrayBuffer: buffer });
             extractedText = result.value;
         }
 
         extractedText = extractedText.trim();
-        if (!extractedText.length)
-            return alert("Resume content empty or unreadable!");
+        if(!extractedText.length) return alert("Resume content empty or unreadable!");
 
-        //------------------- STORE IN LOCALSTORAGE -------------------
+        //---------------- STORE IN LOCALSTORAGE ----------------
         const key = "advancedResumes_v2";
         let resumes = JSON.parse(localStorage.getItem(key) || "[]");
+
+        // get current logged-in user
+        const user = JSON.parse(localStorage.getItem("userProfile"));
 
         resumes.unshift({
             id: crypto.randomUUID(),
             name: file.name,
             content: extractedText,
             uploaded: new Date().toLocaleDateString("en-IN"),
-            score: Math.floor(Math.random()*30)+70,
-            status: "pending"
+            status: "pending",
+            email: user ? user.email : "unknown" // associate resume with user
         });
 
         localStorage.setItem(key, JSON.stringify(resumes));
 
-        //-------------------------------------------------------------
         alert("Resume Uploaded Successfully ✔");
-        window.location.href = "analyze.html"; // This page will now fetch the file
-    } 
-    catch (err) {
+        window.location.href = "analyze.html";
+
+    } catch(err) {
         alert("Error reading file → " + err);
     }
 }
 </script>
-
-
 
 </body>
 </html>

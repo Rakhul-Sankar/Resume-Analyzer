@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Resume Analysis</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-gray-100 flex flex-col items-center p-6 min-h-screen">
 
 <div class="w-full max-w-4xl">
@@ -30,20 +28,15 @@
 
     </div>
 
-    <a href="dashboard.html" 
-       class="mt-10 inline-block bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-black">
+    <a href="dashboard.html" class="mt-10 inline-block bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-black">
        Back to Dashboard
     </a>
 
 </div>
 
 <script>
-
-/* ===============================
-   FETCH LAST UPLOADED RESUME
-=============================== */
 let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-let latest = resumes[0];  // always take recently uploaded one
+let latest = resumes[0]; // latest uploaded
 
 if(!latest){
     alert("No resume found! Please upload again.");
@@ -52,22 +45,17 @@ if(!latest){
 
 let resumeText = latest.content.toLowerCase();
 
-/* ===============================
-   GENERATE ATS SCORE
-=============================== */
+// ATS Score
 const score = Math.floor(Math.random()*21)+80;
 document.getElementById("atsScore").innerText = score + "%";
 
-/* ===============================
-   SKILL EXTRACTION
-=============================== */
+// Skill Extraction
 const skills = [
     "python","java","django","html","css","javascript","js",
     "web development","sql","mysql","react","node","tailwind",
     "docker","git","machine learning","mongodb","typescript"
 ];
 
-// detect present skills
 const matchedSkills = skills.filter(skill => resumeText.includes(skill));
 
 let list = document.getElementById("skillsList");
@@ -81,23 +69,20 @@ if(matchedSkills.length){
     list.innerHTML="<li>No skills detected</li>";
 }
 
-/* ==========================================
-   SAVE REPORT → Past History (ResumeReports)
-========================================== */
-let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+// Save report per user
+const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+const user = JSON.parse(localStorage.getItem("userProfile"));
 
 reports.unshift({
     filename: latest.name,
     score: score,
     skills: matchedSkills,
-    date: new Date().toLocaleString()
+    date: new Date().toLocaleString(),
+    email: user ? user.email : "unknown"
 });
 
-// overwrite updated list
-localStorage.setItem("resumeReports",JSON.stringify(reports));
-
+localStorage.setItem("resumeReports", JSON.stringify(reports));
 console.log("Report added → Resume History Updated");
-
 </script>
 
 </body>
