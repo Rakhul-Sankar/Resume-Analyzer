@@ -9,49 +9,69 @@
 
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
 
-<div class="bg-white w-full max-w-lg p-8 rounded-2xl shadow-lg">
+<div class="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl border border-gray-200">
 
-    <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">My Profile</h2>
+    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">My Profile</h2>
 
     <!-- Profile Image -->
     <div class="flex flex-col items-center">
         <img id="profileImage" 
              src="default.png" 
-             class="w-32 h-32 rounded-full object-cover border shadow-md mb-3">
+             class="w-32 h-32 rounded-full object-cover border-4 border-indigo-400 shadow-lg mb-3 transition">
 
-        <input type="file" id="imageUpload" accept="image/*" 
-               class="mb-4 text-sm"/>
+        <input type="file" id="imageUpload" accept="image/*"
+               class="text-sm font-medium cursor-pointer">
     </div>
+
+    <hr class="my-6">
 
     <!-- Profile Form -->
     <form id="profileForm" class="space-y-4">
 
         <div>
             <label class="font-semibold">Full Name</label>
-            <input id="name" type="text" class="w-full p-2 border rounded-lg mt-1" required>
+            <input id="name" type="text" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 mt-1" required>
         </div>
 
         <div>
             <label class="font-semibold">Email</label>
-            <input id="email" type="email" class="w-full p-2 border rounded-lg mt-1" required>
+            <input id="email" type="email" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 mt-1" required>
         </div>
 
         <div>
             <label class="font-semibold">Phone Number</label>
-            <input id="phone" type="text" class="w-full p-2 border rounded-lg mt-1">
+            <input id="phone" type="text" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 mt-1">
         </div>
 
         <button type="submit"
-            class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700">
+            class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
             Save Profile
         </button>
     </form>
 
-    <!-- Resume Count Display -->
-    <div class="mt-6 bg-gray-100 p-4 rounded-xl shadow-inner text-center">
-        <p class="text-lg font-semibold">📄 Total Resumes Analyzed:</p>
-        <p id="resumeCount" class="text-3xl font-bold text-green-600 mt-1">0</p>
+    <!-- Stats Section -->
+    <div class="mt-8 grid grid-cols-2 gap-4">
+
+        <div class="bg-gray-50 p-5 rounded-xl shadow-inner text-center">
+            <p class="font-semibold">📄 Total Resumes</p>
+            <p id="resumeCount" class="text-3xl font-bold text-green-600 mt-1">0</p>
+        </div>
+
+        <div class="bg-gray-50 p-5 rounded-xl shadow-inner text-center">
+            <p class="font-semibold">⭐ Avg Score</p>
+            <p id="avgScore" class="text-3xl font-bold text-blue-600 mt-1">0%</p>
+        </div>
+
     </div>
+
+    <div class="mt-4 text-center text-sm text-gray-600">
+        <span id="lastReviewed"></span>
+    </div>
+
+    <p class="text-center mt-3 text-gray-500">Member since: <span id="joinDate"></span></p>
+
+    <!-- Success Message -->
+    <p id="savedMsg" class="hidden text-green-600 font-semibold mt-4 text-center">Profile Updated Successfully ✔</p>
 
 </div>
 
@@ -63,16 +83,21 @@ window.onload = () => {
     const user = JSON.parse(localStorage.getItem("userProfile"));
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
 
-    // Fill Profile Fields
     if(user){
         name.value = user.name;
         email.value = user.email;
         phone.value = user.phone;
+
         if(user.image) profileImage.src = user.image;
+        document.getElementById("joinDate").innerText = user.joined ?? "Not Recorded";
     }
 
-    // Show Resume Count
+    // Resume Stats
     document.getElementById("resumeCount").innerText = reports.length;
+    document.getElementById("avgScore").innerText = reports.length ? 
+        Math.round(reports.reduce((a,b)=>a+(b.score||0),0)/reports.length)+"%" : "0%";
+    document.getElementById("lastReviewed").innerText =
+        reports.length ? "🕒 Last Review: " + reports[reports.length-1].date : "No resume analyzed yet";
 };
 
 // Save Profile
@@ -83,14 +108,19 @@ profileForm.addEventListener("submit",(e)=>{
         name: name.value,
         email: email.value,
         phone: phone.value,
-        image: profileImage.src
+        image: profileImage.src,
+        joined: document.getElementById("joinDate").innerText || new Date().toLocaleDateString()
     };
 
     localStorage.setItem("userProfile",JSON.stringify(profile));
-    alert("Profile Updated Successfully ✔");
+
+    // Success Message Animation
+    const msg = document.getElementById("savedMsg");
+    msg.classList.remove("hidden");
+    setTimeout(()=> msg.classList.add("hidden"),2000);
 });
 
-// Upload Image & Save Base64
+// Upload Profile Image
 imageUpload.addEventListener("change",function(){
     const file = this.files[0];
     if(file){
@@ -99,6 +129,7 @@ imageUpload.addEventListener("change",function(){
         reader.readAsDataURL(file);
     }
 });
+
 </script>
 </body>
 </html>
