@@ -24,69 +24,56 @@
 
 <script>
 async function saveResume() {
-    const fileInput = document.getElementById("resumeFile");
-    const file = fileInput.files[0];
-
-    if (!file) return alert("Please select a resume to upload.");
+    const file = document.getElementById("resumeFile").files[0];
+    if (!file) return alert("Please upload a file first!");
 
     const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith(".txt") && !fileName.endsWith(".docx"))
+        return alert("Only .txt & .docx allowed!");
 
-    // Allow only TXT & DOCX
-    if (![".txt",".docx"].some(ext => fileName.endsWith(ext))){
-        return alert("Only .txt or .docx resumes are allowed!");
-    }
-
-    let textContent = "";
+    let extractedText = "";
 
     try {
-        // Handle TXT
+        // TXT → read directly
         if (fileName.endsWith(".txt")) {
-            textContent = await file.text();
+            extractedText = await file.text();
         } 
-        // Handle DOCX
+        // DOCX → read using Mammoth
         else {
-            const arrayBuffer = await file.arrayBuffer();
-            const result = await mammoth.extractRawText({ arrayBuffer });
-            textContent = result.value;
+            const buffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+            extractedText = result.value;
         }
 
-        textContent = textContent.trim();
-        if (!textContent) return alert("Could not read text — file may be empty!");
+        extractedText = extractedText.trim();
+        if (!extractedText.length)
+            return alert("Resume content empty or unreadable!");
 
-        //-----------------------------------------
-        //  SAVE TO LOCAL STORAGE FOR DASHBOARD
-        //-----------------------------------------
+        //------------------- STORE IN LOCALSTORAGE -------------------
         const key = "advancedResumes_v2";
         let resumes = JSON.parse(localStorage.getItem(key) || "[]");
 
         resumes.unshift({
             id: crypto.randomUUID(),
             name: file.name,
-            text: textContent,
-            date: new Date().toLocaleDateString("en-CA"),
-            score: Math.floor(Math.random()*30)+70,  // Auto Score 70–100
-            status: "pending",
-            type: "Uploaded Resume"
+            content: extractedText,
+            uploaded: new Date().toLocaleDateString("en-IN"),
+            score: Math.floor(Math.random()*30)+70,
+            status: "pending"
         });
 
         localStorage.setItem(key, JSON.stringify(resumes));
 
-        //-----------------------------------------
-        // SEND TO DASHBOARD (LIVE UPDATE)
-        //-----------------------------------------
-        window.opener?.postMessage({
-            type:"NEW_RESUME",
-            name:file.name
-        },"*");
-
+        //-------------------------------------------------------------
         alert("Resume Uploaded Successfully ✔");
-        window.location.href = "dashboard.html"; // Redirect to view stored list
-
-    } catch (err) {
+        window.location.href = "dashboard.html"; // This page will now fetch the file
+    } 
+    catch (err) {
         alert("Error reading file → " + err);
     }
 }
 </script>
+
 
 
 </body>
