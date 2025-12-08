@@ -75,59 +75,70 @@
 
 </div>
 
-<!-- SCRIPT -->
 <script>
-
-// Load Profile Details
+// Load Profile + Stats
 window.onload = () => {
-    const user = JSON.parse(localStorage.getItem("userProfile"));
+    const profile = JSON.parse(localStorage.getItem("userProfile"));
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
 
-    if(user){
-        name.value = user.name;
-        email.value = user.email;
-        phone.value = user.phone;
-
-        if(user.image) profileImage.src = user.image;
-        document.getElementById("joinDate").innerText = user.joined ?? "Not Recorded";
+    // Set join date if first time
+    if(profile && !profile.joined){
+        profile.joined = new Date().toLocaleDateString();
+        localStorage.setItem("userProfile", JSON.stringify(profile));
     }
 
-    // Resume Stats
-    document.getElementById("resumeCount").innerText = reports.length;
-    document.getElementById("avgScore").innerText = reports.length ? 
-        Math.round(reports.reduce((a,b)=>a+(b.score||0),0)/reports.length)+"%" : "0%";
-    document.getElementById("lastReviewed").innerText =
-        reports.length ? "🕒 Last Review: " + reports[reports.length-1].date : "No resume analyzed yet";
+    if(profile){
+        name.value = profile.name;
+        email.value = profile.email;
+        phone.value = profile.phone;
+        if(profile.image) profileImage.src = profile.image;
+        document.getElementById("joinDate").innerText = profile.joined;
+    }
+
+    // Filter reports belonging to this user (by email)
+    let myReports = profile ? reports.filter(r => r.email === profile.email) : [];
+
+    document.getElementById("resumeCount").innerText = myReports.length;
+    document.getElementById("avgScore").innerText = myReports.length ?
+        Math.round(myReports.reduce((sum,r)=>sum+(r.score||0),0)/myReports.length)+"%" : "0%";
+    document.getElementById("lastReviewed").innerText = myReports.length ?
+        "🕒 Last Review: " + myReports[myReports.length-1].date : "No resume analyzed yet";
 };
 
 // Save Profile
 profileForm.addEventListener("submit",(e)=>{
     e.preventDefault();
-
     const profile = {
-        name: name.value,
-        email: email.value,
-        phone: phone.value,
-        image: profileImage.src,
+        name:name.value,
+        email:email.value,
+        phone:phone.value,
+        image:profileImage.src,
         joined: document.getElementById("joinDate").innerText || new Date().toLocaleDateString()
     };
-
     localStorage.setItem("userProfile",JSON.stringify(profile));
 
-    // Success Message Animation
+    // Success message
     const msg = document.getElementById("savedMsg");
     msg.classList.remove("hidden");
     setTimeout(()=> msg.classList.add("hidden"),2000);
+
+    // Recalculate stats after save
+    const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+    const myReports = reports.filter(r => r.email === profile.email);
+    document.getElementById("resumeCount").innerText = myReports.length;
+    document.getElementById("avgScore").innerText = myReports.length ?
+        Math.round(myReports.reduce((sum,r)=>sum+(r.score||0),0)/myReports.length)+"%" : "0%";
+    document.getElementById("lastReviewed").innerText = myReports.length ?
+        "🕒 Last Review: " + myReports[myReports.length-1].date : "No resume analyzed yet";
 });
 
 // Upload Profile Image
 imageUpload.addEventListener("change",function(){
     const file = this.files[0];
-    if(file){
-        const reader = new FileReader();
-        reader.onload = ()=> profileImage.src = reader.result;
-        reader.readAsDataURL(file);
-    }
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=> profileImage.src = reader.result;
+    reader.readAsDataURL(file);
 });
 
 </script>
