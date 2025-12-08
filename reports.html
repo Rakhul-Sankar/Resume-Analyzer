@@ -38,21 +38,25 @@
             <h1 class="text-5xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6 drop-shadow-lg">
                 📊 Resume Storage
             </h1>
-            <p class="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">✅ Storage working! Click test buttons + upload from upload.html</p>
+            <p class="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">✅ Counts update instantly! Test + upload.html works</p>
         </div>
 
-        <!-- Controls -->
-        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-12 border border-white/50">
-            <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
-                <input type="text" id="searchInput" placeholder="🔍 Search resumes..." 
-                       class="w-full lg:w-96 pl-12 pr-4 py-4 bg-white/50 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none transition-all text-lg shadow-inner">
-                <div class="absolute left-20 top-36 lg:left-80 text-gray-400 text-lg">🔍</div>
-                <button id="clearAllBtn" class="px-8 py-4 bg-red-500/90 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg transition-all hover:scale-105">
-                    🗑️ Clear All
-                </button>
-                <a href="upload.html" class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                    ➕ Upload New
-                </a>
+        <!-- Controls - FIXED POSITIONING -->
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-12 border border-white/50 relative">
+            <div class="flex flex-col lg:flex-row gap-4 items-end lg:items-center justify-between">
+                <div class="relative w-full lg:w-96 flex-1">
+                    <input type="text" id="searchInput" placeholder="🔍 Search resumes..." 
+                           class="w-full pl-12 pr-4 py-4 bg-white/50 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none transition-all text-lg shadow-inner">
+                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔍</div>
+                </div>
+                <div class="flex gap-3 flex-shrink-0">
+                    <button id="clearAllBtn" class="px-8 py-4 bg-red-500/90 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg transition-all hover:scale-105">
+                        🗑️ Clear All
+                    </button>
+                    <a href="upload.html" class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                        ➕ Upload New
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -72,12 +76,12 @@
             </div>
             <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
                 <div id="storageUsed" class="text-4xl font-black text-purple-600 mb-2 group-hover:scale-110 transition-transform">0KB</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Storage</div>
+                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Storage Used</div>
             </div>
         </div>
 
         <!-- Debug -->
-        <div id="debugInfo" class="bg-yellow-100 border-2 border-yellow-400 rounded-2xl p-6 mb-8 text-sm">
+        <div id="debugInfo" class="bg-yellow-100 border-2 border-yellow-400 rounded-2xl p-6 mb-8 text-sm font-mono">
             <strong>🔍 LIVE STATUS:</strong> <span id="debugText">Loading...</span>
         </div>
 
@@ -88,94 +92,123 @@
     </main>
 
     <script>
-        // ✅ FULLY WORKING STORAGE SYSTEM
-        const storage = {
+        // 🔥 FIXED STORAGE - COUNTS UPDATE EVERY TIME!
+        window.storage = {
             key: 'advancedResumes_v2',
             resumes: [],
             
             init() {
-                console.log('🚀 Storage init');
+                console.log('🚀 Storage init - COUNTS WILL UPDATE!');
                 this.load();
                 this.events();
-                setInterval(() => this.load(), 1000); // Auto-sync
+                // Auto-sync every 500ms
+                setInterval(() => {
+                    this.load();
+                }, 500);
             },
 
             load() {
                 try {
                     const data = localStorage.getItem(this.key);
-                    this.resumes = data ? JSON.parse(data) : [];
-                    console.log('📦 Loaded:', this.resumes.length);
+                    console.log('💾 Raw data:', data ? data.substring(0, 100) : 'EMPTY');
+                    
+                    if (data) {
+                        this.resumes = JSON.parse(data);
+                        console.log('📦 Loaded:', this.resumes.length, 'resumes');
+                    } else {
+                        this.resumes = [];
+                    }
                 } catch(e) {
+                    console.error('❌ Load error:', e);
                     this.resumes = [];
                 }
+                
+                // 🔥 CRITICAL: UPDATE COUNTS IMMEDIATELY
+                this.updateStats();
                 this.render();
-                this.stats();
-                this.debug();
+                this.updateDebug();
             },
 
             save() {
-                localStorage.setItem(this.key, JSON.stringify(this.resumes.slice(0, 50)));
-                console.log('💾 Saved:', this.resumes.length);
+                try {
+                    const data = JSON.stringify(this.resumes.slice(0, 50));
+                    localStorage.setItem(this.key, data);
+                    console.log('💾 SAVED:', this.resumes.length, 'resumes');
+                    console.log('📊 Storage size:', data.length, 'bytes');
+                    // Trigger update
+                    this.updateStats();
+                    this.updateDebug();
+                } catch(e) {
+                    console.error('❌ Save error:', e);
+                }
             },
 
-            add(name = 'Test.pdf') {
+            add(name = 'Test Resume.pdf') {
                 const resume = {
                     id: Date.now() + Math.random().toString(36).substr(2, 9),
-                    name, filename: name,
+                    name: name,
+                    filename: name,
                     date: new Date().toLocaleDateString('en-CA'),
                     score: Math.floor(Math.random() * 30) + 70,
                     status: 'pending',
                     type: 'New Upload'
                 };
+                
+                console.log('➕ ADDING:', name);
                 this.resumes.unshift(resume);
                 this.save();
+                console.log('✅ Total now:', this.resumes.length);
             },
 
             del(id) {
-                if(confirm('Delete?')) {
+                if(confirm('Delete this resume?')) {
                     this.resumes = this.resumes.filter(r => r.id !== id);
                     this.save();
-                    this.render();
                 }
             },
 
             render(resumes = this.resumes) {
                 const grid = document.getElementById('resumeGrid');
-                if(!resumes.length) {
+                if (!grid) return;
+                
+                if (!resumes.length) {
                     grid.innerHTML = `
-                        <div class="md:col-span-full text-center py-24 px-8">
+                        <div class="md:col-span-full lg:col-span-4 text-center py-24 px-8">
                             <div class="w-32 h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
                                 <span class="text-5xl">📄</span>
                             </div>
-                            <h2 class="text-4xl font-black text-gray-700 mb-4">No Resumes</h2>
-                            <p class="text-xl text-gray-500 mb-8">Click 🧪 Add Resume (top-right) or use upload.html</p>
-                            <button onclick="storage.add('Quick Test.pdf')" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl">
-                                🧪 Add Test
+                            <h2 class="text-4xl font-black text-gray-700 mb-4">No Resumes Stored</h2>
+                            <p class="text-xl text-gray-500 mb-8 max-w-md mx-auto">
+                                Click 🧪 Add Resume (top-right) or <a href="upload.html" class="text-purple-600 font-bold hover:underline">upload from upload.html</a>
+                            </p>
+                            <button onclick="storage.add('Quick Test.pdf')" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                                🧪 Add Test Resume
                             </button>
                         </div>`;
                     return;
                 }
+
                 grid.innerHTML = resumes.map(r => `
-                    <div class="group bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl p-8 relative hover:-translate-y-2 transition-all border-2 hover:border-purple-300">
+                    <div class="group bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl p-8 relative hover:-translate-y-2 transition-all duration-500 border-2 hover:border-purple-300">
                         <div class="absolute top-4 left-4">
-                            <span class="px-3 py-1 bg-${r.status=='analyzed'?'green':'yellow'}-100 text-${r.status=='analyzed'?'green':'yellow'}-800 text-xs font-bold rounded-full">
-                                ${r.status=='analyzed'?'✅ Analyzed':'⏳ Pending'}
+                            <span class="px-3 py-1 bg-${r.status === 'analyzed' ? 'green' : 'yellow'}-100 text-${r.status === 'analyzed' ? 'green' : 'yellow'}-800 text-xs font-bold rounded-full shadow-lg">
+                                ${r.status === 'analyzed' ? '✅ Analyzed' : '⏳ Pending'}
                             </span>
                         </div>
-                        <div class="w-20 h-20 bg-gradient-to-br ${r.status=='analyzed'?'from-emerald-400 to-teal-500':'from-purple-400 to-pink-500'} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110">
+                        <div class="w-20 h-20 bg-gradient-to-br ${r.status === 'analyzed' ? 'from-emerald-400 to-teal-500' : 'from-purple-400 to-pink-500'} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl group-hover:scale-110 transition-transform">
                             <span class="text-3xl">📄</span>
                         </div>
-                        <h3 class="font-black text-xl text-gray-800 text-center mb-3 truncate">${r.name}</h3>
+                        <h3 class="font-black text-xl text-gray-800 text-center mb-3 truncate group-hover:text-purple-600 transition-colors">${r.name}</h3>
                         <div class="space-y-1 mb-6 text-center">
                             <p class="text-xs text-gray-500">${r.date}</p>
-                            ${r.score?`<span class="block mx-auto px-3 py-1 bg-gradient-to-r from-${r.score>80?'emerald':r.score>60?'yellow':'red'}-400 to-${r.score>80?'teal':r.score>60?'orange':'pink'}-500 text-white text-sm font-bold rounded-full">${r.score}%</span>`:''}
-                            <p class="text-xs text-gray-500">${r.type}</p>
+                            ${r.score ? `<span class="block mx-auto px-3 py-1 bg-gradient-to-r from-${r.score > 80 ? 'emerald' : r.score > 60 ? 'yellow' : 'red'}-400 to-${r.score > 80 ? 'teal' : r.score > 60 ? 'orange' : 'pink'}-500 text-white text-sm font-bold rounded-full shadow-lg">${r.score}%</span>` : ''}
+                            <p class="text-xs text-gray-500 font-medium">${r.type}</p>
                         </div>
                         <div class="flex gap-3 pt-6 border-t border-gray-100">
-                            <button onclick="alert('Analysis: ${r.name} (${r.score||0}%)')" class="flex-1 bg-blue-500 text-white py-3 px-4 rounded-xl font-bold text-sm hover:bg-blue-600 transition-all">
-                                👁️ View
+                            <button onclick="alert('Analysis for ${r.name}\\nScore: ${r.score || 0}%\\nStatus: ${r.status}')" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+                                👁️ View Analysis
                             </button>
-                            <button onclick="storage.del('${r.id}')" class="w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all">
+                            <button onclick="storage.del('${r.id}')" class="w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 transition-all ml-auto">
                                 🗑️
                             </button>
                         </div>
@@ -183,59 +216,76 @@
                 `).join('');
             },
 
-            stats() {
+            updateStats() {
+                // 🔥 COUNTS UPDATE HERE - IMMEDIATE!
                 document.getElementById('totalResumes').textContent = this.resumes.length;
                 document.getElementById('analyzedCount').textContent = this.resumes.filter(r => r.status === 'analyzed').length;
                 document.getElementById('pendingCount').textContent = this.resumes.filter(r => r.status === 'pending').length;
-                document.getElementById('storageUsed').textContent = `${Math.round(JSON.stringify(this.resumes).length / 1024)}KB`;
+                const size = JSON.stringify(this.resumes).length;
+                document.getElementById('storageUsed').textContent = `${Math.round(size / 1024)}KB (${size} bytes)`;
+                console.log('📊 Stats updated:', this.resumes.length, 'total');
             },
 
-            debug() {
+            updateDebug() {
                 const debugText = document.getElementById('debugText');
-                if(debugText) {
+                if (debugText) {
                     const saved = localStorage.getItem(this.key);
                     const savedCount = saved ? JSON.parse(saved).length : 0;
-                    debugText.textContent = `Storage: ${savedCount} | Memory: ${this.resumes.length}`;
+                    debugText.textContent = `Storage: ${savedCount} | Memory: ${this.resumes.length} | Size: ${saved ? saved.length : 0} bytes`;
                 }
             },
 
             events() {
-                // Test buttons
-                document.getElementById('testAdd').onclick = () => this.add('Test Resume ' + Date.now() + '.pdf');
+                document.getElementById('testAdd').onclick = () => {
+                    console.log('🧪 Test add clicked');
+                    this.add('Test Resume #' + (this.resumes.length + 1) + '.pdf');
+                };
+                
                 document.getElementById('testClear').onclick = () => {
-                    if(confirm('Clear all?')) {
+                    if(confirm('Clear ALL resumes?')) {
                         localStorage.removeItem(this.key);
                         this.resumes = [];
                         this.save();
                     }
                 };
+                
                 document.getElementById('clearAllBtn').onclick = () => {
-                    if(confirm('Clear all?')) {
+                    if(confirm('Clear ALL resumes?')) {
                         localStorage.removeItem(this.key);
                         this.resumes = [];
                         this.save();
                     }
                 };
+                
                 document.getElementById('searchInput').oninput = (e) => {
-                    const filtered = this.resumes.filter(r => r.name.toLowerCase().includes(e.target.value.toLowerCase()));
+                    const query = e.target.value.toLowerCase();
+                    const filtered = this.resumes.filter(r => 
+                        r.name.toLowerCase().includes(query) || 
+                        r.filename.toLowerCase().includes(query)
+                    );
                     this.render(filtered);
                 };
 
-                // Auto-sync from upload.html
+                // 🔥 UPLOAD.HTML SYNC
                 window.addEventListener('storage', (e) => {
-                    if(e.key === this.key) this.load();
+                    if (e.key === this.key) {
+                        console.log('🔄 Storage changed externally - reloading');
+                        this.load();
+                    }
                 });
+
                 window.addEventListener('message', (e) => {
-                    if(e.data.type === 'NEW_RESUME') {
+                    if (e.data.type === 'NEW_RESUME') {
+                        console.log('📨 New resume from upload:', e.data.name);
                         this.add(e.data.name);
                     }
                 });
             }
         };
 
-        // START
-        storage.init();
-        console.log('✅ Storage ready! Test buttons top-right.');
+        // 🚀 START - COUNTS WORK NOW!
+        window.storage.init();
+        console.log('✅ Dashboard ready! Total Stored + Storage KB update on every add!');
     </script>
 </body>
 </html>
