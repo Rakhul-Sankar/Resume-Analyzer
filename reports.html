@@ -81,6 +81,7 @@
         class AdvancedResumeStorage {
             constructor() {
                 this.key = 'advancedResumes_v2';
+                this.resumes = [];
                 this.init();
             }
 
@@ -100,17 +101,22 @@
                         localStorage.removeItem(this.key);
                         this.resumes = [];
                         this.renderResumes();
+                        this.updateStats();
                     }
                 });
 
-                // Listen for uploads
+                // Listen for storage changes from other tabs/windows
                 window.addEventListener('storage', (e) => {
-                    if(e.key === this.key) this.loadResumes();
+                    if(e.key === this.key) {
+                        this.loadResumes();
+                    }
                 });
 
+                // Listen for postMessage from upload.html (iframe or popup)
                 window.addEventListener('message', (e) => {
                     if(e.data.type === 'NEW_RESUME') {
-                        this.addResume(e.data.name || 'Untitled Resume');
+                        console.log('✅ Received resume from upload:', e.data);
+                        this.addResume(e.data.name || 'Untitled Resume.pdf', e.data.score || 0, e.data.status || 'pending');
                     }
                 });
             }
@@ -119,6 +125,7 @@
                 try {
                     const saved = localStorage.getItem(this.key);
                     this.resumes = saved ? JSON.parse(saved) : [];
+                    console.log('📦 Loaded', this.resumes.length, 'resumes from storage');
                 } catch(e) {
                     console.error('Storage corrupted, starting fresh');
                     this.resumes = [];
@@ -140,7 +147,9 @@
                 
                 this.resumes.unshift(resume);
                 localStorage.setItem(this.key, JSON.stringify(this.resumes.slice(0, 50))); // Limit to 50
+                console.log('💾 Saved resume:', resume.name);
                 this.renderResumes();
+                this.updateStats();
             }
 
             searchResumes(query) {
@@ -151,10 +160,10 @@
                 this.renderResumes(filtered);
             }
 
-            renderResumes(resumes = this.resumes) {
+            renderResumes(resumesToRender = this.resumes) {
                 const grid = document.getElementById('resumeGrid');
                 
-                if(resumes.length === 0) {
+                if(resumesToRender.length === 0) {
                     grid.innerHTML = `
                         <div class="md:col-span-full lg:col-span-4 text-center py-24 px-8">
                             <div class="w-32 h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
@@ -170,7 +179,7 @@
                     return;
                 }
 
-                grid.innerHTML = resumes.map(resume => `
+                grid.innerHTML = resumesToRender.map(resume => `
                     <div class="group bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border-2 hover:border-purple-300 p-8 relative overflow-hidden hover:-translate-y-2">
                         <!-- Drag handle -->
                         <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all cursor-grab">
@@ -232,6 +241,7 @@
                     this.resumes = this.resumes.filter(r => r.id !== id);
                     localStorage.setItem(this.key, JSON.stringify(this.resumes));
                     this.renderResumes();
+                    this.updateStats();
                 }
             }
         }
@@ -256,9 +266,10 @@
             window.storage.deleteResume(id);
         }
 
-        // Test button - REMOVE AFTER TESTING
+        // Test data - REMOVE AFTER TESTING
         console.log('✅ Advanced Resume Storage Ready!');
-        console.log('Upload from upload.html to test storage');
+        console.log('📱 Open upload.html to test storage');
+        console.log('💾 Storage key:', window.storage.key);
     </script>
 </body>
 </html>
