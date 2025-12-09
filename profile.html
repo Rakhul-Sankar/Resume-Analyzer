@@ -9,11 +9,11 @@
 
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
 
-<!-- ================= LOGIN FORM ================= -->
+<!-- ================= LOGIN FORM ================ -->
 <div id="loginBox"
      class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
 
-    <h2 class="text-3xl font-bold text-indigo-600 mb-6">Login</h2>
+    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Login</h2>
 
     <input id="loginEmail" type="email" placeholder="Email"
            class="w-full p-3 border rounded-lg mb-3">
@@ -33,7 +33,7 @@
 </div>
 
 
-<!-- ================= SIGNUP FORM ================= -->
+<!-- ================= SIGNUP FORM ================ -->
 <div id="signupBox"
      class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
 
@@ -65,10 +65,22 @@
 <div id="profilePage"
      class="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
 
-    <div class="flex justify-between mb-4">
-        <h2 class="text-3xl font-bold text-indigo-600">Dashboard</h2>
+    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">My Profile</h2>
+
+    <div class="flex justify-between">
         <button onclick="logout()" class="text-red-500 underline text-sm">Logout</button>
+        <button onclick="newAccount()" class="text-blue-600 underline text-sm">Create New Account</button>
     </div>
+
+    <div class="flex flex-col items-center">
+        <img id="profileImage" src="default.png"
+             class="w-32 h-32 rounded-full border-4 border-indigo-400 shadow-lg mb-3">
+
+        <input type="file" id="imageUpload" accept="image/*"
+               class="text-sm font-medium cursor-pointer">
+    </div>
+
+    <hr class="my-6">
 
     <form id="profileForm" class="space-y-4">
         <div>
@@ -96,23 +108,46 @@
 </div>
 
 
-
 <script>
-// ================= AUTO-LOGIN =================
+// Auto redirect on load
 window.onload = () => {
     const user = JSON.parse(localStorage.getItem("loggedUser"));
-    user ? showProfile() : showLogin();
+    if (user) showProfile();
+    else showLogin();
 };
 
-// ================= PAGE SWITCH =================
-function showLogin(){ loginBox.classList.remove("hidden"); signupBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
-function showSignup(){ signupBox.classList.remove("hidden"); loginBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
-function showProfile(){ loginBox.classList.add("hidden"); signupBox.classList.add("hidden"); profilePage.classList.remove("hidden"); loadProfile(); }
+// ======= Show/Hide Screens =======
+function showLogin() {
+    loginBox.classList.remove("hidden");
+    signupBox.classList.add("hidden");
+    profilePage.classList.add("hidden");
+}
 
-// ================= CREATE ACCOUNT =================
-function createAccount(){
+function showSignup() {
+    signupBox.classList.remove("hidden");
+    loginBox.classList.add("hidden");
+    profilePage.classList.add("hidden");
+}
+
+function showProfile() {
+    loginBox.classList.add("hidden");
+    signupBox.classList.add("hidden");
+    profilePage.classList.remove("hidden");
+    loadProfile();
+}
+
+// ========= Create New Account After Login ==========
+function newAccount() {
+    localStorage.removeItem("loggedUser");
+    showSignup();
+}
+
+// ========= Create Account ==========
+function createAccount() {
     const users = JSON.parse(localStorage.getItem("users")) || [];
-    if(users.some(u => u.email === signupEmail.value)){
+    const email = signupEmail.value;
+
+    if (users.some(u => u.email === email)) {
         signupError.classList.remove("hidden");
         return;
     }
@@ -121,21 +156,26 @@ function createAccount(){
         name: signupName.value,
         email: signupEmail.value,
         pass: signupPass.value,
+        image: "default.png",
         joined: new Date().toLocaleDateString()
     };
 
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
     localStorage.setItem("loggedUser", JSON.stringify(newUser));
+
     showProfile();
 }
 
-// ================= LOGIN =================
-function loginUser(){
+// ========= Login System ==========
+function loginUser() {
     const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find(u => u.email === loginEmail.value && u.pass === loginPass.value);
 
-    if(!user){
+    const user = users.find(
+        u => u.email === loginEmail.value && u.pass === loginPass.value
+    );
+
+    if (!user) {
         loginError.classList.remove("hidden");
         return;
     }
@@ -144,20 +184,22 @@ function loginUser(){
     showProfile();
 }
 
-// ================= LOGOUT =================
-function logout(){
+// ========= Logout ==========
+function logout() {
     localStorage.removeItem("loggedUser");
     showLogin();
 }
 
-// ================= LOAD PAST REPORTS =================
-function loadProfile(){
+// ========= Load Profile + Resume History ==========
+function loadProfile() {
     const user = JSON.parse(localStorage.getItem("loggedUser"));
-    if(!user) return;
+    if (!user) return;
 
     name.value = user.name;
     email.value = user.email;
+    profileImage.src = user.image;
 
+    // Load Resume History
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
     const list = reports.filter(r => r.email === user.email);
 
