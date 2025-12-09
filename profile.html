@@ -13,9 +13,7 @@
 <div id="loginBox"
      class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
 
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-3xl font-bold text-indigo-600">Login</h2>
-
+    <h2 class="text-3xl font-bold text-indigo-600 mb-6">Login</h2>
 
     <input id="loginEmail" type="email" placeholder="Email"
            class="w-full p-3 border rounded-lg mb-3">
@@ -72,8 +70,6 @@
         <button onclick="logout()" class="text-red-500 underline text-sm">Logout</button>
     </div>
 
-    <!-- 🔥 Removed image upload section completely -->
-
     <form id="profileForm" class="space-y-4">
         <div>
             <label class="font-semibold">Full Name</label>
@@ -112,7 +108,6 @@ window.onload = () => {
 function showLogin(){ loginBox.classList.remove("hidden"); signupBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
 function showSignup(){ signupBox.classList.remove("hidden"); loginBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
 function showProfile(){ loginBox.classList.add("hidden"); signupBox.classList.add("hidden"); profilePage.classList.remove("hidden"); loadProfile(); }
-function openReports(){ showProfile(); document.getElementById("resumeList").scrollIntoView({behavior:"smooth"}); }
 
 // ================= CREATE ACCOUNT =================
 function createAccount(){
