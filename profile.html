@@ -72,14 +72,6 @@
         <button onclick="newAccount()" class="text-blue-600 underline text-sm">Create New Account</button>
     </div>
 
-    <div class="flex flex-col items-center">
-        <img id="profileImage" src="default.png"
-             class="w-32 h-32 rounded-full border-4 border-indigo-400 shadow-lg mb-3">
-
-        <input type="file" id="imageUpload" accept="image/*"
-               class="text-sm font-medium cursor-pointer">
-    </div>
-
     <hr class="my-6">
 
     <form id="profileForm" class="space-y-4">
@@ -116,38 +108,16 @@ window.onload = () => {
     else showLogin();
 };
 
-// ======= Show/Hide Screens =======
-function showLogin() {
-    loginBox.classList.remove("hidden");
-    signupBox.classList.add("hidden");
-    profilePage.classList.add("hidden");
-}
+// Show/Hide screens
+function showLogin(){ loginBox.classList.remove("hidden"); signupBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
+function showSignup(){ signupBox.classList.remove("hidden"); loginBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
+function showProfile(){ loginBox.classList.add("hidden"); signupBox.classList.add("hidden"); profilePage.classList.remove("hidden"); loadProfile(); }
 
-function showSignup() {
-    signupBox.classList.remove("hidden");
-    loginBox.classList.add("hidden");
-    profilePage.classList.add("hidden");
-}
-
-function showProfile() {
-    loginBox.classList.add("hidden");
-    signupBox.classList.add("hidden");
-    profilePage.classList.remove("hidden");
-    loadProfile();
-}
-
-// ========= Create New Account After Login ==========
-function newAccount() {
-    localStorage.removeItem("loggedUser");
-    showSignup();
-}
-
-// ========= Create Account ==========
-function createAccount() {
+// Create account
+function createAccount(){
     const users = JSON.parse(localStorage.getItem("users")) || [];
-    const email = signupEmail.value;
 
-    if (users.some(u => u.email === email)) {
+    if(users.some(u => u.email === signupEmail.value)){
         signupError.classList.remove("hidden");
         return;
     }
@@ -155,59 +125,62 @@ function createAccount() {
     const newUser = {
         name: signupName.value,
         email: signupEmail.value,
-        pass: signupPass.value,
-        image: "default.png",
-        joined: new Date().toLocaleDateString()
+        pass: signupPass.value
     };
 
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
     localStorage.setItem("loggedUser", JSON.stringify(newUser));
-
     showProfile();
 }
 
-// ========= Login System ==========
-function loginUser() {
+// Login
+function loginUser(){
     const users = JSON.parse(localStorage.getItem("users")) || [];
+    const user = users.find(u => u.email === loginEmail.value && u.pass === loginPass.value);
 
-    const user = users.find(
-        u => u.email === loginEmail.value && u.pass === loginPass.value
-    );
-
-    if (!user) {
-        loginError.classList.remove("hidden");
-        return;
-    }
+    if(!user){ loginError.classList.remove("hidden"); return; }
 
     localStorage.setItem("loggedUser", JSON.stringify(user));
     showProfile();
 }
 
-// ========= Logout ==========
-function logout() {
-    localStorage.removeItem("loggedUser");
-    showLogin();
-}
+// Logout
+function logout(){ localStorage.removeItem("loggedUser"); showLogin(); }
 
-// ========= Load Profile + Resume History ==========
-function loadProfile() {
+// Save name (UPDATED ✔)
+document.getElementById("profileForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let user = JSON.parse(localStorage.getItem("loggedUser"));
+
+    user.name = name.value;
+
+    users = users.map(u => u.email === user.email ? user : u);
+
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("loggedUser", JSON.stringify(user));
+
+    alert("Profile Updated Successfully!");
+});
+
+// Load profile
+function loadProfile(){
     const user = JSON.parse(localStorage.getItem("loggedUser"));
-    if (!user) return;
+    if(!user) return;
 
     name.value = user.name;
     email.value = user.email;
-    profileImage.src = user.image;
 
-    // Load Resume History
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
     const list = reports.filter(r => r.email === user.email);
 
     resumeList.innerHTML = list.length
         ? list.map(r => `<div class="p-3 bg-gray-100 rounded-lg">
-                <b>${r.filename}</b> — Score: ${r.score}% <br>
-                <span class="text-gray-600">${r.date}</span>
-            </div>`).join("")
+            <b>${r.filename}</b> — Score: ${r.score}%<br>
+            <span class="text-gray-600">${r.date}</span>
+        </div>`).join("")
         : `<p class="text-gray-500">No resumes analyzed yet.</p>`;
 }
 </script>
