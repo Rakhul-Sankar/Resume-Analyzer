@@ -161,7 +161,7 @@ function logout(){
     showLogin();
 }
 
-// ================= LOAD PAST REPORTS =================
+// ================= LOAD PROFILE =================
 function loadProfile(){
     const user = JSON.parse(localStorage.getItem("loggedUser"));
     if(!user) return;
@@ -169,6 +169,7 @@ function loadProfile(){
     name.value = user.name;
     email.value = user.email;
 
+    // Resume report history load
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
     const list = reports.filter(r => r.email === user.email);
 
@@ -179,7 +180,25 @@ function loadProfile(){
             </div>`).join("")
         : `<p class="text-gray-500">No resumes analyzed yet.</p>`;
 }
+
+// ================= 🔥 SAVE PROFILE (FIX ADDED) =================
+document.getElementById("profileForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let user = JSON.parse(localStorage.getItem("loggedUser"));
+
+    user.name = name.value; // update name
+
+    users = users.map(u => u.email === user.email ? user : u);
+
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("loggedUser", JSON.stringify(user));
+
+    alert("Profile Updated Successfully!");
+});
 </script>
+
 
 </body>
 </html>
