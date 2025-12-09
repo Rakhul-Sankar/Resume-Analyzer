@@ -7,21 +7,20 @@
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6 relative">
+
+<!-- ================== TOP RIGHT GLOBAL MENU ================== -->
+<div class="absolute top-5 right-5 flex gap-5 text-sm font-semibold">
+    <span onclick="showLogin()" class="cursor-pointer text-indigo-600">Dashboard</span>
+    <span onclick="openReports()" class="cursor-pointer text-green-600">Past Reports</span>
+</div>
+
 
 <!-- ================= LOGIN FORM ================= -->
 <div id="loginBox"
      class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
 
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-3xl font-bold text-indigo-600">Login</h2>
-
-        <!-- 🔥 Dashboard + Past Reports on top right -->
-        <div class="flex gap-3 text-sm font-semibold">
-            <span onclick="showLogin()" class="cursor-pointer text-indigo-600">Dashboard</span>
-            <span onclick="openReports()" class="cursor-pointer text-green-600">Past Reports</span>
-        </div>
-    </div>
+    <h2 class="text-3xl font-bold text-indigo-600 mb-4 text-center">Login</h2>
 
     <input id="loginEmail" type="email" placeholder="Email"
            class="w-full p-3 border rounded-lg mb-3">
@@ -78,8 +77,6 @@
         <button onclick="logout()" class="text-red-500 underline text-sm">Logout</button>
     </div>
 
-    <!-- 🔥 Removed image upload section completely -->
-
     <form id="profileForm" class="space-y-4">
         <div>
             <label class="font-semibold">Full Name</label>
@@ -106,73 +103,59 @@
 </div>
 
 
-
 <script>
-// ================= AUTO-LOGIN =================
 window.onload = () => {
     const user = JSON.parse(localStorage.getItem("loggedUser"));
     user ? showProfile() : showLogin();
 };
 
-// ================= PAGE SWITCH =================
 function showLogin(){ loginBox.classList.remove("hidden"); signupBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
 function showSignup(){ signupBox.classList.remove("hidden"); loginBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
 function showProfile(){ loginBox.classList.add("hidden"); signupBox.classList.add("hidden"); profilePage.classList.remove("hidden"); loadProfile(); }
 function openReports(){ showProfile(); document.getElementById("resumeList").scrollIntoView({behavior:"smooth"}); }
 
-// ================= CREATE ACCOUNT =================
 function createAccount(){
     const users = JSON.parse(localStorage.getItem("users")) || [];
     if(users.some(u => u.email === signupEmail.value)){
         signupError.classList.remove("hidden");
         return;
     }
-
     const newUser = {
         name: signupName.value,
         email: signupEmail.value,
         pass: signupPass.value,
         joined: new Date().toLocaleDateString()
     };
-
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
     localStorage.setItem("loggedUser", JSON.stringify(newUser));
     showProfile();
 }
 
-// ================= LOGIN =================
 function loginUser(){
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const user = users.find(u => u.email === loginEmail.value && u.pass === loginPass.value);
-
     if(!user){
         loginError.classList.remove("hidden");
         return;
     }
-
     localStorage.setItem("loggedUser", JSON.stringify(user));
     showProfile();
 }
 
-// ================= LOGOUT =================
 function logout(){
     localStorage.removeItem("loggedUser");
     showLogin();
 }
 
-// ================= LOAD PROFILE =================
 function loadProfile(){
     const user = JSON.parse(localStorage.getItem("loggedUser"));
     if(!user) return;
-
     name.value = user.name;
     email.value = user.email;
 
-    // Resume report history load
     const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
     const list = reports.filter(r => r.email === user.email);
-
     resumeList.innerHTML = list.length
         ? list.map(r => `<div class="p-3 bg-gray-100 rounded-lg">
                 <b>${r.filename}</b> — Score: ${r.score}% <br>
@@ -181,24 +164,17 @@ function loadProfile(){
         : `<p class="text-gray-500">No resumes analyzed yet.</p>`;
 }
 
-// ================= 🔥 SAVE PROFILE (FIX ADDED) =================
 document.getElementById("profileForm").addEventListener("submit", function(e){
     e.preventDefault();
-
     let users = JSON.parse(localStorage.getItem("users")) || [];
     let user = JSON.parse(localStorage.getItem("loggedUser"));
-
-    user.name = name.value; // update name
-
+    user.name = name.value;
     users = users.map(u => u.email === user.email ? user : u);
-
     localStorage.setItem("users", JSON.stringify(users));
     localStorage.setItem("loggedUser", JSON.stringify(user));
-
     alert("Profile Updated Successfully!");
 });
 </script>
-
 
 </body>
 </html>
