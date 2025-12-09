@@ -1,189 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>User System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
 
 <!-- ================= LOGIN FORM ================ -->
-<div id="loginBox"
-     class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+<div id="loginBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+  <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Login</h2>
 
-    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Login</h2>
+  <input id="loginEmail" type="email" placeholder="Email" class="w-full p-3 border rounded-lg mb-3" />
+  <input id="loginPass" type="password" placeholder="Password" class="w-full p-3 border rounded-lg mb-4" />
 
-    <input id="loginEmail" type="email" placeholder="Email"
-           class="w-full p-3 border rounded-lg mb-3">
-    <input id="loginPass" type="password" placeholder="Password"
-           class="w-full p-3 border rounded-lg mb-4">
+  <button id="loginBtn" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
+    Login
+  </button>
 
-    <button onclick="loginUser()"
-            class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
-        Login
-    </button>
+  <p class="text-center mt-4 text-sm">
+    No account? <span id="toSignup" class="text-blue-600 cursor-pointer">Create one</span>
+  </p>
 
-    <p class="text-center mt-4 text-sm">
-        No account? <span onclick="showSignup()" class="text-blue-600 cursor-pointer">Create one</span>
-    </p>
-
-    <p id="loginError" class="text-red-500 text-center mt-3 hidden">Invalid login details!</p>
+  <p id="loginError" class="text-red-500 text-center mt-3 hidden">Invalid login details!</p>
 </div>
-
 
 <!-- ================= SIGNUP FORM ================ -->
-<div id="signupBox"
-     class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+<div id="signupBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+  <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Create Account</h2>
 
-    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Create Account</h2>
+  <input id="signupName" type="text" placeholder="Full Name" class="w-full p-3 border rounded-lg mb-3" />
+  <input id="signupEmail" type="email" placeholder="Email" class="w-full p-3 border rounded-lg mb-3" />
+  <input id="signupPass" type="password" placeholder="Password" class="w-full p-3 border rounded-lg mb-4" />
 
-    <input id="signupName" type="text" placeholder="Full Name"
-           class="w-full p-3 border rounded-lg mb-3">
+  <button id="createBtn" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700">
+    Create Account
+  </button>
 
-    <input id="signupEmail" type="email" placeholder="Email"
-           class="w-full p-3 border rounded-lg mb-3">
+  <p class="text-center mt-4 text-sm">
+    Already have an account? <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
+  </p>
 
-    <input id="signupPass" type="password" placeholder="Password"
-           class="w-full p-3 border rounded-lg mb-4">
-
-    <button onclick="createAccount()"
-            class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700">
-        Create Account
-    </button>
-
-    <p class="text-center mt-4 text-sm">
-        Already have an account? <span onclick="showLogin()" class="text-blue-600 cursor-pointer">Login</span>
-    </p>
-
-    <p id="signupError" class="text-red-500 text-center mt-3 hidden">Email already used!</p>
+  <p id="signupError" class="text-red-500 text-center mt-3 hidden">Email already used!</p>
 </div>
-
 
 <!-- ================= PROFILE PAGE ================ -->
-<div id="profilePage"
-     class="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+<div id="profilePage" class="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+  <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">My Profile</h2>
 
-    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">My Profile</h2>
+  <div class="flex justify-between">
+    <button id="logoutBtn" class="text-red-500 underline text-sm">Logout</button>
+    <button id="newAccountBtn" class="text-blue-600 underline text-sm">Create New Account</button>
+  </div>
 
-    <div class="flex justify-between">
-        <button onclick="logout()" class="text-red-500 underline text-sm">Logout</button>
-        <button onclick="newAccount()" class="text-blue-600 underline text-sm">Create New Account</button>
+  <hr class="my-6" />
+
+  <form id="profileForm" class="space-y-4">
+    <div>
+      <label class="font-semibold">Full Name</label>
+      <input id="nameInput" type="text" class="w-full p-2.5 border rounded-lg mt-1" />
     </div>
 
-    <hr class="my-6">
-
-    <form id="profileForm" class="space-y-4">
-        <div>
-            <label class="font-semibold">Full Name</label>
-            <input id="name" type="text"
-                   class="w-full p-2.5 border rounded-lg mt-1">
-        </div>
-
-        <div>
-            <label class="font-semibold">Email</label>
-            <input id="email" type="email"
-                   class="w-full p-2.5 border rounded-lg mt-1" disabled>
-        </div>
-
-        <button class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
-            Save Profile
-        </button>
-    </form>
-
-    <div class="mt-6">
-        <h3 class="text-xl font-bold mb-3">Your Resume History</h3>
-        <div id="resumeList" class="space-y-2 text-sm"></div>
+    <div>
+      <label class="font-semibold">Email</label>
+      <input id="emailInput" type="email" class="w-full p-2.5 border rounded-lg mt-1" disabled />
     </div>
 
+    <!-- make it a proper submit button -->
+    <button type="submit" id="saveProfileBtn" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
+      Save Profile
+    </button>
+  </form>
+
+  <div class="mt-6">
+    <h3 class="text-xl font-bold mb-3">Your Resume History</h3>
+    <div id="resumeList" class="space-y-2 text-sm"></div>
+  </div>
 </div>
 
-
 <script>
-// Auto redirect on load
-window.onload = () => {
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
-    if (user) showProfile();
-    else showLogin();
-};
+/* -------------------------
+   Element references
+   ------------------------- */
+const loginBox = document.getElementById('loginBox');
+const signupBox = document.getElementById('signupBox');
+const profilePage = document.getElementById('profilePage');
 
-// Show/Hide screens
-function showLogin(){ loginBox.classList.remove("hidden"); signupBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
-function showSignup(){ signupBox.classList.remove("hidden"); loginBox.classList.add("hidden"); profilePage.classList.add("hidden"); }
-function showProfile(){ loginBox.classList.add("hidden"); signupBox.classList.add("hidden"); profilePage.classList.remove("hidden"); loadProfile(); }
+const loginEmail = document.getElementById('loginEmail');
+const loginPass = document.getElementById('loginPass');
+const loginBtn = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
 
-// Create account
-function createAccount(){
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+const signupName = document.getElementById('signupName');
+const signupEmail = document.getElementById('signupEmail');
+const signupPass = document.getElementById('signupPass');
+const createBtn = document.getElementById('createBtn');
+const signupError = document.getElementById('signupError');
 
-    if(users.some(u => u.email === signupEmail.value)){
-        signupError.classList.remove("hidden");
-        return;
-    }
+const toSignup = document.getElementById('toSignup');
+const toLogin = document.getElementById('toLogin');
 
-    const newUser = {
-        name: signupName.value,
-        email: signupEmail.value,
-        pass: signupPass.value
-    };
+const logoutBtn = document.getElementById('logoutBtn');
+const newAccountBtn = document.getElementById('newAccountBtn');
 
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-    localStorage.setItem("loggedUser", JSON.stringify(newUser));
-    showProfile();
+const profileForm = document.getElementById('profileForm');
+const nameInput = document.getElementById('nameInput');
+const emailInput = document.getElementById('emailInput');
+const resumeList = document.getElementById('resumeList');
+
+/* -------------------------
+   Helpers
+   ------------------------- */
+function showLogin() {
+  loginBox.classList.remove('hidden');
+  signupBox.classList.add('hidden');
+  profilePage.classList.add('hidden');
+  loginError.classList.add('hidden');
+  signupError.classList.add('hidden');
 }
 
-// Login
-function loginUser(){
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find(u => u.email === loginEmail.value && u.pass === loginPass.value);
-
-    if(!user){ loginError.classList.remove("hidden"); return; }
-
-    localStorage.setItem("loggedUser", JSON.stringify(user));
-    showProfile();
+function showSignupFunc() {
+  signupBox.classList.remove('hidden');
+  loginBox.classList.add('hidden');
+  profilePage.classList.add('hidden');
+  loginError.classList.add('hidden');
+  signupError.classList.add('hidden');
 }
 
-// Logout
-function logout(){ localStorage.removeItem("loggedUser"); showLogin(); }
+function showProfile() {
+  loginBox.classList.add('hidden');
+  signupBox.classList.add('hidden');
+  profilePage.classList.remove('hidden');
+  loginError.classList.add('hidden');
+  signupError.classList.add('hidden');
+  loadProfile();
+}
 
-// Save name (UPDATED ✔)
-document.getElementById("profileForm").addEventListener("submit", function(e){
-    e.preventDefault();
-
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    let user = JSON.parse(localStorage.getItem("loggedUser"));
-
-    user.name = name.value;
-
-    users = users.map(u => u.email === user.email ? user : u);
-
-    localStorage.setItem("users", JSON.stringify(users));
-    localStorage.setItem("loggedUser", JSON.stringify(user));
-
-    alert("Profile Updated Successfully!");
+/* -------------------------
+   Initialization
+   ------------------------- */
+window.addEventListener('load', () => {
+  const user = JSON.parse(localStorage.getItem('loggedUser'));
+  if (user) showProfile();
+  else showLogin();
 });
 
-// Load profile
-function loadProfile(){
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
-    if(!user) return;
+/* -------------------------
+   Create account
+   ------------------------- */
+createBtn.addEventListener('click', () => {
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+  const email = signupEmail.value.trim().toLowerCase();
 
-    name.value = user.name;
-    email.value = user.email;
+  // simple validation
+  if (!signupName.value.trim() || !email || !signupPass.value) {
+    signupError.textContent = 'Please fill name, email and password.';
+    signupError.classList.remove('hidden');
+    return;
+  }
 
-    const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-    const list = reports.filter(r => r.email === user.email);
+  if (users.some(u => u.email === email)) {
+    signupError.textContent = 'Email already used!';
+    signupError.classList.remove('hidden');
+    return;
+  }
 
-    resumeList.innerHTML = list.length
-        ? list.map(r => `<div class="p-3 bg-gray-100 rounded-lg">
-            <b>${r.filename}</b> — Score: ${r.score}%<br>
-            <span class="text-gray-600">${r.date}</span>
-        </div>`).join("")
-        : `<p class="text-gray-500">No resumes analyzed yet.</p>`;
+  const newUser = {
+    name: signupName.value.trim(),
+    email,
+    pass: signupPass.value
+  };
+
+  users.push(newUser);
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('loggedUser', JSON.stringify(newUser));
+
+  // clear signup fields
+  signupName.value = signupEmail.value = signupPass.value = '';
+  signupError.classList.add('hidden');
+
+  showProfile();
+});
+
+/* -------------------------
+   Login
+   ------------------------- */
+loginBtn.addEventListener('click', () => {
+  const users = JSON.parse(localStorage.getItem('users')) || [];
+  const email = loginEmail.value.trim().toLowerCase();
+  const pass = loginPass.value;
+
+  const user = users.find(u => u.email === email && u.pass === pass);
+  if (!user) {
+    loginError.textContent = 'Invalid login details!';
+    loginError.classList.remove('hidden');
+    return;
+  }
+
+  localStorage.setItem('loggedUser', JSON.stringify(user));
+  loginEmail.value = loginPass.value = '';
+  showProfile();
+});
+
+/* -------------------------
+   Logout / New account
+   ------------------------- */
+logoutBtn.addEventListener('click', () => {
+  localStorage.removeItem('loggedUser');
+  showLogin();
+});
+
+newAccountBtn.addEventListener('click', () => {
+  localStorage.removeItem('loggedUser');
+  showSignupFunc();
+});
+
+/* -------------------------
+   Save profile (reliable)
+   ------------------------- */
+profileForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  let users = JSON.parse(localStorage.getItem('users')) || [];
+  let loggedUser = JSON.parse(localStorage.getItem('loggedUser'));
+
+  if (!loggedUser) {
+    alert('No logged user found.');
+    return;
+  }
+
+  const newName = nameInput.value.trim();
+  if (!newName) {
+    alert('Name cannot be empty.');
+    return;
+  }
+
+  // update loggedUser and users array
+  loggedUser.name = newName;
+  users = users.map(u => (u.email === loggedUser.email ? loggedUser : u));
+
+  // save back
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
+
+  alert('Profile Updated Successfully!');
+});
+
+/* -------------------------
+   Load profile and resume history
+   ------------------------- */
+function loadProfile() {
+  const user = JSON.parse(localStorage.getItem('loggedUser'));
+  if (!user) return;
+
+  nameInput.value = user.name || '';
+  emailInput.value = user.email || '';
+
+  const reports = JSON.parse(localStorage.getItem('resumeReports')) || [];
+  const list = reports.filter(r => r.email === user.email);
+
+  if (list.length) {
+    resumeList.innerHTML = list
+      .map(r => `<div class="p-3 bg-gray-100 rounded-lg"><b>${r.filename}</b> — Score: ${r.score}% <br><span class="text-gray-600">${r.date}</span></div>`)
+      .join('');
+  } else {
+    resumeList.innerHTML = `<p class="text-gray-500">No resumes analyzed yet.</p>`;
+  }
 }
-</script>
 
+/* -------------------------
+   small nav link handlers
+   ------------------------- */
+toSignup.addEventListener('click', showSignupFunc);
+toLogin.addEventListener('click', showLogin);
+
+</script>
 </body>
 </html>
