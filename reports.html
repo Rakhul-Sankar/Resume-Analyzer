@@ -5,98 +5,454 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Past Reports - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Dark mode styles */
+        .dark body { background: linear-gradient(to bottom right, #1a1a2e, #16213e); }
+        .dark .bg-white { background-color: #1e293b !important; }
+        .dark .bg-white\/80, .dark .bg-white\/90 { background-color: rgba(30, 41, 59, 0.9) !important; }
+        .dark .text-gray-800, .dark .text-gray-700, .dark .text-gray-600 { color: #e2e8f0 !important; }
+        .dark .text-gray-500, .dark .text-gray-400 { color: #94a3b8 !important; }
+        .dark .border-gray-200 { border-color: #475569 !important; }
+        .dark .bg-yellow-100 { background-color: #422006 !important; }
+        .dark .border-yellow-400 { border-color: #ca8a04 !important; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        /* Modal animations */
+        .modal-enter { animation: modalIn 0.3s ease-out; }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        /* Checkbox styling */
+        .resume-checkbox:checked { background-color: #8b5cf6; border-color: #8b5cf6; }
+        
+        /* Toast notification */
+        .toast { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-emerald-50 to-green-100 min-h-screen">
+<body class="bg-gradient-to-br from-emerald-50 to-green-100 min-h-screen transition-all duration-300">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2"></div>
+
     <!-- Navigation -->
     <nav class="bg-white/90 backdrop-blur-md shadow-xl border-b sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 py-4">
+        <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <a href="index.html" class="text-2xl font-bold text-gray-800 hover:text-green-600 transition-colors">← Dashboard</a>
                 </div>
-                <div class="flex space-x-4">
+                <div class="flex items-center space-x-4">
                     <a href="index.html" class="text-gray-700 hover:text-purple-600 font-medium px-4 py-2 rounded-lg transition-all hover:bg-purple-50">Home</a>
                     <a href="profile.html" class="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-all hover:bg-blue-50">Profile</a>
+                    
+                    <!-- Dark Mode Toggle -->
+                    <button id="darkModeToggle" class="p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all" title="Toggle Dark Mode">
+                        <span id="darkModeIcon">🌙</span>
+                    </button>
+                    
+                    <!-- Keyboard Shortcuts -->
+                    <button onclick="storage.showShortcuts()" class="p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all" title="Keyboard Shortcuts">
+                        ⌨️
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-6 py-12">
-        <div class="text-center mb-16">
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <div class="text-center mb-12">
             <h1 class="text-5xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6 drop-shadow-lg">
                 📊 Resume Storage
             </h1>
             <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-                Manage and analyze your uploaded resumes. Use the search to quickly find specific resumes or clear all data as needed.
+                Manage and analyze your uploaded resumes. Use advanced features to organize, filter, and export your data.
             </p>
         </div>
 
-        <!-- Controls -->
-        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-12 border border-white/50 relative">
-            <div class="flex flex-col lg:flex-row gap-4 items-end lg:items-center justify-between">
+        <!-- Controls Section -->
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-8 border border-white/50">
+            <!-- Row 1: Search and Main Actions -->
+            <div class="flex flex-col lg:flex-row gap-4 items-end lg:items-center justify-between mb-6">
                 <div class="relative w-full lg:w-96 flex-1">
-                    <input type="text" id="searchInput" placeholder="🔍 Search resumes..." 
+                    <input type="text" id="searchInput" placeholder="🔍 Search resumes by name, tags..." 
                            class="w-full pl-12 pr-4 py-4 bg-white/50 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none transition-all text-lg shadow-inner">
                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔍</div>
                 </div>
-                <div class="flex gap-3 flex-shrink-0">
-                    <button id="clearAllBtn" class="px-8 py-4 bg-red-500/90 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg transition-all hover:scale-105">
+                <div class="flex gap-3 flex-shrink-0 flex-wrap">
+                    <button id="clearAllBtn" class="px-6 py-3 bg-red-500/90 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all hover:scale-105 text-sm">
                         🗑️ Clear All
                     </button>
-                    <a href="upload.html" class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                    <button onclick="storage.exportAll()" class="px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg transition-all hover:scale-105 text-sm">
+                        📤 Export
+                    </button>
+                    <button onclick="document.getElementById('importInput').click()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg transition-all hover:scale-105 text-sm">
+                        📥 Import
+                    </button>
+                    <input type="file" id="importInput" accept=".json" class="hidden" onchange="storage.importData(event)">
+                    <a href="upload.html" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all text-sm">
                         ➕ Upload New
                     </a>
                 </div>
             </div>
+
+            <!-- Row 2: Filters and Sort -->
+            <div class="flex flex-col lg:flex-row gap-4 items-center justify-between border-t pt-6">
+                <!-- Filter by Status -->
+                <div class="flex gap-2 flex-wrap">
+                    <span class="text-gray-600 font-semibold self-center mr-2">Filter:</span>
+                    <button onclick="storage.filterBy('all')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200 transition-all" data-filter="all">
+                        📋 All
+                    </button>
+                    <button onclick="storage.filterBy('analyzed')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition-all" data-filter="analyzed">
+                        ✅ Analyzed
+                    </button>
+                    <button onclick="storage.filterBy('pending')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-all" data-filter="pending">
+                        ⏳ Pending
+                    </button>
+                    <button onclick="storage.filterBy('favorites')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-pink-100 text-pink-700 hover:bg-pink-200 transition-all" data-filter="favorites">
+                        ⭐ Favorites
+                    </button>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="flex gap-2 items-center">
+                    <span class="text-gray-600 font-semibold mr-2">Sort:</span>
+                    <select id="sortSelect" onchange="storage.sortBy(this.value)" class="px-4 py-2 rounded-xl border-2 border-gray-200 bg-white focus:border-purple-500 focus:outline-none font-semibold text-gray-700">
+                        <option value="date-desc">📅 Newest First</option>
+                        <option value="date-asc">📅 Oldest First</option>
+                        <option value="score-desc">📊 Highest Score</option>
+                        <option value="score-asc">📊 Lowest Score</option>
+                        <option value="name-asc">🔤 Name A-Z</option>
+                        <option value="name-desc">🔤 Name Z-A</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Bulk Actions (shown when items selected) -->
+            <div id="bulkActions" class="hidden border-t pt-6 mt-6">
+                <div class="flex gap-3 items-center flex-wrap">
+                    <span class="text-gray-600 font-semibold"><span id="selectedCount">0</span> selected</span>
+                    <button onclick="storage.bulkDelete()" class="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-all">
+                        🗑️ Delete Selected
+                    </button>
+                    <button onclick="storage.bulkExport()" class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all">
+                        📤 Export Selected
+                    </button>
+                    <button onclick="storage.bulkToggleFavorite()" class="px-4 py-2 bg-yellow-500 text-white rounded-xl text-sm font-semibold hover:bg-yellow-600 transition-all">
+                        ⭐ Toggle Favorite
+                    </button>
+                    <button onclick="storage.clearSelection()" class="px-4 py-2 bg-gray-500 text-white rounded-xl text-sm font-semibold hover:bg-gray-600 transition-all">
+                        ✖️ Clear Selection
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Stats -->
-        <div class="grid md:grid-cols-4 gap-6 mb-12">
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
+        <!-- Stats Cards -->
+        <div class="grid md:grid-cols-5 gap-6 mb-8">
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group cursor-pointer" onclick="storage.filterBy('all')">
                 <div id="totalResumes" class="text-4xl font-black text-blue-600 mb-2 group-hover:scale-110 transition-transform">0</div>
                 <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Stored</div>
             </div>
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group cursor-pointer" onclick="storage.filterBy('analyzed')">
                 <div id="analyzedCount" class="text-4xl font-black text-green-600 mb-2 group-hover:scale-110 transition-transform">0</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">AI Analyzed</div>
+                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Analyzed</div>
             </div>
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group cursor-pointer" onclick="storage.filterBy('pending')">
                 <div id="pendingCount" class="text-4xl font-black text-yellow-500 mb-2 group-hover:scale-110 transition-transform">0</div>
                 <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Pending</div>
             </div>
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group cursor-pointer" onclick="storage.filterBy('favorites')">
+                <div id="favoritesCount" class="text-4xl font-black text-pink-600 mb-2 group-hover:scale-110 transition-transform">0</div>
+                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Favorites</div>
+            </div>
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
                 <div id="storageUsed" class="text-4xl font-black text-purple-600 mb-2 group-hover:scale-110 transition-transform">0KB</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Storage Used</div>
+                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Storage</div>
             </div>
         </div>
 
-        <!-- Debug -->
+        <!-- Analytics Section (Collapsible) -->
+        <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/50 mb-8 overflow-hidden">
+            <button onclick="storage.toggleAnalytics()" class="w-full px-8 py-6 flex items-center justify-between hover:bg-gray-50 transition-all">
+                <h2 class="text-xl font-bold text-gray-800">📈 Analytics Dashboard</h2>
+                <span id="analyticsToggle" class="text-2xl transition-transform">▼</span>
+            </button>
+            <div id="analyticsSection" class="hidden px-8 pb-8">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Score Distribution Chart -->
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h3 class="font-bold text-gray-700 mb-4">Score Distribution</h3>
+                        <canvas id="scoreChart" height="200"></canvas>
+                    </div>
+                    <!-- Status Overview Chart -->
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h3 class="font-bold text-gray-700 mb-4">Status Overview</h3>
+                        <canvas id="statusChart" height="200"></canvas>
+                    </div>
+                    <!-- Average Score -->
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white">
+                        <h3 class="font-bold mb-2">Average Score</h3>
+                        <div id="avgScore" class="text-5xl font-black">0%</div>
+                        <p class="text-white/80 mt-2">Across all analyzed resumes</p>
+                    </div>
+                    <!-- Recent Activity -->
+                    <div class="bg-gray-50 rounded-2xl p-6">
+                        <h3 class="font-bold text-gray-700 mb-4">Recent Activity</h3>
+                        <div id="recentActivity" class="space-y-2 max-h-32 overflow-y-auto">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tags Section -->
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-6 mb-8 border border-white/50">
+            <div class="flex items-center gap-4 flex-wrap">
+                <span class="text-gray-600 font-semibold">🏷️ Tags:</span>
+                <div id="tagsList" class="flex gap-2 flex-wrap">
+                    <!-- Dynamic tags -->
+                </div>
+                <button onclick="storage.showTagManager()" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-xl text-sm font-semibold hover:bg-purple-200 transition-all">
+                    + Manage Tags
+                </button>
+            </div>
+        </div>
+
+        <!-- Debug Info -->
         <div id="debugInfo" class="bg-yellow-100 border-2 border-yellow-400 rounded-2xl p-6 mb-8 text-sm font-mono">
             <strong>🔍 LIVE STATUS:</strong> <span id="debugText">Loading...</span>
         </div>
 
-        <!-- Grid -->
-        <div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <!-- Pagination -->
+        <div id="pagination" class="flex justify-center gap-2 mb-8">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- Resume Grid -->
+        <div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Dynamic -->
+        </div>
+
+        <!-- Pagination Bottom -->
+        <div id="paginationBottom" class="flex justify-center gap-2 mt-8">
             <!-- Dynamic -->
         </div>
     </main>
+
+    <!-- View Resume Modal -->
+    <div id="viewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden modal-enter">
+            <div class="p-6 border-b flex items-center justify-between bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                <h2 id="viewModalTitle" class="text-xl font-bold">Resume Details</h2>
+                <button onclick="storage.closeModal('viewModal')" class="text-2xl hover:scale-110 transition-transform">✕</button>
+            </div>
+            <div id="viewModalContent" class="p-6 overflow-y-auto max-h-[60vh]">
+                <!-- Dynamic content -->
+            </div>
+            <div class="p-6 border-t flex gap-3 justify-end bg-gray-50">
+                <button onclick="storage.closeModal('viewModal')" class="px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Resume Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full modal-enter">
+            <div class="p-6 border-b flex items-center justify-between bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
+                <h2 class="text-xl font-bold">✏️ Edit Resume</h2>
+                <button onclick="storage.closeModal('editModal')" class="text-2xl hover:scale-110 transition-transform">✕</button>
+            </div>
+            <div class="p-6">
+                <input type="hidden" id="editResumeId">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Resume Name</label>
+                    <input type="text" id="editResumeName" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Tags (comma separated)</label>
+                    <input type="text" id="editResumeTags" placeholder="engineering, senior, tech" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Notes</label>
+                    <textarea id="editResumeNotes" rows="4" placeholder="Add notes about this resume..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Status</label>
+                    <select id="editResumeStatus" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
+                        <option value="analyzed">✅ Analyzed</option>
+                        <option value="pending">⏳ Pending</option>
+                        <option value="processing">🔄 Processing</option>
+                        <option value="error">❌ Error</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-6 border-t flex gap-3 justify-end bg-gray-50">
+                <button onclick="storage.closeModal('editModal')" class="px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-all">
+                    Cancel
+                </button>
+                <button onclick="storage.saveEdit()" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                    💾 Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Manager Modal -->
+    <div id="tagModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full modal-enter">
+            <div class="p-6 border-b flex items-center justify-between bg-gradient-to-r from-green-600 to-teal-600 text-white">
+                <h2 class="text-xl font-bold">🏷️ Manage Tags</h2>
+                <button onclick="storage.closeModal('tagModal')" class="text-2xl hover:scale-110 transition-transform">✕</button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Create New Tag</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newTagInput" placeholder="Enter tag name" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none">
+                        <button onclick="storage.createTag()" class="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all">
+                            + Add
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Existing Tags</label>
+                    <div id="allTagsList" class="flex gap-2 flex-wrap max-h-40 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t flex gap-3 justify-end bg-gray-50">
+                <button onclick="storage.closeModal('tagModal')" class="px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcutsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full modal-enter">
+            <div class="p-6 border-b flex items-center justify-between bg-gradient-to-r from-gray-700 to-gray-900 text-white">
+                <h2 class="text-xl font-bold">⌨️ Keyboard Shortcuts</h2>
+                <button onclick="storage.closeModal('shortcutsModal')" class="text-2xl hover:scale-110 transition-transform">✕</button>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-gray-700">Search resumes</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">/</kbd>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-gray-700">Upload new resume</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">N</kbd>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-gray-700">Toggle dark mode</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">D</kbd>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-gray-700">Export all</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">E</kbd>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-gray-700">Show analytics</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">A</kbd>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b">
+                        <span class="text-gray-700">Close modal</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">Esc</kbd>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-700">Undo last delete</span>
+                        <kbd class="px-3 py-1 bg-gray-100 rounded-lg font-mono text-sm">Ctrl+Z</kbd>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t flex gap-3 justify-end bg-gray-50">
+                <button onclick="storage.closeModal('shortcutsModal')" class="px-6 py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
 window.storage = {
     key: "advancedResumes_v2",
     resumes: [],
+    selectedIds: new Set(),
+    currentFilter: 'all',
+    currentSort: 'date-desc',
+    currentPage: 1,
+    itemsPerPage: 12,
+    deletedResumes: [], // For undo functionality
+    tags: [],
+    charts: {},
 
     init() {
+        this.loadTags();
         this.load();
         this.bindEvents();
-
-        // Live checker every 1 sec (keeps UI updated)
-        setInterval(() => this.load(), 1000);
+        this.initDarkMode();
+        
+        // Live checker every 2 sec
+        setInterval(() => this.load(), 2000);
     },
 
-    // ✅ FIX 1: Normalize resume data on load to ensure all fields exist
+    // ========== DARK MODE ==========
+    initDarkMode() {
+        const isDark = localStorage.getItem('darkMode') === 'true';
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('darkModeIcon').textContent = '☀️';
+        }
+    },
+
+    toggleDarkMode() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('darkMode', isDark);
+        document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+        this.showToast(isDark ? '🌙 Dark mode enabled' : '☀️ Light mode enabled', 'info');
+    },
+
+    // ========== TOAST NOTIFICATIONS ==========
+    showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500',
+            warning: 'bg-yellow-500'
+        };
+        
+        toast.className = `toast px-6 py-4 rounded-xl text-white font-semibold shadow-xl ${colors[type] || colors.info}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    },
+
+    // ========== DATA NORMALIZATION ==========
     normalizeResume(r) {
         if (!r || typeof r !== 'object') return null;
         
@@ -107,34 +463,51 @@ window.storage = {
             score: (r.score !== undefined && r.score !== null && !isNaN(r.score)) 
                    ? Number(r.score) 
                    : Math.floor(Math.random() * 30) + 70,
-            status: r.status || "analyzed",  // ✅ Default to "analyzed" not "pending"
+            status: r.status || "analyzed",
             type: r.type || "Uploaded Resume",
             fileData: r.fileData || null,
-            fileType: r.fileType || null
+            fileType: r.fileType || null,
+            favorite: r.favorite || false,
+            tags: Array.isArray(r.tags) ? r.tags : [],
+            notes: r.notes || "",
+            createdAt: r.createdAt || Date.now()
         };
     },
 
+    // ========== LOAD & SAVE ==========
     load() {
         try {
             const saved = localStorage.getItem(this.key);
             let parsed = saved ? JSON.parse(saved) : [];
             
-            // ✅ FIX 2: Normalize ALL resumes on load
             this.resumes = parsed
                 .map(r => this.normalizeResume(r))
                 .filter(r => r !== null && r.name);
                 
-            // ✅ FIX 3: Save normalized data back to fix any corrupted entries
             this.saveWithoutRender();
-            
         } catch (e) { 
             console.error("Load error:", e);
             this.resumes = []; 
         }
 
         this.updateStats();
+        this.renderTags();
         this.render();
         this.debug();
+    },
+
+    loadTags() {
+        try {
+            const saved = localStorage.getItem('resumeTags');
+            this.tags = saved ? JSON.parse(saved) : ['engineering', 'design', 'marketing', 'senior', 'junior'];
+        } catch {
+            this.tags = ['engineering', 'design', 'marketing', 'senior', 'junior'];
+        }
+    },
+
+    saveTags() {
+        localStorage.setItem('resumeTags', JSON.stringify(this.tags));
+        this.renderTags();
     },
 
     saveWithoutRender() {
@@ -148,56 +521,668 @@ window.storage = {
         this.render();
     },
 
+    // ========== CRUD OPERATIONS ==========
     add(resumeData) {
         let newResume;
         
         if (typeof resumeData === 'string') {
-            newResume = {
-                id: crypto.randomUUID(),
-                name: resumeData || "Untitled Resume",
-                date: new Date().toLocaleDateString("en-CA"),
-                score: Math.floor(Math.random() * 30) + 70,
-                status: "analyzed",
-                type: "Uploaded Resume",
-                fileData: null,
-                fileType: null
-            };
+            newResume = this.normalizeResume({ name: resumeData });
         } else {
-            // ✅ FIX 4: Properly handle incoming resume data
-            newResume = {
-                id: crypto.randomUUID(),
-                name: resumeData.name || "Untitled Resume",
-                date: resumeData.date || new Date().toLocaleDateString("en-CA"),
-                score: (resumeData.score !== undefined && resumeData.score !== null) 
-                       ? Number(resumeData.score) 
-                       : Math.floor(Math.random() * 30) + 70,
-                status: resumeData.status || "analyzed",
-                type: resumeData.type || "Uploaded Resume",
-                fileData: resumeData.fileData || null,
-                fileType: resumeData.fileType || null
-            };
+            newResume = this.normalizeResume(resumeData);
         }
 
         this.resumes.unshift(newResume);
         this.save();
+        this.showToast(`✅ "${newResume.name}" added successfully!`, 'success');
+    },
+
+    delete(id, skipConfirm = false) {
+        if (!skipConfirm && !confirm("Delete this resume?")) return;
         
-        console.log("✅ Resume added:", newResume);
-    },
-
-    delete(id) {
-        if (confirm("Delete this resume?")) {
-            this.resumes = this.resumes.filter(r => r.id !== id);
-            this.save();
-        }
-    },
-
-    // ✅ FIX 5: Update status of a specific resume
-    updateStatus(id, newStatus) {
         const resume = this.resumes.find(r => r.id === id);
         if (resume) {
-            resume.status = newStatus;
+            this.deletedResumes.push({ ...resume, deletedAt: Date.now() });
+            this.resumes = this.resumes.filter(r => r.id !== id);
+            this.selectedIds.delete(id);
             this.save();
+            this.showToast(`🗑️ Resume deleted. Press Ctrl+Z to undo.`, 'warning');
         }
+    },
+
+    undoDelete() {
+        if (this.deletedResumes.length === 0) {
+            this.showToast('Nothing to undo', 'info');
+            return;
+        }
+        
+        const lastDeleted = this.deletedResumes.pop();
+        delete lastDeleted.deletedAt;
+        this.resumes.unshift(lastDeleted);
+        this.save();
+        this.showToast(`↩️ "${lastDeleted.name}" restored!`, 'success');
+    },
+
+    // ========== FAVORITES ==========
+    toggleFavorite(id) {
+        const resume = this.resumes.find(r => r.id === id);
+        if (resume) {
+            resume.favorite = !resume.favorite;
+            this.save();
+            this.showToast(resume.favorite ? '⭐ Added to favorites' : '☆ Removed from favorites', 'info');
+        }
+    },
+
+    // ========== EDIT ==========
+    openEdit(id) {
+        const resume = this.resumes.find(r => r.id === id);
+        if (!resume) return;
+
+        document.getElementById('editResumeId').value = id;
+        document.getElementById('editResumeName').value = resume.name;
+        document.getElementById('editResumeTags').value = (resume.tags || []).join(', ');
+        document.getElementById('editResumeNotes').value = resume.notes || '';
+        document.getElementById('editResumeStatus').value = resume.status;
+        
+        document.getElementById('editModal').classList.remove('hidden');
+    },
+
+    saveEdit() {
+        const id = document.getElementById('editResumeId').value;
+        const resume = this.resumes.find(r => r.id === id);
+        if (!resume) return;
+
+        resume.name = document.getElementById('editResumeName').value || resume.name;
+        resume.tags = document.getElementById('editResumeTags').value
+            .split(',')
+            .map(t => t.trim().toLowerCase())
+            .filter(t => t);
+        resume.notes = document.getElementById('editResumeNotes').value;
+        resume.status = document.getElementById('editResumeStatus').value;
+
+        this.save();
+        this.closeModal('editModal');
+        this.showToast('✅ Resume updated!', 'success');
+    },
+
+    // ========== VIEW DETAILS ==========
+    viewDetails(id) {
+        const resume = this.resumes.find(r => r.id === id);
+        if (!resume) return;
+
+        document.getElementById('viewModalTitle').textContent = resume.name;
+        
+        const scoreColor = resume.score > 80 ? 'text-green-600' : resume.score > 60 ? 'text-yellow-600' : 'text-red-600';
+        
+        document.getElementById('viewModalContent').innerHTML = `
+            <div class="space-y-6">
+                <!-- Score Circle -->
+                <div class="text-center py-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl">
+                    <div class="text-6xl font-black ${scoreColor}">${resume.score}%</div>
+                    <div class="text-gray-600 mt-2 font-semibold">Overall Score</div>
+                </div>
+                
+                <!-- Details Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-xl">
+                        <div class="text-gray-500 text-sm">📅 Date Uploaded</div>
+                        <div class="font-bold text-gray-800">${resume.date}</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl">
+                        <div class="text-gray-500 text-sm">📋 Status</div>
+                        <div class="font-bold text-gray-800">${this.getStatusDisplay(resume.status)}</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl">
+                        <div class="text-gray-500 text-sm">📁 Type</div>
+                        <div class="font-bold text-gray-800">${resume.type}</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl">
+                        <div class="text-gray-500 text-sm">⭐ Favorite</div>
+                        <div class="font-bold text-gray-800">${resume.favorite ? 'Yes' : 'No'}</div>
+                    </div>
+                </div>
+                
+                <!-- Tags -->
+                ${resume.tags && resume.tags.length > 0 ? `
+                <div>
+                    <div class="text-gray-500 text-sm mb-2">🏷️ Tags</div>
+                    <div class="flex gap-2 flex-wrap">
+                        ${resume.tags.map(t => `<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">${t}</span>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Notes -->
+                ${resume.notes ? `
+                <div>
+                    <div class="text-gray-500 text-sm mb-2">📝 Notes</div>
+                    <div class="bg-gray-50 p-4 rounded-xl text-gray-700">${resume.notes}</div>
+                </div>
+                ` : ''}
+                
+                <!-- Actions -->
+                <div class="flex gap-3 pt-4 border-t">
+                    <button onclick="storage.download('${resume.id}')" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                        📥 Download
+                    </button>
+                    <button onclick="storage.closeModal('viewModal'); storage.openEdit('${resume.id}')" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all">
+                        ✏️ Edit
+                    </button>
+                    <button onclick="storage.toggleFavorite('${resume.id}'); storage.viewDetails('${resume.id}')" class="px-4 py-3 bg-yellow-500 text-white rounded-xl font-semibold hover:bg-yellow-600 transition-all">
+                        ${resume.favorite ? '☆' : '⭐'}
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('viewModal').classList.remove('hidden');
+    },
+
+    // ========== FILTERING & SORTING ==========
+    filterBy(filter) {
+        this.currentFilter = filter;
+        this.currentPage = 1;
+        
+        // Update active filter button
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('ring-2', 'ring-offset-2', 'ring-purple-500');
+            if (btn.dataset.filter === filter) {
+                btn.classList.add('ring-2', 'ring-offset-2', 'ring-purple-500');
+            }
+        });
+        
+        this.render();
+    },
+
+    sortBy(sort) {
+        this.currentSort = sort;
+        this.render();
+    },
+
+    getFilteredResumes() {
+        let filtered = [...this.resumes];
+        
+        // Apply filter
+        switch (this.currentFilter) {
+            case 'analyzed':
+                filtered = filtered.filter(r => r.status === 'analyzed');
+                break;
+            case 'pending':
+                filtered = filtered.filter(r => r.status === 'pending');
+                break;
+            case 'favorites':
+                filtered = filtered.filter(r => r.favorite);
+                break;
+        }
+        
+        // Apply sort
+        const [field, direction] = this.currentSort.split('-');
+        filtered.sort((a, b) => {
+            let valA, valB;
+            
+            switch (field) {
+                case 'date':
+                    valA = new Date(a.date).getTime();
+                    valB = new Date(b.date).getTime();
+                    break;
+                case 'score':
+                    valA = a.score;
+                    valB = b.score;
+                    break;
+                case 'name':
+                    valA = a.name.toLowerCase();
+                    valB = b.name.toLowerCase();
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (direction === 'asc') {
+                return valA > valB ? 1 : -1;
+            } else {
+                return valA < valB ? 1 : -1;
+            }
+        });
+        
+        return filtered;
+    },
+
+    filterByTag(tag) {
+        this.currentFilter = 'tag:' + tag;
+        this.currentPage = 1;
+        this.render();
+    },
+
+    // ========== BULK ACTIONS ==========
+    toggleSelect(id) {
+        if (this.selectedIds.has(id)) {
+            this.selectedIds.delete(id);
+        } else {
+            this.selectedIds.add(id);
+        }
+        this.updateBulkActions();
+        this.render();
+    },
+
+    selectAll() {
+        const filtered = this.getFilteredResumes();
+        if (this.selectedIds.size === filtered.length) {
+            this.selectedIds.clear();
+        } else {
+            filtered.forEach(r => this.selectedIds.add(r.id));
+        }
+        this.updateBulkActions();
+        this.render();
+    },
+
+    clearSelection() {
+        this.selectedIds.clear();
+        this.updateBulkActions();
+        this.render();
+    },
+
+    updateBulkActions() {
+        const bulkDiv = document.getElementById('bulkActions');
+        const countSpan = document.getElementById('selectedCount');
+        
+        if (this.selectedIds.size > 0) {
+            bulkDiv.classList.remove('hidden');
+            countSpan.textContent = this.selectedIds.size;
+        } else {
+            bulkDiv.classList.add('hidden');
+        }
+    },
+
+    bulkDelete() {
+        if (!confirm(`Delete ${this.selectedIds.size} selected resumes?`)) return;
+        
+        this.selectedIds.forEach(id => this.delete(id, true));
+        this.selectedIds.clear();
+        this.updateBulkActions();
+        this.showToast(`🗑️ ${this.selectedIds.size} resumes deleted`, 'warning');
+    },
+
+    bulkExport() {
+        const selected = this.resumes.filter(r => this.selectedIds.has(r.id));
+        this.downloadJSON(selected, 'selected_resumes_backup.json');
+        this.showToast(`📤 ${selected.length} resumes exported`, 'success');
+    },
+
+    bulkToggleFavorite() {
+        this.selectedIds.forEach(id => {
+            const resume = this.resumes.find(r => r.id === id);
+            if (resume) resume.favorite = !resume.favorite;
+        });
+        this.save();
+        this.showToast('⭐ Favorites toggled', 'info');
+    },
+
+    // ========== EXPORT & IMPORT ==========
+    exportAll() {
+        if (this.resumes.length === 0) {
+            this.showToast('No resumes to export', 'warning');
+            return;
+        }
+        
+        const exportData = {
+            version: '2.0',
+            exportDate: new Date().toISOString(),
+            resumes: this.resumes,
+            tags: this.tags
+        };
+        
+        this.downloadJSON(exportData, `resume_backup_${new Date().toISOString().split('T')[0]}.json`);
+        this.showToast(`📤 ${this.resumes.length} resumes exported`, 'success');
+    },
+
+    downloadJSON(data, filename) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                let imported = [];
+                if (Array.isArray(data)) {
+                    imported = data;
+                } else if (data.resumes && Array.isArray(data.resumes)) {
+                    imported = data.resumes;
+                    if (data.tags) {
+                        this.tags = [...new Set([...this.tags, ...data.tags])];
+                        this.saveTags();
+                    }
+                }
+                
+                imported.forEach(r => {
+                    const normalized = this.normalizeResume(r);
+                    normalized.id = crypto.randomUUID(); // New ID to avoid duplicates
+                    this.resumes.unshift(normalized);
+                });
+                
+                this.save();
+                this.showToast(`📥 ${imported.length} resumes imported!`, 'success');
+            } catch (err) {
+                console.error('Import error:', err);
+                this.showToast('❌ Invalid file format', 'error');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    },
+
+    // ========== TAGS ==========
+    renderTags() {
+        const container = document.getElementById('tagsList');
+        const allUsedTags = [...new Set(this.resumes.flatMap(r => r.tags || []))];
+        
+        container.innerHTML = allUsedTags.slice(0, 10).map(tag => `
+            <button onclick="storage.filterByTag('${tag}')" 
+                    class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold hover:bg-purple-100 hover:text-purple-700 transition-all">
+                ${tag}
+            </button>
+        `).join('');
+    },
+
+    showTagManager() {
+        const container = document.getElementById('allTagsList');
+        container.innerHTML = this.tags.map(tag => `
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border">
+                <span class="text-gray-700">${tag}</span>
+                <button onclick="storage.deleteTag('${tag}')" class="text-red-500 hover:text-red-700">✕</button>
+            </div>
+        `).join('');
+        
+        document.getElementById('tagModal').classList.remove('hidden');
+    },
+
+    createTag() {
+        const input = document.getElementById('newTagInput');
+        const tag = input.value.trim().toLowerCase();
+        
+        if (!tag) return;
+        if (this.tags.includes(tag)) {
+            this.showToast('Tag already exists', 'warning');
+            return;
+        }
+        
+        this.tags.push(tag);
+        this.saveTags();
+        input.value = '';
+        this.showTagManager();
+        this.showToast(`🏷️ Tag "${tag}" created`, 'success');
+    },
+
+    deleteTag(tag) {
+        this.tags = this.tags.filter(t => t !== tag);
+        this.saveTags();
+        this.showTagManager();
+    },
+
+    // ========== ANALYTICS ==========
+    toggleAnalytics() {
+        const section = document.getElementById('analyticsSection');
+        const toggle = document.getElementById('analyticsToggle');
+        
+        section.classList.toggle('hidden');
+        toggle.style.transform = section.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        
+        if (!section.classList.contains('hidden')) {
+            this.renderCharts();
+        }
+    },
+
+    renderCharts() {
+        // Score Distribution
+        const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+        const scoreBuckets = { '0-50': 0, '51-60': 0, '61-70': 0, '71-80': 0, '81-90': 0, '91-100': 0 };
+        
+        this.resumes.forEach(r => {
+            if (r.score <= 50) scoreBuckets['0-50']++;
+            else if (r.score <= 60) scoreBuckets['51-60']++;
+            else if (r.score <= 70) scoreBuckets['61-70']++;
+            else if (r.score <= 80) scoreBuckets['71-80']++;
+            else if (r.score <= 90) scoreBuckets['81-90']++;
+            else scoreBuckets['91-100']++;
+        });
+
+        if (this.charts.score) this.charts.score.destroy();
+        this.charts.score = new Chart(scoreCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(scoreBuckets),
+                datasets: [{
+                    label: 'Resumes',
+                    data: Object.values(scoreBuckets),
+                    backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#10b981']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        // Status Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        const statusCounts = {
+            analyzed: this.resumes.filter(r => r.status === 'analyzed').length,
+            pending: this.resumes.filter(r => r.status === 'pending').length,
+            processing: this.resumes.filter(r => r.status === 'processing').length,
+            error: this.resumes.filter(r => r.status === 'error').length
+        };
+
+        if (this.charts.status) this.charts.status.destroy();
+        this.charts.status = new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Analyzed', 'Pending', 'Processing', 'Error'],
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: ['#22c55e', '#eab308', '#3b82f6', '#ef4444']
+                }]
+            },
+            options: { responsive: true }
+        });
+
+        // Average Score
+        const avgScore = this.resumes.length > 0 
+            ? Math.round(this.resumes.reduce((sum, r) => sum + r.score, 0) / this.resumes.length)
+            : 0;
+        document.getElementById('avgScore').textContent = avgScore + '%';
+
+        // Recent Activity
+        const recent = this.resumes.slice(0, 5);
+        document.getElementById('recentActivity').innerHTML = recent.map(r => `
+            <div class="flex justify-between items-center text-sm">
+                <span class="truncate text-gray-700">${r.name}</span>
+                <span class="text-gray-400">${r.date}</span>
+            </div>
+        `).join('') || '<p class="text-gray-400">No recent activity</p>';
+    },
+
+    // ========== PAGINATION ==========
+    renderPagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+        if (totalPages <= 1) {
+            document.getElementById('pagination').innerHTML = '';
+            document.getElementById('paginationBottom').innerHTML = '';
+            return;
+        }
+
+        const createPaginationHTML = () => {
+            let html = '';
+            
+            // Previous
+            html += `<button onclick="storage.goToPage(${this.currentPage - 1})" 
+                     class="px-4 py-2 rounded-xl ${this.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}"
+                     ${this.currentPage === 1 ? 'disabled' : ''}>←</button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= this.currentPage - 1 && i <= this.currentPage + 1)) {
+                    html += `<button onclick="storage.goToPage(${i})" 
+                             class="px-4 py-2 rounded-xl ${i === this.currentPage ? 'bg-purple-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}">${i}</button>`;
+                } else if (i === this.currentPage - 2 || i === this.currentPage + 2) {
+                    html += '<span class="px-2">...</span>';
+                }
+            }
+            
+            // Next
+            html += `<button onclick="storage.goToPage(${this.currentPage + 1})" 
+                     class="px-4 py-2 rounded-xl ${this.currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}"
+                     ${this.currentPage === totalPages ? 'disabled' : ''}>→</button>`;
+            
+            return html;
+        };
+
+        document.getElementById('pagination').innerHTML = createPaginationHTML();
+        document.getElementById('paginationBottom').innerHTML = createPaginationHTML();
+    },
+
+    goToPage(page) {
+        const filtered = this.getFilteredResumes();
+        const totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+        
+        if (page < 1 || page > totalPages) return;
+        
+        this.currentPage = page;
+        this.render();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    // ========== RENDER ==========
+    render() {
+        const box = document.getElementById("resumeGrid");
+        let filtered = this.getFilteredResumes();
+        
+        // Apply tag filter
+        if (this.currentFilter.startsWith('tag:')) {
+            const tag = this.currentFilter.replace('tag:', '');
+            filtered = filtered.filter(r => r.tags && r.tags.includes(tag));
+        }
+        
+        // Apply search
+        const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+        if (searchQuery) {
+            filtered = filtered.filter(r => 
+                r.name.toLowerCase().includes(searchQuery) ||
+                (r.tags && r.tags.some(t => t.includes(searchQuery))) ||
+                (r.notes && r.notes.toLowerCase().includes(searchQuery))
+            );
+        }
+
+        // Pagination
+        this.renderPagination(filtered.length);
+        const startIdx = (this.currentPage - 1) * this.itemsPerPage;
+        const paginated = filtered.slice(startIdx, startIdx + this.itemsPerPage);
+
+        if (filtered.length === 0) {
+            box.innerHTML = `
+            <div class="col-span-full text-center py-24">
+                <div class="text-6xl mb-4">📭</div>
+                <h2 class="text-3xl font-black text-gray-600">No Resumes Found</h2>
+                <p class="text-gray-500 mt-2">Try adjusting your filters or upload a new resume</p>
+                <a href="upload.html" class="mt-6 inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-bold hover:scale-105 transition-all">
+                    ➕ Upload New Resume
+                </a>
+            </div>`;
+            return;
+        }
+
+        box.innerHTML = paginated.map(r => {
+            const { id, name, date, score, status, favorite, tags } = r;
+            const isSelected = this.selectedIds.has(id);
+
+            let scoreColor = 'bg-gray-500';
+            if (score > 80) scoreColor = 'bg-green-500';
+            else if (score > 60) scoreColor = 'bg-yellow-500';
+            else if (score > 0) scoreColor = 'bg-red-500';
+
+            return `
+            <div class="bg-white rounded-2xl shadow-xl p-5 border-l-4 ${favorite ? 'border-yellow-500' : 'border-purple-500'} hover:shadow-2xl transition-all relative ${isSelected ? 'ring-2 ring-purple-500 ring-offset-2' : ''}">
+                <!-- Checkbox & Favorite -->
+                <div class="absolute top-3 right-3 flex gap-2">
+                    <input type="checkbox" 
+                           class="resume-checkbox w-5 h-5 rounded cursor-pointer" 
+                           ${isSelected ? 'checked' : ''} 
+                           onchange="storage.toggleSelect('${id}')">
+                    <button onclick="storage.toggleFavorite('${id}')" class="text-xl hover:scale-110 transition-transform">
+                        ${favorite ? '⭐' : '☆'}
+                    </button>
+                </div>
+
+                <!-- Content -->
+                <h2 class="font-bold text-lg truncate mb-1 pr-20 cursor-pointer hover:text-purple-600" onclick="storage.viewDetails('${id}')">${name}</h2>
+                <p class="text-gray-400 text-xs mb-3">📅 ${date}</p>
+
+                <!-- Tags -->
+                ${tags && tags.length > 0 ? `
+                <div class="flex gap-1 flex-wrap mb-3">
+                    ${tags.slice(0, 3).map(t => `<span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">${t}</span>`).join('')}
+                    ${tags.length > 3 ? `<span class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">+${tags.length - 3}</span>` : ''}
+                </div>
+                ` : ''}
+
+                <!-- Score -->
+                <div class="px-4 py-2 text-center rounded-full text-white font-bold ${scoreColor}">
+                    Score: ${score}%
+                </div>
+                
+                ${this.getStatusBadge(status)}
+
+                <!-- Actions -->
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                    <button class="bg-blue-600 text-white px-2 py-2 rounded-xl hover:bg-blue-700 font-semibold text-xs"
+                        onclick="storage.viewDetails('${id}')">👁️ View</button>
+                    <button class="bg-green-600 text-white px-2 py-2 rounded-xl hover:bg-green-700 font-semibold text-xs"
+                        onclick="storage.openEdit('${id}')">✏️ Edit</button>
+                    <button class="bg-red-600 text-white px-2 py-2 rounded-xl hover:bg-red-700 font-semibold text-xs"
+                        onclick="storage.delete('${id}')">🗑️</button>
+                </div>
+                <button class="w-full mt-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-200 font-semibold text-xs"
+                    onclick="storage.download('${id}')">📥 Download</button>
+            </div>
+            `;
+        }).join("");
+    },
+
+    // ========== HELPERS ==========
+    getStatusDisplay(status) {
+        const map = {
+            'analyzed': '✅ Analyzed',
+            'pending': '⏳ Pending',
+            'processing': '🔄 Processing',
+            'error': '❌ Error'
+        };
+        return map[status] || '✅ Analyzed';
+    },
+
+    getStatusBadge(status) {
+        const badges = {
+            'analyzed': `<p class="text-xs text-green-600 mt-2 text-center font-semibold bg-green-100 py-1 px-2 rounded-full">✅ Analyzed</p>`,
+            'pending': `<p class="text-xs text-yellow-600 mt-2 text-center font-semibold bg-yellow-100 py-1 px-2 rounded-full">⏳ Pending</p>`,
+            'processing': `<p class="text-xs text-blue-600 mt-2 text-center font-semibold bg-blue-100 py-1 px-2 rounded-full">🔄 Processing</p>`,
+            'error': `<p class="text-xs text-red-600 mt-2 text-center font-semibold bg-red-100 py-1 px-2 rounded-full">❌ Error</p>`
+        };
+        return badges[status] || badges['analyzed'];
+    },
+
+    closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    },
+
+    showShortcuts() {
+        document.getElementById('shortcutsModal').classList.remove('hidden');
     },
 
     download(id) {
@@ -226,72 +1211,48 @@ window.storage = {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
+        
+        this.showToast('📥 Download started', 'success');
     },
 
     base64ToBlob(base64, mimeType) {
         const byteCharacters = atob(base64);
         const byteArrays = [];
-
         for (let offset = 0; offset < byteCharacters.length; offset += 512) {
             const slice = byteCharacters.slice(offset, offset + 512);
             const byteNumbers = new Array(slice.length);
             for (let i = 0; i < slice.length; i++) {
                 byteNumbers[i] = slice.charCodeAt(i);
             }
-            const byteArray = new Uint8Array(byteNumbers);
-            byteArrays.push(byteArray);
+            byteArrays.push(new Uint8Array(byteNumbers));
         }
-
         return new Blob(byteArrays, { type: mimeType });
     },
 
-    // ✅ FIX 6: Add fallback values in generateReport
     generateReport(resume) {
-        // Normalize the resume data first
-        const normalizedResume = this.normalizeResume(resume);
-        
-        const name = normalizedResume.name;
-        const date = normalizedResume.date;
-        const status = normalizedResume.status;
-        const score = normalizedResume.score;
-        
-        // ✅ FIX 7: Get proper status display text
-        const statusDisplay = this.getStatusDisplay(status);
-
+        const r = this.normalizeResume(resume);
         return `
 ═══════════════════════════════════════════════════════
          RESUME ANALYSIS REPORT
 ═══════════════════════════════════════════════════════
 
-Resume Name: ${name}
-Date Uploaded: ${date}
-Analysis Status: ${statusDisplay}
-Overall Score: ${score}%
+Resume Name: ${r.name}
+Date Uploaded: ${r.date}
+Analysis Status: ${this.getStatusDisplay(r.status)}
+Overall Score: ${r.score}%
+Favorite: ${r.favorite ? 'Yes' : 'No'}
+Tags: ${r.tags.join(', ') || 'None'}
+
+${r.notes ? `Notes: ${r.notes}` : ''}
 
 ═══════════════════════════════════════════════════════
          SCORE BREAKDOWN
 ═══════════════════════════════════════════════════════
 
-Overall Performance: ${score > 80 ? 'Excellent' : score > 60 ? 'Good' : 'Needs Improvement'}
+Overall Performance: ${r.score > 80 ? 'Excellent' : r.score > 60 ? 'Good' : 'Needs Improvement'}
 
 Score Rating:
-${this.getScoreBar(score)}
-
-═══════════════════════════════════════════════════════
-         RECOMMENDATIONS
-═══════════════════════════════════════════════════════
-
-${score > 80 ? 
-`✓ Your resume demonstrates strong qualifications
-✓ Format and structure are well-organized
-✓ Continue to update with recent achievements` :
-score > 60 ?
-`• Consider strengthening your skills section
-• Add more quantifiable achievements
-• Review formatting for better readability` :
-`! Significant improvements needed
-! Focus on highlighting relevant experience
-! Consider professional resume review`}
+${this.getScoreBar(r.score)}
 
 ═══════════════════════════════════════════════════════
 Report Generated: ${new Date().toLocaleString()}
@@ -299,88 +1260,16 @@ Report Generated: ${new Date().toLocaleString()}
         `.trim();
     },
 
-    // ✅ FIX 8: Helper to get proper status display text
-    getStatusDisplay(status) {
-        const statusMap = {
-            'analyzed': '✅ AI Analysis Complete',
-            'pending': '⏳ Pending Analysis',
-            'processing': '🔄 Processing...',
-            'error': '❌ Analysis Failed',
-            'uploaded': '📤 Uploaded - Awaiting Analysis'
-        };
-        return statusMap[status] || '✅ AI Analysis Complete';
-    },
-
     getScoreBar(score) {
         const filled = Math.floor(score / 5);
-        const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
-        return `[${bar}] ${score}%`;
-    },
-
-    render(list = this.resumes) {
-        const box = document.getElementById("resumeGrid");
-
-        if (!list || list.length === 0) {
-            box.innerHTML = `
-            <div class="col-span-full text-center py-24">
-                <h2 class="text-4xl font-black text-gray-600">No Resumes Yet</h2>
-                <p class="text-gray-500 mt-2">Upload from upload.html to view here</p>
-                <a href="upload.html" class="mt-6 inline-block bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105">Upload Now</a>
-            </div>`;
-            return;
-        }
-
-        box.innerHTML = list.map(r => {
-            // ✅ FIX 9: Normalize each resume before rendering
-            const normalized = this.normalizeResume(r);
-            const { id, name, date, score, status } = normalized;
-
-            let scoreColor = 'bg-gray-500';
-            if (score > 80) scoreColor = 'bg-green-500';
-            else if (score > 60) scoreColor = 'bg-yellow-500';
-            else if (score > 0) scoreColor = 'bg-red-500';
-
-            // ✅ FIX 10: Get proper status badge styling
-            let statusBadge = this.getStatusBadge(status);
-
-            return `
-            <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-purple-500 hover:scale-[1.02] transition">
-                <h2 class="font-bold text-lg truncate mb-1">${name}</h2>
-                <p class="text-gray-400 text-xs mb-2">📅 ${date}</p>
-
-                <div class="mt-3 px-4 py-2 text-center rounded-full text-white font-bold ${scoreColor}">
-                  Score: ${score}%
-                </div>
-                
-                ${statusBadge}
-
-                <div class="mt-5 flex gap-2">
-                    <button class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl hover:scale-105 font-semibold text-sm"
-                        onclick="storage.download('${id}')">📥 Download</button>
-                    <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded-xl hover:scale-105 font-semibold text-sm"
-                        onclick="storage.delete('${id}')">🗑 Delete</button>
-                </div>
-            </div>
-            `;
-        }).join("");
-    },
-
-    // ✅ FIX 11: Create styled status badges
-    getStatusBadge(status) {
-        const badges = {
-            'analyzed': `<p class="text-xs text-green-600 mt-2 text-center font-semibold bg-green-100 py-1 px-2 rounded-full">✅ Analyzed</p>`,
-            'pending': `<p class="text-xs text-yellow-600 mt-2 text-center font-semibold bg-yellow-100 py-1 px-2 rounded-full">⏳ Pending</p>`,
-            'processing': `<p class="text-xs text-blue-600 mt-2 text-center font-semibold bg-blue-100 py-1 px-2 rounded-full">🔄 Processing</p>`,
-            'error': `<p class="text-xs text-red-600 mt-2 text-center font-semibold bg-red-100 py-1 px-2 rounded-full">❌ Error</p>`,
-            'uploaded': `<p class="text-xs text-purple-600 mt-2 text-center font-semibold bg-purple-100 py-1 px-2 rounded-full">📤 Uploaded</p>`
-        };
-        return badges[status] || badges['analyzed'];
+        return '[' + '█'.repeat(filled) + '░'.repeat(20 - filled) + '] ' + score + '%';
     },
 
     updateStats() {
         document.getElementById('totalResumes').innerText = this.resumes.length;
         document.getElementById('analyzedCount').innerText = this.resumes.filter(x => x.status === "analyzed").length;
         document.getElementById('pendingCount').innerText = this.resumes.filter(x => x.status === "pending").length;
+        document.getElementById('favoritesCount').innerText = this.resumes.filter(x => x.favorite).length;
         document.getElementById('storageUsed').innerText = Math.round(JSON.stringify(this.resumes).length / 1024) + " KB";
     },
 
@@ -388,50 +1277,91 @@ Report Generated: ${new Date().toLocaleString()}
         const analyzed = this.resumes.filter(x => x.status === "analyzed").length;
         const pending = this.resumes.filter(x => x.status === "pending").length;
         document.getElementById('debugText').innerText = 
-            `Total: ${this.resumes.length} | Analyzed: ${analyzed} | Pending: ${pending} | Size: ${JSON.stringify(this.resumes).length} bytes`;
+            `Total: ${this.resumes.length} | Analyzed: ${analyzed} | Pending: ${pending} | Selected: ${this.selectedIds.size}`;
     },
 
+    // ========== EVENT BINDINGS ==========
     bindEvents() {
-        document.getElementById('searchInput').oninput = e => {
-            const q = e.target.value.toLowerCase();
-            this.render(this.resumes.filter(r => r.name && r.name.toLowerCase().includes(q)));
+        // Search
+        document.getElementById('searchInput').oninput = () => {
+            this.currentPage = 1;
+            this.render();
         };
 
+        // Clear All
         document.getElementById('clearAllBtn').onclick = () => {
-            if (confirm("Delete all resumes?")) {
+            if (confirm("Delete all resumes? This cannot be undone!")) {
+                this.deletedResumes = [...this.resumes];
                 localStorage.removeItem(this.key);
                 this.resumes = [];
+                this.selectedIds.clear();
                 this.load();
+                this.showToast('🗑️ All resumes cleared. Press Ctrl+Z to undo.', 'warning');
             }
         };
 
-        // Listen for uploads from upload.html
-        window.addEventListener("message", e => {
-            if (e.data && e.data.type === "NEW_RESUME") {
-                this.add(e.data);
+        // Dark Mode Toggle
+        document.getElementById('darkModeToggle').onclick = () => this.toggleDarkMode();
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if typing in input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                if (e.key === 'Escape') e.target.blur();
+                return;
+            }
+            
+            switch (e.key.toLowerCase()) {
+                case '/':
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                    break;
+                case 'n':
+                    window.location.href = 'upload.html';
+                    break;
+                case 'd':
+                    this.toggleDarkMode();
+                    break;
+                case 'e':
+                    this.exportAll();
+                    break;
+                case 'a':
+                    this.toggleAnalytics();
+                    break;
+                case 'escape':
+                    document.querySelectorAll('[id$="Modal"]').forEach(m => m.classList.add('hidden'));
+                    break;
+            }
+            
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                this.undoDelete();
             }
         });
 
-        // ✅ FIX 12: Listen for storage changes from other tabs/pages
-        window.addEventListener("storage", e => {
-            if (e.key === this.key) {
-                this.load();
+        // Storage events from other tabs
+        window.addEventListener("storage", (e) => {
+            if (e.key === this.key) this.load();
+        });
+
+        // Message events
+        window.addEventListener("message", (e) => {
+            if (e.data && e.data.type === "NEW_RESUME") {
+                this.add(e.data);
             }
         });
     }
 };
 
+// Initialize
 storage.init();
 
-// ✅ FIX 13: Expose helper function to fix existing corrupted data
-window.fixAllResumes = function() {
-    const fixed = storage.resumes.map(r => storage.normalizeResume(r));
-    storage.resumes = fixed;
+// Helper function for console
+window.fixAllResumes = () => {
+    storage.resumes = storage.resumes.map(r => storage.normalizeResume(r));
     storage.save();
-    console.log("✅ All resumes fixed!", fixed);
+    console.log("✅ All resumes fixed!");
 };
-
-console.log("💡 Run fixAllResumes() in console to fix any corrupted resume data");
 </script>
 
 </body>
