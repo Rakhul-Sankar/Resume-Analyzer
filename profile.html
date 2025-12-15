@@ -9,77 +9,148 @@
 
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
 
-<!-- ================= LOGIN ================= -->
+<!-- ================= LOGIN FORM ================= -->
 <div id="loginBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
   <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Login</h2>
-  <input id="loginEmail" placeholder="Email" class="w-full p-3 border rounded mb-3">
-  <input id="loginPass" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4">
-  <button id="loginBtn" class="w-full bg-indigo-600 text-white p-3 rounded">Login</button>
+
+  <input id="loginEmail" type="email" placeholder="Email"
+    class="w-full p-3 border rounded-lg mb-3" />
+  <input id="loginPass" type="password" placeholder="Password"
+    class="w-full p-3 border rounded-lg mb-4" />
+
+  <button id="loginBtn"
+    class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
+    Login
+  </button>
+
   <p class="text-center mt-4 text-sm">
     No account? <span id="toSignup" class="text-blue-600 cursor-pointer">Create one</span>
   </p>
-</div>
 
-<!-- ================= SIGNUP ================= -->
-<div id="signupBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
-  <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Create Account</h2>
-  <input id="signupName" placeholder="Full Name" class="w-full p-3 border rounded mb-3">
-  <input id="signupEmail" placeholder="Email" class="w-full p-3 border rounded mb-3">
-  <input id="signupPass" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4">
-  <button id="createBtn" class="w-full bg-green-600 text-white p-3 rounded">Create</button>
-  <p class="text-center mt-4 text-sm">
-    Already have an account? <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
+  <p id="loginError" class="text-red-500 text-center mt-3 hidden">
+    Invalid login details!
   </p>
 </div>
 
-<!-- ================= PROFILE ================= -->
-<div id="profilePage" class="bg-white w-full max-w-3xl p-8 rounded-2xl shadow-xl border hidden">
+<!-- ================= SIGNUP FORM ================= -->
+<div id="signupBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
+  <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Create Account</h2>
 
-  <div class="flex justify-between mb-6">
+  <input id="signupName" type="text" placeholder="Full Name"
+    class="w-full p-3 border rounded-lg mb-3" />
+  <input id="signupEmail" type="email" placeholder="Email"
+    class="w-full p-3 border rounded-lg mb-3" />
+  <input id="signupPass" type="password" placeholder="Password"
+    class="w-full p-3 border rounded-lg mb-4" />
+
+  <button id="createBtn"
+    class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700">
+    Create Account
+  </button>
+
+  <p class="text-center mt-4 text-sm">
+    Already have an account?
+    <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
+  </p>
+
+  <p id="signupError" class="text-red-500 text-center mt-3 hidden">
+    Email already used!
+  </p>
+</div>
+
+<!-- ================= PROFILE PAGE ================= -->
+<div id="profilePage"
+  class="bg-white w-full max-w-3xl p-8 rounded-2xl shadow-xl border hidden">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
     <h2 class="text-3xl font-bold text-indigo-600">My Profile</h2>
-    <button id="logoutBtn" class="text-red-600 underline">Logout</button>
+
+    <div class="flex gap-4 text-sm">
+      <button id="logoutBtn" class="text-red-500 underline">Logout</button>
+      <button id="newAccountBtn" class="text-blue-600 underline">New Account</button>
+    </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-4 mb-6">
-    <input id="nameInput" class="p-3 border rounded">
-    <input id="emailInput" disabled class="p-3 border rounded bg-gray-100">
+  <!-- Profile Form -->
+  <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div>
+      <label class="font-semibold">Full Name</label>
+      <input id="nameInput" type="text"
+        class="w-full p-3 border rounded-lg mt-1" />
+    </div>
+
+    <div>
+      <label class="font-semibold">Email</label>
+      <input id="emailInput" type="email"
+        class="w-full p-3 border rounded-lg mt-1 bg-gray-100" disabled />
+    </div>
+
+    <div class="md:col-span-2">
+      <button type="submit"
+        class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
+        Save Profile
+      </button>
+    </div>
+  </form>
+
+  <hr class="my-6">
+
+  <!-- Resume History -->
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-2xl font-bold">
+      Resume Analysis History (<span id="reportCount">0</span>)
+    </h3>
+    <button onclick="clearAllReports()" class="text-sm text-red-600 underline">
+      Clear All
+    </button>
   </div>
 
-  <h3 class="text-xl font-bold mb-3">
-    Resume Analysis History (<span id="reportCount">0</span>)
-  </h3>
-
-  <div id="resumeList" class="space-y-3"></div>
+  <div id="resumeList" class="space-y-3 text-sm"></div>
 </div>
 
 <script>
-/* ===== ELEMENTS ===== */
+/* ================= ELEMENTS ================= */
 const loginBox = document.getElementById("loginBox");
 const signupBox = document.getElementById("signupBox");
 const profilePage = document.getElementById("profilePage");
 
 const loginEmail = document.getElementById("loginEmail");
 const loginPass = document.getElementById("loginPass");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
+
 const signupName = document.getElementById("signupName");
 const signupEmail = document.getElementById("signupEmail");
 const signupPass = document.getElementById("signupPass");
+const createBtn = document.getElementById("createBtn");
+const signupError = document.getElementById("signupError");
+
+const toSignup = document.getElementById("toSignup");
+const toLogin = document.getElementById("toLogin");
 
 const nameInput = document.getElementById("nameInput");
 const emailInput = document.getElementById("emailInput");
 const resumeList = document.getElementById("resumeList");
 const reportCount = document.getElementById("reportCount");
+const profileForm = document.getElementById("profileForm");
 
-/* ===== SHOW / HIDE ===== */
+const logoutBtn = document.getElementById("logoutBtn");
+const newAccountBtn = document.getElementById("newAccountBtn");
+
+/* ================= SHOW / HIDE ================= */
 function showLogin() {
   loginBox.classList.remove("hidden");
   signupBox.classList.add("hidden");
   profilePage.classList.add("hidden");
 }
+
 function showSignup() {
   signupBox.classList.remove("hidden");
   loginBox.classList.add("hidden");
   profilePage.classList.add("hidden");
 }
+
 function showProfile() {
   profilePage.classList.remove("hidden");
   loginBox.classList.add("hidden");
@@ -87,17 +158,23 @@ function showProfile() {
   loadProfile();
 }
 
-/* ===== SAVE RESUME ===== */
+/* ================= SAVE RESUME REPORT ================= */
 function saveResumeReport(filename, score) {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return;
 
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-  reports.push({ email: user.email, filename, score, date: new Date().toLocaleString() });
+  reports.push({
+    email: user.email,
+    filename,
+    score,
+    date: new Date().toLocaleString()
+  });
+
   localStorage.setItem("resumeReports", JSON.stringify(reports));
 }
 
-/* ===== LOAD PROFILE ===== */
+/* ================= LOAD PROFILE ================= */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return;
@@ -108,48 +185,105 @@ function loadProfile() {
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
   const userReports = reports.filter(r => r.email === user.email);
 
-  reportCount.textContent = userReports.length;
+  reportCount.innerText = userReports.length;
 
   resumeList.innerHTML = userReports.length
-    ? userReports.map(r => `
-      <div class="p-4 bg-gray-100 rounded flex justify-between">
+    ? userReports.map((r, i) => `
+      <div class="p-4 bg-gray-100 rounded-xl flex justify-between">
         <div>
-          <b>${r.filename}</b>
-          <div class="text-xs text-gray-500">${r.date}</div>
+          <p class="font-bold">${r.filename}</p>
+          <p class="text-xs text-gray-600">${r.date}</p>
         </div>
-        <span class="font-bold">${r.score}%</span>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full font-bold text-sm
+            ${r.score >= 70 ? "bg-green-200 text-green-700" : "bg-red-200 text-red-700"}">
+            ${r.score}%
+          </span>
+          <button onclick="deleteReport(${i})" class="text-red-500 underline text-xs">
+            Delete
+          </button>
+        </div>
       </div>`).join("")
-    : "<p class='text-gray-500'>No resumes analyzed yet.</p>";
+    : `<p class="text-gray-500">No resumes analyzed yet.</p>`;
 }
 
-/* ===== AUTH ===== */
-document.getElementById("createBtn").onclick = () => {
-  const user = { name: signupName.value, email: signupEmail.value, pass: signupPass.value };
+/* ================= DELETE REPORT ================= */
+function deleteReport(index) {
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+  const userReports = reports.filter(r => r.email === user.email);
+  reports = reports.filter(r => r !== userReports[index]);
+  localStorage.setItem("resumeReports", JSON.stringify(reports));
+  loadProfile();
+}
+
+/* ================= CLEAR ALL ================= */
+function clearAllReports() {
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+  reports = reports.filter(r => r.email !== user.email);
+  localStorage.setItem("resumeReports", JSON.stringify(reports));
+  loadProfile();
+}
+
+/* ================= AUTH ================= */
+createBtn.onclick = () => {
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  if (users.some(u => u.email === signupEmail.value)) {
+    signupError.classList.remove("hidden");
+    return;
+  }
+
+  const user = {
+    name: signupName.value,
+    email: signupEmail.value,
+    pass: signupPass.value
+  };
+
+  users.push(user);
+  localStorage.setItem("users", JSON.stringify(users));
   localStorage.setItem("loggedUser", JSON.stringify(user));
-
-  // demo resume
-  saveResumeReport("Demo_Resume.pdf", 85);
-  saveResumeReport("ATS_Test.docx", 72);
-
   showProfile();
 };
 
-document.getElementById("loginBtn").onclick = () => {
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (user && user.email === loginEmail.value && user.pass === loginPass.value) {
-    showProfile();
+loginBtn.onclick = () => {
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users.find(
+    u => u.email === loginEmail.value && u.pass === loginPass.value
+  );
+  if (!user) {
+    loginError.classList.remove("hidden");
+    return;
   }
+  localStorage.setItem("loggedUser", JSON.stringify(user));
+  showProfile();
 };
 
-document.getElementById("logoutBtn").onclick = () => {
+logoutBtn.onclick = () => {
   localStorage.removeItem("loggedUser");
   showLogin();
 };
 
-document.getElementById("toSignup").onclick = showSignup;
-document.getElementById("toLogin").onclick = showLogin;
+newAccountBtn.onclick = () => {
+  localStorage.removeItem("loggedUser");
+  showSignup();
+};
 
-/* ===== INIT ===== */
+toSignup.onclick = showSignup;
+toLogin.onclick = showLogin;
+
+profileForm.onsubmit = e => {
+  e.preventDefault();
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  let user = JSON.parse(localStorage.getItem("loggedUser"));
+  user.name = nameInput.value;
+  users = users.map(u => u.email === user.email ? user : u);
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("loggedUser", JSON.stringify(user));
+  alert("Profile updated!");
+};
+
+/* ================= INIT ================= */
 window.onload = () => {
   localStorage.getItem("loggedUser") ? showProfile() : showLogin();
 };
