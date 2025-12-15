@@ -98,7 +98,11 @@
 
 
 <script>
+/* ---------------- ELEMENTS ---------------- */
+const loginBox = document.getElementById("loginBox");
+const signupBox = document.getElementById("signupBox");
 const profilePage = document.getElementById("profilePage");
+
 const nameInput = document.getElementById("nameInput");
 const emailInput = document.getElementById("emailInput");
 const resumeList = document.getElementById("resumeList");
@@ -107,13 +111,34 @@ const profileForm = document.getElementById("profileForm");
 const logoutBtn = document.getElementById("logoutBtn");
 const newAccountBtn = document.getElementById("newAccountBtn");
 
+/* ---------------- SHOW / HIDE ---------------- */
+function showLogin() {
+  loginBox.classList.remove("hidden");
+  signupBox.classList.add("hidden");
+  profilePage.classList.add("hidden");
+}
+
+function showSignup() {
+  signupBox.classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  profilePage.classList.add("hidden");
+}
+
+function showProfile() {
+  profilePage.classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  signupBox.classList.add("hidden");
+  loadProfile();
+}
+
 /* ---------------- LOAD PROFILE ---------------- */
 function loadProfile() {
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (!user) return;
+  const userRaw = localStorage.getItem("loggedUser");
+  if (!userRaw) return;
 
-  nameInput.value = user.name;
-  emailInput.value = user.email;
+  const user = JSON.parse(userRaw);
+  nameInput.value = user.name || "";
+  emailInput.value = user.email || "";
 
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
   const userReports = reports.filter(r => r.email === user.email);
@@ -133,8 +158,8 @@ function loadProfile() {
 
       <div class="flex items-center gap-4">
         <span class="px-3 py-1 rounded-full text-sm font-bold
-          ${r.score >= 70 ? 'bg-green-200 text-green-700'
-                          : 'bg-red-200 text-red-700'}">
+          ${r.score >= 70 ? "bg-green-200 text-green-700"
+                          : "bg-red-200 text-red-700"}">
           ${r.score}%
         </span>
 
@@ -163,7 +188,7 @@ profileForm.addEventListener("submit", e => {
   alert("Profile updated successfully!");
 });
 
-/* ---------------- DELETE SINGLE REPORT ---------------- */
+/* ---------------- DELETE ONE REPORT ---------------- */
 function deleteReport(index) {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
@@ -173,36 +198,39 @@ function deleteReport(index) {
 
   reports = reports.filter(r => r !== target);
   localStorage.setItem("resumeReports", JSON.stringify(reports));
-
   loadProfile();
 }
 
-/* ---------------- CLEAR ALL REPORTS ---------------- */
+/* ---------------- CLEAR ALL ---------------- */
 function clearAllReports() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
 
   reports = reports.filter(r => r.email !== user.email);
   localStorage.setItem("resumeReports", JSON.stringify(reports));
-
   loadProfile();
 }
 
 /* ---------------- LOGOUT ---------------- */
 logoutBtn.addEventListener("click", () => {
   localStorage.removeItem("loggedUser");
-  location.reload();
+  showLogin();
 });
 
 /* ---------------- NEW ACCOUNT ---------------- */
 newAccountBtn.addEventListener("click", () => {
   localStorage.removeItem("loggedUser");
-  location.reload();
+  showSignup();
 });
 
-/* ---------------- INIT ---------------- */
-loadProfile();
+/* ---------------- INIT (MOST IMPORTANT) ---------------- */
+window.onload = () => {
+  const user = localStorage.getItem("loggedUser");
+  if (user) showProfile();
+  else showLogin();
+};
 </script>
+
 
 </body>
 </html>
