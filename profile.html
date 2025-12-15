@@ -6,16 +6,20 @@
 <title>User System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
 
-<!-- ================= LOGIN FORM ================ -->
-<div id="loginBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+<!-- ================= LOGIN FORM ================= -->
+<div id="loginBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
   <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Login</h2>
 
-  <input id="loginEmail" type="email" placeholder="Email" class="w-full p-3 border rounded-lg mb-3" />
-  <input id="loginPass" type="password" placeholder="Password" class="w-full p-3 border rounded-lg mb-4" />
+  <input id="loginEmail" type="email" placeholder="Email"
+    class="w-full p-3 border rounded-lg mb-3" />
+  <input id="loginPass" type="password" placeholder="Password"
+    class="w-full p-3 border rounded-lg mb-4" />
 
-  <button id="loginBtn" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
+  <button id="loginBtn"
+    class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700">
     Login
   </button>
 
@@ -23,31 +27,40 @@
     No account? <span id="toSignup" class="text-blue-600 cursor-pointer">Create one</span>
   </p>
 
-  <p id="loginError" class="text-red-500 text-center mt-3 hidden">Invalid login details!</p>
+  <p id="loginError" class="text-red-500 text-center mt-3 hidden">
+    Invalid login details!
+  </p>
 </div>
 
-<!-- ================= SIGNUP FORM ================ -->
-<div id="signupBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+<!-- ================= SIGNUP FORM ================= -->
+<div id="signupBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
   <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Create Account</h2>
 
-  <input id="signupName" type="text" placeholder="Full Name" class="w-full p-3 border rounded-lg mb-3" />
-  <input id="signupEmail" type="email" placeholder="Email" class="w-full p-3 border rounded-lg mb-3" />
-  <input id="signupPass" type="password" placeholder="Password" class="w-full p-3 border rounded-lg mb-4" />
+  <input id="signupName" type="text" placeholder="Full Name"
+    class="w-full p-3 border rounded-lg mb-3" />
+  <input id="signupEmail" type="email" placeholder="Email"
+    class="w-full p-3 border rounded-lg mb-3" />
+  <input id="signupPass" type="password" placeholder="Password"
+    class="w-full p-3 border rounded-lg mb-4" />
 
-  <button id="createBtn" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700">
+  <button id="createBtn"
+    class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700">
     Create Account
   </button>
 
   <p class="text-center mt-4 text-sm">
-    Already have an account? <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
+    Already have an account?
+    <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
   </p>
 
-  <p id="signupError" class="text-red-500 text-center mt-3 hidden">Email already used!</p>
+  <p id="signupError" class="text-red-500 text-center mt-3 hidden">
+    Email already used!
+  </p>
 </div>
 
 <!-- ================= PROFILE PAGE ================= -->
 <div id="profilePage"
-  class="bg-white w-full max-w-3xl p-8 rounded-2xl shadow-xl border border-gray-200 hidden">
+  class="bg-white w-full max-w-3xl p-8 rounded-2xl shadow-xl border hidden">
 
   <!-- Header -->
   <div class="flex justify-between items-center mb-6">
@@ -70,8 +83,7 @@
     <div>
       <label class="font-semibold">Email</label>
       <input id="emailInput" type="email"
-        class="w-full p-3 border rounded-lg mt-1 bg-gray-100"
-        disabled />
+        class="w-full p-3 border rounded-lg mt-1 bg-gray-100" disabled />
     </div>
 
     <div class="md:col-span-2">
@@ -86,9 +98,10 @@
 
   <!-- Resume History -->
   <div class="flex justify-between items-center mb-4">
-    <h3 class="text-2xl font-bold">Resume Analysis History</h3>
-    <button onclick="clearAllReports()"
-      class="text-sm text-red-600 underline">
+    <h3 class="text-2xl font-bold">
+      Resume Analysis History (<span id="reportCount">0</span>)
+    </h3>
+    <button onclick="clearAllReports()" class="text-sm text-red-600 underline">
       Clear All
     </button>
   </div>
@@ -96,22 +109,36 @@
   <div id="resumeList" class="space-y-3 text-sm"></div>
 </div>
 
-
 <script>
-/* ---------------- ELEMENTS ---------------- */
+/* ================= ELEMENTS ================= */
 const loginBox = document.getElementById("loginBox");
 const signupBox = document.getElementById("signupBox");
 const profilePage = document.getElementById("profilePage");
 
+const loginEmail = document.getElementById("loginEmail");
+const loginPass = document.getElementById("loginPass");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
+
+const signupName = document.getElementById("signupName");
+const signupEmail = document.getElementById("signupEmail");
+const signupPass = document.getElementById("signupPass");
+const createBtn = document.getElementById("createBtn");
+const signupError = document.getElementById("signupError");
+
+const toSignup = document.getElementById("toSignup");
+const toLogin = document.getElementById("toLogin");
+
 const nameInput = document.getElementById("nameInput");
 const emailInput = document.getElementById("emailInput");
 const resumeList = document.getElementById("resumeList");
+const reportCount = document.getElementById("reportCount");
 const profileForm = document.getElementById("profileForm");
 
 const logoutBtn = document.getElementById("logoutBtn");
 const newAccountBtn = document.getElementById("newAccountBtn");
 
-/* ---------------- SHOW / HIDE ---------------- */
+/* ================= SHOW / HIDE ================= */
 function showLogin() {
   loginBox.classList.remove("hidden");
   signupBox.classList.add("hidden");
@@ -131,106 +158,136 @@ function showProfile() {
   loadProfile();
 }
 
-/* ---------------- LOAD PROFILE ---------------- */
-function loadProfile() {
-  const userRaw = localStorage.getItem("loggedUser");
-  if (!userRaw) return;
+/* ================= SAVE RESUME REPORT ================= */
+function saveResumeReport(filename, score) {
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  if (!user) return;
 
-  const user = JSON.parse(userRaw);
-  nameInput.value = user.name || "";
-  emailInput.value = user.email || "";
+  const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+  reports.push({
+    email: user.email,
+    filename,
+    score,
+    date: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("resumeReports", JSON.stringify(reports));
+}
+
+/* ================= LOAD PROFILE ================= */
+function loadProfile() {
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  if (!user) return;
+
+  nameInput.value = user.name;
+  emailInput.value = user.email;
 
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
   const userReports = reports.filter(r => r.email === user.email);
 
-  if (!userReports.length) {
-    resumeList.innerHTML =
-      `<p class="text-gray-500">No resumes analyzed yet.</p>`;
-    return;
-  }
+  reportCount.innerText = userReports.length;
 
-  resumeList.innerHTML = userReports.map((r, index) => `
-    <div class="p-4 bg-gray-100 rounded-xl flex justify-between items-center">
-      <div>
-        <p class="font-bold">${r.filename}</p>
-        <p class="text-gray-600 text-xs">${r.date}</p>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <span class="px-3 py-1 rounded-full text-sm font-bold
-          ${r.score >= 70 ? "bg-green-200 text-green-700"
-                          : "bg-red-200 text-red-700"}">
-          ${r.score}%
-        </span>
-
-        <button onclick="deleteReport(${index})"
-          class="text-red-500 text-xs underline">
-          Delete
-        </button>
-      </div>
-    </div>
-  `).join("");
+  resumeList.innerHTML = userReports.length
+    ? userReports.map((r, i) => `
+      <div class="p-4 bg-gray-100 rounded-xl flex justify-between">
+        <div>
+          <p class="font-bold">${r.filename}</p>
+          <p class="text-xs text-gray-600">${r.date}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full font-bold text-sm
+            ${r.score >= 70 ? "bg-green-200 text-green-700" : "bg-red-200 text-red-700"}">
+            ${r.score}%
+          </span>
+          <button onclick="deleteReport(${i})" class="text-red-500 underline text-xs">
+            Delete
+          </button>
+        </div>
+      </div>`).join("")
+    : `<p class="text-gray-500">No resumes analyzed yet.</p>`;
 }
 
-/* ---------------- SAVE PROFILE ---------------- */
-profileForm.addEventListener("submit", e => {
-  e.preventDefault();
-
-  let users = JSON.parse(localStorage.getItem("users")) || [];
-  let loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
-
-  loggedUser.name = nameInput.value.trim();
-  users = users.map(u => u.email === loggedUser.email ? loggedUser : u);
-
-  localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("loggedUser", JSON.stringify(loggedUser));
-
-  alert("Profile updated successfully!");
-});
-
-/* ---------------- DELETE ONE REPORT ---------------- */
+/* ================= DELETE REPORT ================= */
 function deleteReport(index) {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-
   const userReports = reports.filter(r => r.email === user.email);
-  const target = userReports[index];
-
-  reports = reports.filter(r => r !== target);
+  reports = reports.filter(r => r !== userReports[index]);
   localStorage.setItem("resumeReports", JSON.stringify(reports));
   loadProfile();
 }
 
-/* ---------------- CLEAR ALL ---------------- */
+/* ================= CLEAR ALL ================= */
 function clearAllReports() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   let reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-
   reports = reports.filter(r => r.email !== user.email);
   localStorage.setItem("resumeReports", JSON.stringify(reports));
   loadProfile();
 }
 
-/* ---------------- LOGOUT ---------------- */
-logoutBtn.addEventListener("click", () => {
+/* ================= AUTH ================= */
+createBtn.onclick = () => {
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  if (users.some(u => u.email === signupEmail.value)) {
+    signupError.classList.remove("hidden");
+    return;
+  }
+
+  const user = {
+    name: signupName.value,
+    email: signupEmail.value,
+    pass: signupPass.value
+  };
+
+  users.push(user);
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("loggedUser", JSON.stringify(user));
+  showProfile();
+};
+
+loginBtn.onclick = () => {
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users.find(
+    u => u.email === loginEmail.value && u.pass === loginPass.value
+  );
+  if (!user) {
+    loginError.classList.remove("hidden");
+    return;
+  }
+  localStorage.setItem("loggedUser", JSON.stringify(user));
+  showProfile();
+};
+
+logoutBtn.onclick = () => {
   localStorage.removeItem("loggedUser");
   showLogin();
-});
+};
 
-/* ---------------- NEW ACCOUNT ---------------- */
-newAccountBtn.addEventListener("click", () => {
+newAccountBtn.onclick = () => {
   localStorage.removeItem("loggedUser");
   showSignup();
-});
+};
 
-/* ---------------- INIT (MOST IMPORTANT) ---------------- */
+toSignup.onclick = showSignup;
+toLogin.onclick = showLogin;
+
+profileForm.onsubmit = e => {
+  e.preventDefault();
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  let user = JSON.parse(localStorage.getItem("loggedUser"));
+  user.name = nameInput.value;
+  users = users.map(u => u.email === user.email ? user : u);
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("loggedUser", JSON.stringify(user));
+  alert("Profile updated!");
+};
+
+/* ================= INIT ================= */
 window.onload = () => {
-  const user = localStorage.getItem("loggedUser");
-  if (user) showProfile();
-  else showLogin();
+  localStorage.getItem("loggedUser") ? showProfile() : showLogin();
 };
 </script>
-
 
 </body>
 </html>
