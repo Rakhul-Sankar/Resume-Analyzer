@@ -3,55 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Home</title>
+    <title>Dashboard - Resume Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg border-b">
-        <div class="max-w-6xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
-                </div>
-                <div class="flex space-x-4">
-                    <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2 rounded-lg transition-colors">Profile</a>
-                    <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2 rounded-lg transition-colors">Past Reports</a>
-                </div>
+
+<!-- ================= NAVIGATION ================= -->
+<nav class="bg-white shadow-lg border-b">
+    <div class="max-w-6xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+            <div class="flex space-x-4 items-center">
+                <a href="profile.html"
+                   class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
+                   Profile
+                </a>
+                <a href="reports.html"
+                   class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
+                   Past Reports
+                </a>
+                <button onclick="logout()"
+                        class="text-red-600 font-medium px-3 py-2">
+                        Logout
+                </button>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Main Content -->
-    <main class="max-w-md mx-auto px-6 py-12">
-        <div class="bg-white p-8 rounded-xl shadow-lg text-center">
-            <!-- Greeting -->
-            <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
+<!-- ================= STATS ================= -->
+<section class="max-w-6xl mx-auto px-6 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            <p class="text-gray-600 mb-8 text-lg">Continue to upload your resume or explore your profile and past reports.</p>
+    <div class="bg-white p-6 rounded-xl shadow text-center">
+        <p class="text-gray-500">Total Resumes</p>
+        <h2 id="totalResumes" class="text-3xl font-bold text-indigo-600">0</h2>
+    </div>
 
-            <div class="space-y-4">
-                <a href="profile.html" class="block bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors">View Profile</a>
-                <a href="reports.html" class="block bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors">Past Reports</a>
-                <!-- Upload Resume button MOVED HERE - BELOW Past Reports -->
-                <a href="upload.html" class="block bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 transition-colors">Upload Resume</a>
-            </div>
+    <div class="bg-white p-6 rounded-xl shadow text-center">
+        <p class="text-gray-500">Average ATS Score</p>
+        <h2 id="avgScore" class="text-3xl font-bold text-green-600">0%</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow text-center">
+        <p class="text-gray-500">Last Upload</p>
+        <h2 id="lastUpload" class="text-lg font-semibold text-gray-700">--</h2>
+    </div>
+
+</section>
+
+<!-- ================= MAIN CONTENT ================= -->
+<main class="max-w-md mx-auto px-6 py-12">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+
+        <!-- Greeting -->
+        <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
+
+        <p class="text-gray-600 mb-8 text-lg">
+            Continue to upload your resume or explore your profile and past reports.
+        </p>
+
+        <div class="space-y-4">
+            <a href="profile.html"
+               class="block bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">
+               View Profile
+            </a>
+
+            <a href="reports.html"
+               class="block bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">
+               Past Reports
+            </a>
+
+            <a href="upload.html"
+               class="block bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700">
+               Upload Resume
+            </a>
         </div>
-    </main>
 
-    <script>
-        const hour = new Date().getHours();
-        let timeGreeting;
+    </div>
+</main>
 
-        if (hour < 12) {
-            timeGreeting = "Good Morning";
-        } else if (hour < 16) {
-            timeGreeting = "Good Afternoon";
-        } else {
-            timeGreeting = "Good Evening";
-        }
+<!-- ================= SCRIPT ================= -->
+<script>
+/* ===== AUTH CHECK ===== */
+const user = JSON.parse(localStorage.getItem("loggedUser"));
+if (!user) {
+    window.location.href = "login.html";
+}
 
-        document.getElementById("greeting").innerText = `Welcome, ${timeGreeting}!`;
-    </script>
+/* ===== GREETING ===== */
+const hour = new Date().getHours();
+let timeGreeting;
+
+if (hour < 12) timeGreeting = "Good Morning";
+else if (hour < 16) timeGreeting = "Good Afternoon";
+else timeGreeting = "Good Evening";
+
+document.getElementById("greeting").innerText =
+    `Welcome, ${timeGreeting} ${user.name}!`;
+
+/* ===== STATS ===== */
+const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+const userReports = reports.filter(r => r.email === user.email);
+
+document.getElementById("totalResumes").innerText = userReports.length;
+
+if (userReports.length > 0) {
+    const avgScore = Math.round(
+        userReports.reduce((sum, r) => sum + r.score, 0) / userReports.length
+    );
+    document.getElementById("avgScore").innerText = avgScore + "%";
+    document.getElementById("lastUpload").innerText = userReports[0].date;
+}
+
+/* ===== LOGOUT ===== */
+function logout() {
+    localStorage.removeItem("loggedUser");
+    window.location.href = "login.html";
+}
+</script>
+
 </body>
 </html>

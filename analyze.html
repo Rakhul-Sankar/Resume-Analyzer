@@ -6,11 +6,14 @@
 <title>Resume Analysis</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 flex flex-col items-center p-6 min-h-screen">
 
 <div class="w-full max-w-4xl">
 
-    <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Resume Analysis Result</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">
+        Resume Analysis Result
+    </h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -18,38 +21,71 @@
         <div class="bg-white p-6 rounded-xl shadow text-center">
             <h2 class="text-xl font-semibold mb-2">ATS Score</h2>
             <p id="atsScore" class="text-4xl font-bold text-blue-600 mt-4">--%</p>
+            <p id="atsLabel" class="mt-2 font-medium text-gray-600"></p>
         </div>
 
         <!-- Skills Found -->
         <div class="bg-white p-6 rounded-xl shadow">
-            <h2 class="text-xl font-semibold mb-2">Skills Found</h2>
-            <ul id="skillsList" class="list-disc pl-5 mt-4 text-gray-700 font-medium"></ul>
+            <h2 class="text-xl font-semibold mb-2">
+                Skills Found (<span id="skillCount">0</span>)
+            </h2>
+            <ul id="skillsList"
+                class="list-disc pl-5 mt-4 text-gray-700 font-medium"></ul>
         </div>
 
     </div>
 
-    <a href="dashboard.html" class="mt-10 inline-block bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-black">
-       Back to Dashboard
-    </a>
+    <!-- Resume Status -->
+    <div class="bg-white p-6 rounded-xl shadow mt-6 text-center">
+        <p class="text-lg font-semibold">
+            Analysis Status:
+            <span class="text-green-600 font-bold">✔ Analyzed</span>
+        </p>
+        <p class="text-sm text-gray-500 mt-1">
+            This resume has been successfully processed by the ATS engine.
+        </p>
+    </div>
+
+    <div class="text-center">
+        <a href="dashboard.html"
+           class="mt-10 inline-block bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-black">
+           Back to Dashboard
+        </a>
+    </div>
 
 </div>
 
 <script>
-let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-let latest = resumes[0]; // latest uploaded
+/* ===== AUTH CHECK ===== */
+const user = JSON.parse(localStorage.getItem("loggedUser"));
+if (!user) {
+    alert("Session expired. Please login again.");
+    window.location.href = "login.html";
+}
 
-if(!latest){
+/* ===== GET LATEST RESUME ===== */
+let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+let latest = resumes[0];
+
+if (!latest || !latest.content) {
     alert("No resume found! Please upload again.");
-    window.location.href="upload.html";
+    window.location.href = "upload.html";
 }
 
 let resumeText = latest.content.toLowerCase();
 
-// ATS Score
-const score = Math.floor(Math.random()*21)+80;
+/* ===== ATS SCORE ===== */
+const score = Math.floor(Math.random() * 21) + 80;
 document.getElementById("atsScore").innerText = score + "%";
 
-// Skill Extraction
+let label =
+    score >= 85 ? "Excellent ATS Match" :
+    score >= 70 ? "Good ATS Match" :
+    "Needs Improvement";
+
+document.getElementById("atsLabel").innerText = label;
+
+/* ===== SKILL EXTRACTION ===== */
 const skills = [
     "python","java","django","html","css","javascript","js",
     "web development","sql","mysql","react","node","tailwind",
@@ -58,31 +94,42 @@ const skills = [
 
 const matchedSkills = skills.filter(skill => resumeText.includes(skill));
 
-let list = document.getElementById("skillsList");
-if(matchedSkills.length){
-    matchedSkills.forEach(s=>{
-        let li=document.createElement("li");
-        li.textContent = s.charAt(0).toUpperCase()+s.slice(1);
+const list = document.getElementById("skillsList");
+document.getElementById("skillCount").innerText = matchedSkills.length;
+
+if (matchedSkills.length) {
+    matchedSkills.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = s.charAt(0).toUpperCase() + s.slice(1);
         list.appendChild(li);
     });
-}else{
-    list.innerHTML="<li>No skills detected</li>";
+} else {
+    list.innerHTML = "<li>No skills detected</li>";
 }
 
-// Save report per user
+/* ===== SAVE REPORT (NO DUPLICATES) ===== */
 const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-const user = JSON.parse(localStorage.getItem("userProfile"));
 
-reports.unshift({
-    filename: latest.name,
-    score: score,
-    skills: matchedSkills,
-    date: new Date().toLocaleString(),
-    email: user ? user.email : "unknown"
-});
+const alreadySaved = reports.some(r =>
+    r.filename === latest.name && r.email === user.email
+);
 
-localStorage.setItem("resumeReports", JSON.stringify(reports));
-console.log("Report added → Resume History Updated");
+if (!alreadySaved) {
+    reports.unshift({
+        id: crypto.randomUUID(),
+        filename: latest.name,
+        score: score,
+        skills: matchedSkills,
+        status: "analyzed",
+        date: new Date().toLocaleString(),
+        email: user.email
+    });
+
+    localStorage.setItem("resumeReports", JSON.stringify(reports));
+    console.log("✅ Report saved successfully");
+} else {
+    console.log("ℹ Report already exists, skipping save");
+}
 </script>
 
 </body>

@@ -1,437 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Past Reports - Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Past Reports</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gradient-to-br from-emerald-50 to-green-100 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-white/90 backdrop-blur-md shadow-xl border-b sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
-                </div>
-                <div class="flex space-x-4">
-                    <a href="index.html" class="text-gray-700 hover:text-purple-600 font-medium px-4 py-2 rounded-lg transition-all hover:bg-purple-50">Home</a>
-                    <a href="profile.html" class="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg transition-all hover:bg-blue-50">Profile</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-6 py-12">
-        <div class="text-center mb-16">
-            <h1 class="text-5xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6 drop-shadow-lg">
-                📊 Resume Storage
-            </h1>
-            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-                Manage and analyze your uploaded resumes. Use the search to quickly find specific resumes or clear all data as needed.
-            </p>
-        </div>
+<!-- ===== AUTH CHECK ===== -->
+<script>
+const currentUser = JSON.parse(localStorage.getItem("loggedUser"));
+if (!currentUser) window.location.href = "login.html";
+</script>
 
-        <!-- Controls -->
-        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-12 border border-white/50 relative">
-            <div class="flex flex-col lg:flex-row gap-4 items-end lg:items-center justify-between">
-                <div class="relative w-full lg:w-96 flex-1">
-                    <input type="text" id="searchInput" placeholder="🔍 Search resumes..." 
-                           class="w-full pl-12 pr-4 py-4 bg-white/50 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none transition-all text-lg shadow-inner">
-                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔍</div>
-                </div>
-                <div class="flex gap-3 flex-shrink-0">
-                    <button id="clearAllBtn" class="px-8 py-4 bg-red-500/90 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg transition-all hover:scale-105">
-                        🗑️ Clear All
-                    </button>
-                    <a href="upload.html" class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                        ➕ Upload New
-                    </a>
-                </div>
-            </div>
-        </div>
+<!-- ===== NAV ===== -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between">
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+    <div class="space-x-4">
+      <a href="dashboard.html" class="font-medium text-gray-700">Dashboard</a>
+      <a href="profile.html" class="font-medium text-gray-700">Profile</a>
+    </div>
+  </div>
+</nav>
 
-        <!-- Stats -->
-        <div class="grid md:grid-cols-4 gap-6 mb-12">
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
-                <div id="totalResumes" class="text-4xl font-black text-blue-600 mb-2 group-hover:scale-110 transition-transform">0</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Stored</div>
-            </div>
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
-                <div id="analyzedCount" class="text-4xl font-black text-green-600 mb-2 group-hover:scale-110 transition-transform">0</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">AI Analyzed</div>
-            </div>
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
-                <div id="pendingCount" class="text-4xl font-black text-yellow-500 mb-2 group-hover:scale-110 transition-transform">0</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Pending</div>
-            </div>
-            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 hover:shadow-3xl transition-all group">
-                <div id="storageUsed" class="text-4xl font-black text-purple-600 mb-2 group-hover:scale-110 transition-transform">0KB</div>
-                <div class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Storage Used</div>
-            </div>
-        </div>
+<!-- ===== MAIN ===== -->
+<main class="max-w-6xl mx-auto px-6 py-10">
 
-        <!-- Debug -->
-        <div id="debugInfo" class="bg-yellow-100 border-2 border-yellow-400 rounded-2xl p-6 mb-8 text-sm font-mono">
-            <strong>🔍 LIVE STATUS:</strong> <span id="debugText">Loading...</span>
-        </div>
+<h1 class="text-4xl font-black text-center mb-6 text-green-700">
+📊 Past Resume Reports
+</h1>
 
-        <!-- Grid -->
-        <div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            <!-- Dynamic -->
-        </div>
-    </main>
+<!-- CONTROLS -->
+<div class="flex flex-wrap gap-3 justify-between mb-8">
+  <input id="searchInput" placeholder="Search resume..."
+    class="px-4 py-3 rounded-xl border w-full md:w-80">
 
-    <script>
+  <div class="flex gap-3">
+    <button onclick="storage.sortByScore()"
+      class="bg-blue-600 text-white px-5 py-3 rounded-xl">⬆ Score</button>
+    <button onclick="storage.sortByDate()"
+      class="bg-gray-600 text-white px-5 py-3 rounded-xl">📅 Date</button>
+    <button onclick="storage.exportAll()"
+      class="bg-indigo-600 text-white px-5 py-3 rounded-xl">📦 Export</button>
+  </div>
+</div>
+
+<!-- GRID -->
+<div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+</main>
+
+<!-- ===== VIEW MODAL ===== -->
+<div id="viewModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+  <div class="bg-white p-6 rounded-xl max-w-md w-full">
+    <h2 id="modalTitle" class="text-xl font-bold mb-2"></h2>
+    <p id="modalInfo" class="text-gray-600 whitespace-pre-line"></p>
+    <button onclick="closeModal()"
+      class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg">
+      Close
+    </button>
+  </div>
+</div>
+
+<script>
 window.storage = {
-    key: "advancedResumes_v2",
-    resumes: [],
+  key: "advancedResumes_v2",
+  resumes: [],
 
-    init() {
-        this.load();
-        this.bindEvents();
+  load() {
+    const saved = JSON.parse(localStorage.getItem(this.key)) || [];
+    this.resumes = saved.filter(r => r.email === currentUser.email);
+    this.render();
+  },
 
-        // Live checker every 1 sec (keeps UI updated)
-        setInterval(() => this.load(), 1000);
-    },
-
-    // ✅ FIX 1: Normalize resume data on load to ensure all fields exist
-    normalizeResume(r) {
-        if (!r || typeof r !== 'object') return null;
-        
-        return {
-            id: r.id || crypto.randomUUID(),
-            name: r.name || "Untitled Resume",
-            date: r.date || new Date().toLocaleDateString("en-CA"),
-            score: (r.score !== undefined && r.score !== null && !isNaN(r.score)) 
-                   ? Number(r.score) 
-                   : Math.floor(Math.random() * 30) + 70,
-            status: r.status || "analyzed",  // ✅ Default to "analyzed" not "pending"
-            type: r.type || "Uploaded Resume",
-            fileData: r.fileData || null,
-            fileType: r.fileType || null
-        };
-    },
-
-    load() {
-        try {
-            const saved = localStorage.getItem(this.key);
-            let parsed = saved ? JSON.parse(saved) : [];
-            
-            // ✅ FIX 2: Normalize ALL resumes on load
-            this.resumes = parsed
-                .map(r => this.normalizeResume(r))
-                .filter(r => r !== null && r.name);
-                
-            // ✅ FIX 3: Save normalized data back to fix any corrupted entries
-            this.saveWithoutRender();
-            
-        } catch (e) { 
-            console.error("Load error:", e);
-            this.resumes = []; 
-        }
-
-        this.updateStats();
-        this.render();
-        this.debug();
-    },
-
-    saveWithoutRender() {
-        localStorage.setItem(this.key, JSON.stringify(this.resumes));
-    },
-
-    save() {
-        localStorage.setItem(this.key, JSON.stringify(this.resumes));
-        this.updateStats();
-        this.debug();
-        this.render();
-    },
-
-    add(resumeData) {
-        let newResume;
-        
-        if (typeof resumeData === 'string') {
-            newResume = {
-                id: crypto.randomUUID(),
-                name: resumeData || "Untitled Resume",
-                date: new Date().toLocaleDateString("en-CA"),
-                score: Math.floor(Math.random() * 30) + 70,
-                status: "analyzed",
-                type: "Uploaded Resume",
-                fileData: null,
-                fileType: null
-            };
-        } else {
-            // ✅ FIX 4: Properly handle incoming resume data
-            newResume = {
-                id: crypto.randomUUID(),
-                name: resumeData.name || "Untitled Resume",
-                date: resumeData.date || new Date().toLocaleDateString("en-CA"),
-                score: (resumeData.score !== undefined && resumeData.score !== null) 
-                       ? Number(resumeData.score) 
-                       : Math.floor(Math.random() * 30) + 70,
-                status: resumeData.status || "analyzed",
-                type: resumeData.type || "Uploaded Resume",
-                fileData: resumeData.fileData || null,
-                fileType: resumeData.fileType || null
-            };
-        }
-
-        this.resumes.unshift(newResume);
-        this.save();
-        
-        console.log("✅ Resume added:", newResume);
-    },
-
-    delete(id) {
-        if (confirm("Delete this resume?")) {
-            this.resumes = this.resumes.filter(r => r.id !== id);
-            this.save();
-        }
-    },
-
-    // ✅ FIX 5: Update status of a specific resume
-    updateStatus(id, newStatus) {
-        const resume = this.resumes.find(r => r.id === id);
-        if (resume) {
-            resume.status = newStatus;
-            this.save();
-        }
-    },
-
-    download(id) {
-        const resume = this.resumes.find(r => r.id === id);
-        if (!resume) return;
-
-        if (resume.fileData && resume.fileType) {
-            const blob = this.base64ToBlob(resume.fileData, resume.fileType);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = resume.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        } else {
-            const report = this.generateReport(resume);
-            const blob = new Blob([report], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${resume.name.replace(/\.[^/.]+$/, "")}_report.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    },
-
-    base64ToBlob(base64, mimeType) {
-        const byteCharacters = atob(base64);
-        const byteArrays = [];
-
-        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-            const slice = byteCharacters.slice(offset, offset + 512);
-            const byteNumbers = new Array(slice.length);
-            for (let i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            byteArrays.push(byteArray);
-        }
-
-        return new Blob(byteArrays, { type: mimeType });
-    },
-
-    // ✅ FIX 6: Add fallback values in generateReport
-    generateReport(resume) {
-        // Normalize the resume data first
-        const normalizedResume = this.normalizeResume(resume);
-        
-        const name = normalizedResume.name;
-        const date = normalizedResume.date;
-        const status = normalizedResume.status;
-        const score = normalizedResume.score;
-        
-        // ✅ FIX 7: Get proper status display text
-        const statusDisplay = this.getStatusDisplay(status);
-
-        return `
-═══════════════════════════════════════════════════════
-         RESUME ANALYSIS REPORT
-═══════════════════════════════════════════════════════
-
-Resume Name: ${name}
-Date Uploaded: ${date}
-Analysis Status: ${statusDisplay}
-Overall Score: ${score}%
-
-═══════════════════════════════════════════════════════
-         SCORE BREAKDOWN
-═══════════════════════════════════════════════════════
-
-Overall Performance: ${score > 80 ? 'Excellent' : score > 60 ? 'Good' : 'Needs Improvement'}
-
-Score Rating:
-${this.getScoreBar(score)}
-
-═══════════════════════════════════════════════════════
-         RECOMMENDATIONS
-═══════════════════════════════════════════════════════
-
-${score > 80 ? 
-`✓ Your resume demonstrates strong qualifications
-✓ Format and structure are well-organized
-✓ Continue to update with recent achievements` :
-score > 60 ?
-`• Consider strengthening your skills section
-• Add more quantifiable achievements
-• Review formatting for better readability` :
-`! Significant improvements needed
-! Focus on highlighting relevant experience
-! Consider professional resume review`}
-
-═══════════════════════════════════════════════════════
-Report Generated: ${new Date().toLocaleString()}
-═══════════════════════════════════════════════════════
-        `.trim();
-    },
-
-    // ✅ FIX 8: Helper to get proper status display text
-    getStatusDisplay(status) {
-        const statusMap = {
-            'analyzed': '✅ AI Analysis Complete',
-            'pending': '⏳ Pending Analysis',
-            'processing': '🔄 Processing...',
-            'error': '❌ Analysis Failed',
-            'uploaded': '📤 Uploaded - Awaiting Analysis'
-        };
-        return statusMap[status] || '✅ AI Analysis Complete';
-    },
-
-    getScoreBar(score) {
-        const filled = Math.floor(score / 5);
-        const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
-        return `[${bar}] ${score}%`;
-    },
-
-    render(list = this.resumes) {
-        const box = document.getElementById("resumeGrid");
-
-        if (!list || list.length === 0) {
-            box.innerHTML = `
-            <div class="col-span-full text-center py-24">
-                <h2 class="text-4xl font-black text-gray-600">No Resumes Yet</h2>
-                <p class="text-gray-500 mt-2">Upload from upload.html to view here</p>
-                <a href="upload.html" class="mt-6 inline-block bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:scale-105">Upload Now</a>
-            </div>`;
-            return;
-        }
-
-        box.innerHTML = list.map(r => {
-            // ✅ FIX 9: Normalize each resume before rendering
-            const normalized = this.normalizeResume(r);
-            const { id, name, date, score, status } = normalized;
-
-            let scoreColor = 'bg-gray-500';
-            if (score > 80) scoreColor = 'bg-green-500';
-            else if (score > 60) scoreColor = 'bg-yellow-500';
-            else if (score > 0) scoreColor = 'bg-red-500';
-
-            // ✅ FIX 10: Get proper status badge styling
-            let statusBadge = this.getStatusBadge(status);
-
-            return `
-            <div class="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-purple-500 hover:scale-[1.02] transition">
-                <h2 class="font-bold text-lg truncate mb-1">${name}</h2>
-                <p class="text-gray-400 text-xs mb-2">📅 ${date}</p>
-
-                <div class="mt-3 px-4 py-2 text-center rounded-full text-white font-bold ${scoreColor}">
-                  Score: ${score}%
-                </div>
-                
-                ${statusBadge}
-
-                <div class="mt-5 flex gap-2">
-                    <button class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl hover:scale-105 font-semibold text-sm"
-                        onclick="storage.download('${id}')">📥 Download</button>
-                    <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded-xl hover:scale-105 font-semibold text-sm"
-                        onclick="storage.delete('${id}')">🗑 Delete</button>
-                </div>
-            </div>
-            `;
-        }).join("");
-    },
-
-    // ✅ FIX 11: Create styled status badges
-    getStatusBadge(status) {
-        const badges = {
-            'analyzed': `<p class="text-xs text-green-600 mt-2 text-center font-semibold bg-green-100 py-1 px-2 rounded-full">✅ Analyzed</p>`,
-            'pending': `<p class="text-xs text-yellow-600 mt-2 text-center font-semibold bg-yellow-100 py-1 px-2 rounded-full">⏳ Pending</p>`,
-            'processing': `<p class="text-xs text-blue-600 mt-2 text-center font-semibold bg-blue-100 py-1 px-2 rounded-full">🔄 Processing</p>`,
-            'error': `<p class="text-xs text-red-600 mt-2 text-center font-semibold bg-red-100 py-1 px-2 rounded-full">❌ Error</p>`,
-            'uploaded': `<p class="text-xs text-purple-600 mt-2 text-center font-semibold bg-purple-100 py-1 px-2 rounded-full">📤 Uploaded</p>`
-        };
-        return badges[status] || badges['analyzed'];
-    },
-
-    updateStats() {
-        document.getElementById('totalResumes').innerText = this.resumes.length;
-        document.getElementById('analyzedCount').innerText = this.resumes.filter(x => x.status === "analyzed").length;
-        document.getElementById('pendingCount').innerText = this.resumes.filter(x => x.status === "pending").length;
-        document.getElementById('storageUsed').innerText = Math.round(JSON.stringify(this.resumes).length / 1024) + " KB";
-    },
-
-    debug() {
-        const analyzed = this.resumes.filter(x => x.status === "analyzed").length;
-        const pending = this.resumes.filter(x => x.status === "pending").length;
-        document.getElementById('debugText').innerText = 
-            `Total: ${this.resumes.length} | Analyzed: ${analyzed} | Pending: ${pending} | Size: ${JSON.stringify(this.resumes).length} bytes`;
-    },
-
-    bindEvents() {
-        document.getElementById('searchInput').oninput = e => {
-            const q = e.target.value.toLowerCase();
-            this.render(this.resumes.filter(r => r.name && r.name.toLowerCase().includes(q)));
-        };
-
-        document.getElementById('clearAllBtn').onclick = () => {
-            if (confirm("Delete all resumes?")) {
-                localStorage.removeItem(this.key);
-                this.resumes = [];
-                this.load();
-            }
-        };
-
-        // Listen for uploads from upload.html
-        window.addEventListener("message", e => {
-            if (e.data && e.data.type === "NEW_RESUME") {
-                this.add(e.data);
-            }
-        });
-
-        // ✅ FIX 12: Listen for storage changes from other tabs/pages
-        window.addEventListener("storage", e => {
-            if (e.key === this.key) {
-                this.load();
-            }
-        });
+  render(list = this.resumes) {
+    const box = document.getElementById("resumeGrid");
+    if (!list.length) {
+      box.innerHTML = "<p class='col-span-full text-center'>No reports yet.</p>";
+      return;
     }
+
+    box.innerHTML = list.map(r => `
+      <div class="bg-white p-5 rounded-xl shadow">
+        <h2 class="font-bold truncate">${r.name}</h2>
+        <p class="text-xs text-gray-500">📅 ${r.date}</p>
+
+        <div class="mt-3 font-bold text-center
+          ${r.score >= 80 ? 'text-green-600' :
+            r.score >= 60 ? 'text-yellow-600' : 'text-red-600'}">
+          ${r.score}% ATS
+        </div>
+
+        <p class="text-xs text-center mt-1">
+          ${r.score >= 80 ? "Strong Match" :
+            r.score >= 60 ? "Moderate Match" : "Low Match"}
+        </p>
+
+        <div class="flex gap-2 mt-4">
+          <button onclick="storage.view('${r.id}')"
+            class="flex-1 bg-gray-700 text-white py-2 rounded">👁 View</button>
+          <button onclick="storage.delete('${r.id}')"
+            class="flex-1 bg-red-600 text-white py-2 rounded">🗑 Delete</button>
+        </div>
+      </div>
+    `).join("");
+  },
+
+  view(id) {
+    const r = this.resumes.find(x => x.id === id);
+    document.getElementById("modalTitle").innerText = r.name;
+    document.getElementById("modalInfo").innerText =
+      `Score: ${r.score}%\nDate: ${r.date}\nStatus: ${r.status || "Analyzed"}`;
+    document.getElementById("viewModal").classList.remove("hidden");
+  },
+
+  delete(id) {
+    if (!confirm("Delete this report?")) return;
+    const all = JSON.parse(localStorage.getItem(this.key)) || [];
+    const filtered = all.filter(r => r.id !== id);
+    localStorage.setItem(this.key, JSON.stringify(filtered));
+    this.load();
+  },
+
+  sortByScore() {
+    this.resumes.sort((a,b) => b.score - a.score);
+    this.render();
+  },
+
+  sortByDate() {
+    this.resumes.sort((a,b) => new Date(b.date) - new Date(a.date));
+    this.render();
+  },
+
+  exportAll() {
+    const blob = new Blob([JSON.stringify(this.resumes, null, 2)],
+      { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "resume_reports.json";
+    a.click();
+  }
 };
 
-storage.init();
+function closeModal() {
+  document.getElementById("viewModal").classList.add("hidden");
+}
 
-// ✅ FIX 13: Expose helper function to fix existing corrupted data
-window.fixAllResumes = function() {
-    const fixed = storage.resumes.map(r => storage.normalizeResume(r));
-    storage.resumes = fixed;
-    storage.save();
-    console.log("✅ All resumes fixed!", fixed);
+document.getElementById("searchInput").oninput = e => {
+  const q = e.target.value.toLowerCase();
+  storage.render(storage.resumes.filter(r =>
+    r.name.toLowerCase().includes(q)
+  ));
 };
 
-console.log("💡 Run fixAllResumes() in console to fix any corrupted resume data");
+storage.load();
 </script>
 
 </body>
