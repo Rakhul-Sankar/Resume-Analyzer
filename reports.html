@@ -90,32 +90,33 @@ if (!currentUser) window.location.href = "login.html";
 
 <script>
 window.storage = {
-  key: "advancedResumes_v2",
-  resumes: [],
+  key: "resumeReports",
+  reports: [],
 
   load() {
     const saved = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    // ✅ Normalize & filter user data
-    this.resumes = saved
+    // ✅ FIX: normalize + user filter
+    this.reports = saved
       .filter(r => r.email === currentUser.email)
       .map(r => ({
-        ...r,
-        displayName: r.filename || r.name || "Untitled Resume",
-        score: typeof r.score === "number" ? r.score : Number(r.score) || 0,
-        date: r.date || "N/A"
+        id: r.id || crypto.randomUUID(),
+        name: r.filename || r.name || "Untitled Resume",
+        score: Number(r.score) || 0,
+        date: r.date || new Date().toLocaleString(),
+        status: "Analyzed"
       }));
 
-    this.updateStats(this.resumes);
-    this.render(this.resumes);
+    this.updateStats(this.reports);
+    this.render(this.reports);
   },
 
   updateStats(list) {
     const total = list.length;
-    const analyzed = list.filter(r => r.score > 0).length;
+    const analyzed = list.length;
 
     let avg = 0, best = 0;
-    if (analyzed) {
+    if (list.length) {
       const scores = list.map(r => r.score);
       avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
       best = Math.max(...scores);
@@ -136,21 +137,18 @@ window.storage = {
 
     box.innerHTML = list.map(r => `
       <div class="bg-white p-5 rounded-xl shadow">
-        <h2 class="font-bold truncate">${r.displayName}</h2>
+        <h2 class="font-bold truncate">${r.name}</h2>
         <p class="text-xs text-gray-500">📅 ${r.date}</p>
 
         <div class="mt-3 font-bold text-center
           ${r.score >= 80 ? 'text-green-600' :
             r.score >= 60 ? 'text-yellow-600' : 'text-red-600'}">
-          ${r.score ? r.score + "% ATS" : "Not Analyzed"}
+          ${r.score}% ATS
         </div>
 
         <p class="text-xs text-center mt-1">
-          ${r.score
-            ? r.score >= 80 ? "Strong Match"
-              : r.score >= 60 ? "Moderate Match"
-              : "Low Match"
-            : "Pending"}
+          ${r.score >= 80 ? "Strong Match" :
+            r.score >= 60 ? "Moderate Match" : "Low Match"}
         </p>
 
         <div class="flex gap-2 mt-4">
@@ -164,10 +162,10 @@ window.storage = {
   },
 
   view(id) {
-    const r = this.resumes.find(x => x.id === id);
-    modalTitle.innerText = r.displayName;
+    const r = this.reports.find(x => x.id === id);
+    modalTitle.innerText = r.name;
     modalInfo.innerText =
-      `Score: ${r.score || "N/A"}%\nDate: ${r.date}\nStatus: ${r.score ? "Analyzed" : "Pending"}`;
+      `Score: ${r.score}%\nDate: ${r.date}\nStatus: ${r.status}`;
     viewModal.classList.remove("hidden");
   },
 
@@ -182,19 +180,19 @@ window.storage = {
   },
 
   sortByScore() {
-    this.resumes.sort((a,b) => b.score - a.score);
-    this.updateStats(this.resumes);
-    this.render(this.resumes);
+    this.reports.sort((a,b) => b.score - a.score);
+    this.updateStats(this.reports);
+    this.render(this.reports);
   },
 
   sortByDate() {
-    this.resumes.sort((a,b) => new Date(b.date) - new Date(a.date));
-    this.updateStats(this.resumes);
-    this.render(this.resumes);
+    this.reports.sort((a,b) => new Date(b.date) - new Date(a.date));
+    this.updateStats(this.reports);
+    this.render(this.reports);
   },
 
   exportAll() {
-    const blob = new Blob([JSON.stringify(this.resumes, null, 2)],
+    const blob = new Blob([JSON.stringify(this.reports, null, 2)],
       { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -209,8 +207,8 @@ function closeModal() {
 
 searchInput.oninput = e => {
   const q = e.target.value.toLowerCase();
-  const filtered = storage.resumes.filter(r =>
-    r.displayName.toLowerCase().includes(q)
+  const filtered = storage.reports.filter(r =>
+    r.name.toLowerCase().includes(q)
   );
   storage.updateStats(filtered);
   storage.render(filtered);
