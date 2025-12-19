@@ -29,9 +29,32 @@ if (!currentUser) window.location.href = "login.html";
 <!-- ===== MAIN ===== -->
 <main class="max-w-6xl mx-auto px-6 py-10">
 
-<h1 class="text-4xl font-black text-center mb-6 text-green-700">
+<h1 class="text-4xl font-black text-center mb-8 text-green-700">
 📊 Past Resume Reports
 </h1>
+
+<!-- ===== STATS ===== -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Total Reports</p>
+    <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Analyzed</p>
+    <h2 id="analyzedCount" class="text-3xl font-bold text-green-600">0</h2>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Average ATS</p>
+    <h2 id="avgScore" class="text-3xl font-bold text-blue-600">0%</h2>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Best Score</p>
+    <h2 id="bestScore" class="text-3xl font-bold text-purple-600">0%</h2>
+  </div>
+</section>
 
 <!-- CONTROLS -->
 <div class="flex flex-wrap gap-3 justify-between mb-8">
@@ -73,10 +96,28 @@ window.storage = {
   load() {
     const saved = JSON.parse(localStorage.getItem(this.key)) || [];
     this.resumes = saved.filter(r => r.email === currentUser.email);
-    this.render();
+    this.updateStats(this.resumes);
+    this.render(this.resumes);
   },
 
-  render(list = this.resumes) {
+  updateStats(list) {
+    const total = list.length;
+    const analyzed = list.filter(r => r.score !== undefined).length;
+
+    let avg = 0, best = 0;
+    if (analyzed) {
+      const scores = list.map(r => r.score);
+      avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+      best = Math.max(...scores);
+    }
+
+    document.getElementById("totalCount").innerText = total;
+    document.getElementById("analyzedCount").innerText = analyzed;
+    document.getElementById("avgScore").innerText = avg + "%";
+    document.getElementById("bestScore").innerText = best + "%";
+  },
+
+  render(list) {
     const box = document.getElementById("resumeGrid");
     if (!list.length) {
       box.innerHTML = "<p class='col-span-full text-center'>No reports yet.</p>";
@@ -113,26 +154,28 @@ window.storage = {
     const r = this.resumes.find(x => x.id === id);
     document.getElementById("modalTitle").innerText = r.name;
     document.getElementById("modalInfo").innerText =
-      `Score: ${r.score}%\nDate: ${r.date}\nStatus: ${r.status || "Analyzed"}`;
+      `Score: ${r.score}%\nDate: ${r.date}\nStatus: Analyzed`;
     document.getElementById("viewModal").classList.remove("hidden");
   },
 
   delete(id) {
     if (!confirm("Delete this report?")) return;
     const all = JSON.parse(localStorage.getItem(this.key)) || [];
-    const filtered = all.filter(r => r.id !== id);
-    localStorage.setItem(this.key, JSON.stringify(filtered));
+    localStorage.setItem(this.key,
+      JSON.stringify(all.filter(r => r.id !== id)));
     this.load();
   },
 
   sortByScore() {
     this.resumes.sort((a,b) => b.score - a.score);
-    this.render();
+    this.updateStats(this.resumes);
+    this.render(this.resumes);
   },
 
   sortByDate() {
     this.resumes.sort((a,b) => new Date(b.date) - new Date(a.date));
-    this.render();
+    this.updateStats(this.resumes);
+    this.render(this.resumes);
   },
 
   exportAll() {
@@ -151,9 +194,11 @@ function closeModal() {
 
 document.getElementById("searchInput").oninput = e => {
   const q = e.target.value.toLowerCase();
-  storage.render(storage.resumes.filter(r =>
+  const filtered = storage.resumes.filter(r =>
     r.name.toLowerCase().includes(q)
-  ));
+  );
+  storage.updateStats(filtered);
+  storage.render(filtered);
 };
 
 storage.load();
