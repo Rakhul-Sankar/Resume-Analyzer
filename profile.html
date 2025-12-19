@@ -2,26 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>User System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>User Profile</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
-   <!-- Navigation -->
-    <nav class="bg-white shadow-lg border-b">
-        <div class="max-w-6xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <h1 class="text-2xl font-bold text-gray-800">Profile</h1>
-                </div>
-                <div class="flex space-x-4">
-                    <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2 rounded-lg transition-colors">Dashboard</a>
-                    <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2 rounded-lg transition-colors">Past Reports</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- ================= NAVBAR ================= -->
+<nav id="navbar" class="bg-white shadow border-b hidden">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+    <div class="space-x-4">
+      <a href="dashboard.html"
+         class="text-gray-700 hover:text-indigo-600 font-medium">
+         Dashboard
+      </a>
+      <a href="reports.html"
+         class="text-gray-700 hover:text-indigo-600 font-medium">
+         Past Reports
+      </a>
+      <button id="logoutBtn"
+         class="text-red-600 font-medium">
+         Logout
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= MAIN CONTENT ================= -->
+<main class="flex justify-center p-6">
 
 <!-- ================= LOGIN ================= -->
 <div id="loginBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
@@ -30,7 +40,8 @@
   <input id="loginPass" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4">
   <button id="loginBtn" class="w-full bg-indigo-600 text-white p-3 rounded">Login</button>
   <p class="text-center mt-4 text-sm">
-    No account? <span id="toSignup" class="text-blue-600 cursor-pointer">Create one</span>
+    No account?
+    <span id="toSignup" class="text-blue-600 cursor-pointer">Create one</span>
   </p>
 </div>
 
@@ -42,26 +53,21 @@
   <input id="signupPass" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4">
   <button id="createBtn" class="w-full bg-green-600 text-white p-3 rounded">Create</button>
   <p class="text-center mt-4 text-sm">
-    Already have an account? <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
+    Already have an account?
+    <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
   </p>
 </div>
 
-<!-- ================= PROFILE ================= -->
+<!-- ================= PROFILE PAGE ================= -->
 <div id="profilePage" class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-xl border hidden">
 
-  <div class="flex justify-between mb-6">
-    <h2 class="text-3xl font-bold text-indigo-600">My Profile</h2>
-    <button id="logoutBtn" class="text-red-600 underline">Logout</button>
-  </div>
+  <h2 class="text-3xl font-bold text-indigo-600 mb-6">My Profile</h2>
 
-  <!-- PROFILE INFO -->
   <div class="grid grid-cols-2 gap-4 mb-6">
     <input id="nameInput" class="p-3 border rounded">
     <input id="emailInput" disabled class="p-3 border rounded bg-gray-100">
   </div>
 
-
-  <!-- HISTORY -->
   <h3 class="text-xl font-bold mb-3">
     Resume Analysis History (<span id="reportCount">0</span>)
   </h3>
@@ -69,75 +75,52 @@
   <div id="resumeList" class="space-y-3"></div>
 </div>
 
+</main>
+
 <script>
 /* ===== ELEMENTS ===== */
+const navbar = document.getElementById("navbar");
 const loginBox = document.getElementById("loginBox");
 const signupBox = document.getElementById("signupBox");
 const profilePage = document.getElementById("profilePage");
 
-const loginEmail = document.getElementById("loginEmail");
-const loginPass = document.getElementById("loginPass");
-const signupName = document.getElementById("signupName");
-const signupEmail = document.getElementById("signupEmail");
-const signupPass = document.getElementById("signupPass");
-
-const nameInput = document.getElementById("nameInput");
-const emailInput = document.getElementById("emailInput");
-const resumeList = document.getElementById("resumeList");
-const reportCount = document.getElementById("reportCount");
-const resumeFile = document.getElementById("resumeFile");
-const analyzeMsg = document.getElementById("analyzeMsg");
-
 /* ===== SHOW / HIDE ===== */
 function showLogin() {
+  navbar.classList.add("hidden");
   loginBox.classList.remove("hidden");
   signupBox.classList.add("hidden");
   profilePage.classList.add("hidden");
 }
+
 function showSignup() {
+  navbar.classList.add("hidden");
   signupBox.classList.remove("hidden");
   loginBox.classList.add("hidden");
   profilePage.classList.add("hidden");
 }
+
 function showProfile() {
+  navbar.classList.remove("hidden");
   profilePage.classList.remove("hidden");
   loginBox.classList.add("hidden");
   signupBox.classList.add("hidden");
   loadProfile();
 }
 
-/* ===== SAVE REPORT ===== */
-function saveResumeReport(filename, score) {
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-  reports.push({ email: user.email, filename, score, date: new Date().toLocaleString() });
-  localStorage.setItem("resumeReports", JSON.stringify(reports));
-}
-
-/* ===== ANALYZE RESUME ===== */
-function analyzeResume() {
-  const file = resumeFile.files[0];
-  if (!file) return alert("Select a resume");
-
-  const atsScore = Math.floor(Math.random() * 40) + 60; // demo score
-  saveResumeReport(file.name, atsScore);
-
-  analyzeMsg.classList.remove("hidden");
-  loadProfile();
-}
-
 /* ===== LOAD PROFILE ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
-  nameInput.value = user.name;
-  emailInput.value = user.email;
+  if (!user) return;
+
+  document.getElementById("nameInput").value = user.name;
+  document.getElementById("emailInput").value = user.email;
 
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
   const userReports = reports.filter(r => r.email === user.email);
 
-  reportCount.textContent = userReports.length;
+  document.getElementById("reportCount").textContent = userReports.length;
 
-  resumeList.innerHTML = userReports.length
+  document.getElementById("resumeList").innerHTML = userReports.length
     ? userReports.map(r => `
       <div class="p-4 bg-gray-100 rounded flex justify-between">
         <div>
@@ -151,18 +134,29 @@ function loadProfile() {
 
 /* ===== AUTH ===== */
 document.getElementById("createBtn").onclick = () => {
-  const user = { name: signupName.value, email: signupEmail.value, pass: signupPass.value };
+  const user = {
+    name: signupName.value,
+    email: signupEmail.value,
+    pass: signupPass.value
+  };
   localStorage.setItem("loggedUser", JSON.stringify(user));
   showProfile();
 };
+
 document.getElementById("loginBtn").onclick = () => {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (user && user.email === loginEmail.value && user.pass === loginPass.value) showProfile();
+  if (user && user.email === loginEmail.value && user.pass === loginPass.value) {
+    showProfile();
+  } else {
+    alert("Invalid credentials");
+  }
 };
+
 document.getElementById("logoutBtn").onclick = () => {
   localStorage.removeItem("loggedUser");
   showLogin();
 };
+
 document.getElementById("toSignup").onclick = showSignup;
 document.getElementById("toLogin").onclick = showLogin;
 
