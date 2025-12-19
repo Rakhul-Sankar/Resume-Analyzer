@@ -1,52 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
 <div id="login-box" class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg hidden">
-    <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
+    <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
+        Login
+    </h2>
 
-    <form onsubmit="saveUser(event)" class="space-y-4">
-        <input id="username" name="username" type="text" placeholder="Username"
+    <form onsubmit="loginUser(event)" class="space-y-4">
+        <input id="email" type="email" placeholder="Email"
             class="w-full p-3 border rounded-lg" required>
+
         <input id="password" type="password" placeholder="Password"
             class="w-full p-3 border rounded-lg" required>
 
-        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg">
+        <p id="errorMsg" class="text-red-600 text-sm hidden"></p>
+
+        <button type="submit"
+            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
             Login
         </button>
     </form>
 
     <p class="mt-4 text-center text-sm">
         No account?
-        <a href="signup.html" class="text-blue-600">Create one</a>
+        <a href="signup.html" class="text-blue-600 font-medium">Create one</a>
     </p>
 </div>
 
 <script>
-    // On page load → Check if user already logged in
-    window.onload = () => {
-        const user = localStorage.getItem("username");
-        if (user) {
-            window.location.href = "analyze.html"; // Already logged in → redirect
-        } else {
-            document.getElementById("login-box").classList.remove("hidden");
-        }
-    };
-
-    // Login Function
-    function saveUser(event) {
-        event.preventDefault();
-        const username = document.getElementById("username").value;
-        localStorage.setItem("username", username); // Save username locally
-        window.location.href = "analyze.html"; // Redirect after login
+/* ===== AUTO LOGIN CHECK ===== */
+window.onload = () => {
+    const user = JSON.parse(localStorage.getItem("loggedUser"));
+    if (user) {
+        window.location.href = "dashboard.html";
+    } else {
+        document.getElementById("login-box").classList.remove("hidden");
     }
+};
+
+/* ===== LOGIN FUNCTION ===== */
+function loginUser(event) {
+    event.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorMsg = document.getElementById("errorMsg");
+
+    // Fetch saved user (created in signup page)
+    const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
+
+    if (!savedUser) {
+        errorMsg.innerText = "No account found. Please sign up first.";
+        errorMsg.classList.remove("hidden");
+        return;
+    }
+
+    if (email === savedUser.email && password === savedUser.password) {
+        localStorage.setItem("loggedUser", JSON.stringify(savedUser));
+        window.location.href = "dashboard.html";
+    } else {
+        errorMsg.innerText = "Invalid email or password";
+        errorMsg.classList.remove("hidden");
+    }
+}
 </script>
 
 </body>
