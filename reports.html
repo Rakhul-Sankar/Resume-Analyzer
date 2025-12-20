@@ -80,7 +80,8 @@ window.storage = {
       .filter(r => r.email === currentUser.email)
       .map(r => ({
         id: r.id,
-        name: r.name || "Untitled Resume",
+        // ✅ FIX: Proper name priority
+        name: r.filename || r.name || "Resume",
         content: r.content || "",
         score: Number(r.score) || 0,
         date: r.date || new Date().toLocaleString()
@@ -150,15 +151,10 @@ window.storage = {
           ${this.skillMatch(r.score)}
         </p>
 
-        <div class="grid grid-cols-3 gap-2 mt-4">
+        <div class="grid grid-cols-2 gap-2 mt-4">
           <button onclick="storage.view('${r.id}')"
             class="bg-gray-700 text-white py-2 rounded text-sm">
             👁 View
-          </button>
-
-          <button onclick="storage.reAnalyze('${r.id}')"
-            class="bg-blue-600 text-white py-2 rounded text-sm">
-            🔁 Re-Analyze
           </button>
 
           <button onclick="storage.delete('${r.id}')"
@@ -170,58 +166,16 @@ window.storage = {
     `).join("");
   },
 
+  // ✅ FIXED VIEW BUTTON
   view(id) {
     const r = this.reports.find(x => x.id === id);
+    if (!r) return;
+
     modalTitle.innerText = r.name;
     modalInfo.innerText =
       `ATS Score: ${r.score}%\n\nResume Strength:\n${this.getBadge(r.score)}\n\nSkill Match:\n${this.skillMatch(r.score)}`;
+
     viewModal.classList.remove("hidden");
-  },
-
-  reAnalyze(id) {
-    const all = JSON.parse(localStorage.getItem(this.key)) || [];
-    const index = all.findIndex(r => r.id === id);
-    if (index === -1) return;
-
-    const resume = all[index];
-    if (!resume.content) {
-      alert("Resume content missing. Cannot re-analyze.");
-      return;
-    }
-
-    modalTitle.innerText = "Re-Analyzing Resume...";
-    modalInfo.innerText = "Calculating ATS score. Please wait...";
-    viewModal.classList.remove("hidden");
-
-    setTimeout(() => {
-      resume.score = this.calculateATS(resume.content);
-      resume.date = new Date().toLocaleString();
-      all[index] = resume;
-
-      localStorage.setItem(this.key, JSON.stringify(all));
-      viewModal.classList.add("hidden");
-      this.load();
-    }, 1200);
-  },
-
-  calculateATS(text) {
-    const keywords = [
-      "skills","experience","education","project",
-      "html","css","javascript","python",
-      "django","react","sql","internship"
-    ];
-
-    let score = 40;
-    const lower = text.toLowerCase();
-
-    keywords.forEach(k => {
-      if (lower.includes(k)) score += 4;
-    });
-
-    if (text.length > 1500) score += 10;
-    if (text.length > 2500) score += 10;
-
-    return Math.min(score, 100);
   },
 
   delete(id) {
