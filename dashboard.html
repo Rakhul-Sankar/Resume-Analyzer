@@ -1,146 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Resume Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Resume Analyzer</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
 
 <!-- ================= NAVIGATION ================= -->
 <nav class="bg-white shadow-lg border-b">
-    <div class="max-w-6xl mx-auto px-6 py-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-            <div class="flex space-x-4 items-center">
-                <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-                    Upload
-                </a>
-                <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-                    Profile
-                </a>
-                <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-                    Past Reports
-                </a>
-                <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">
-                    Logout
-                </button>
-            </div>
-        </div>
+    <div class="flex space-x-4 items-center">
+      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
+  </div>
 </nav>
 
 <!-- ================= STATS ================= -->
 <section class="max-w-6xl mx-auto px-6 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 
-    <div class="bg-white p-6 rounded-xl shadow text-center">
-        <p class="text-gray-500">Total Resumes</p>
-        <h2 id="totalResumes" class="text-3xl font-bold text-indigo-600">0</h2>
-    </div>
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Total Resumes Uploaded</p>
+    <h2 id="totalResumes" class="text-3xl font-bold text-indigo-600">0</h2>
+  </div>
 
-    <div class="bg-white p-6 rounded-xl shadow text-center">
-        <p class="text-gray-500">Average ATS Score</p>
-        <h2 id="avgScore" class="text-3xl font-bold text-green-600">0%</h2>
-    </div>
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Average ATS Score</p>
+    <h2 id="avgScore" class="text-3xl font-bold text-green-600">0%</h2>
+  </div>
 
-    <div class="bg-white p-6 rounded-xl shadow text-center">
-        <p class="text-gray-500">Last Upload</p>
-        <h2 id="lastUpload" class="text-lg font-semibold text-gray-700">--</h2>
-    </div>
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p class="text-gray-500">Last Upload</p>
+    <h2 id="lastUpload" class="text-lg font-semibold text-gray-700">--</h2>
+  </div>
 
 </section>
 
-<!-- ================= MAIN CONTENT ================= -->
+<!-- ================= MAIN ================= -->
 <main class="max-w-md mx-auto px-6 py-12">
+  <div class="bg-white p-8 rounded-xl shadow-lg text-center">
 
-    <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+    <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
 
-        <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
+    <p class="text-gray-600 mb-8 text-lg">
+      Continue to upload your resume or explore your profile and past reports.
+    </p>
 
-        <p class="text-gray-600 mb-8 text-lg">
-            Continue to upload your resume or explore your profile and past reports.
-        </p>
+    <div class="space-y-4">
+      <a href="profile.html"
+         class="block bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">
+         View Profile
+      </a>
 
-        <div class="space-y-4">
-            <a href="profile.html"
-               class="block bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">
-               View Profile
-            </a>
+      <a href="reports.html"
+         class="block bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">
+         Past Reports
+      </a>
 
-            <a href="reports.html"
-               class="block bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">
-               Past Reports
-            </a>
-
-            <a href="upload.html"
-               class="block bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700">
-               Upload Resume
-            </a>
-        </div>
-
+      <a href="upload.html"
+         class="block bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700">
+         Upload Resume
+      </a>
     </div>
+
+  </div>
 </main>
 
 <!-- ================= SCRIPT ================= -->
 <script>
 /* ===== AUTH CHECK ===== */
 const user = JSON.parse(localStorage.getItem("loggedUser"));
-if (!user) {
-    window.location.href = "login.html";
-}
+if (!user) window.location.href = "login.html";
 
 /* ===== GREETING ===== */
 const hour = new Date().getHours();
 const greeting =
-    hour < 12 ? "Good Morning" :
-    hour < 16 ? "Good Afternoon" :
-    "Good Evening";
+  hour < 12 ? "Good Morning" :
+  hour < 16 ? "Good Afternoon" :
+  "Good Evening";
 
 document.getElementById("greeting").innerText =
-    `Welcome, ${greeting} ${user.name}!`;
+  `Welcome, ${greeting} ${user.name}!`;
 
-/* ===== LOAD ALL RESUMES ===== */
-const allResumes =
-    JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+/* ===== LOAD RESUMES FROM UPLOAD (SINGLE SOURCE) ===== */
+const resumes =
+  JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
 
-/* ===== TOTAL RESUMES (UPLOAD PAGE ONLY) ===== */
-const uploadedResumes = allResumes.filter(r =>
-    r.email === user.email &&
-    r.status === "uploaded"
-);
+/* ✅ TOTAL RESUMES = ALL UPLOADS */
+const userResumes = resumes.filter(r => r.email === user.email);
+document.getElementById("totalResumes").innerText = userResumes.length;
 
-document.getElementById("totalResumes").innerText =
-    uploadedResumes.length;
-
-/* ===== ANALYZED RESUMES (ANALYZE PAGE ONLY) ===== */
-const analyzedResumes = allResumes.filter(r =>
-    r.email === user.email &&
-    r.analyzed === true &&
-    typeof r.score === "number"
-);
-
-/* ===== AVERAGE ATS ===== */
-if (analyzedResumes.length) {
-    const avg = Math.round(
-        analyzedResumes.reduce((sum, r) => sum + r.score, 0) /
-        analyzedResumes.length
-    );
-    document.getElementById("avgScore").innerText = avg + "%";
+/* ✅ LAST UPLOAD */
+if (userResumes.length) {
+  document.getElementById("lastUpload").innerText =
+    userResumes[0].uploaded || "--";
 }
 
-/* ===== LAST UPLOAD DATE ===== */
-if (uploadedResumes.length) {
-    document.getElementById("lastUpload").innerText =
-        uploadedResumes[0].uploaded || "--";
+/* ✅ ANALYZED RESUMES ONLY */
+const analyzed = userResumes.filter(r =>
+  r.analyzed === true && typeof r.score === "number"
+);
+
+/* ✅ AVERAGE ATS */
+if (analyzed.length) {
+  const avg = Math.round(
+    analyzed.reduce((sum, r) => sum + r.score, 0) / analyzed.length
+  );
+  document.getElementById("avgScore").innerText = avg + "%";
+} else {
+  document.getElementById("avgScore").innerText = "0%";
 }
 
 /* ===== LOGOUT ===== */
 function logout() {
-    localStorage.removeItem("loggedUser");
-    window.location.href = "login.html";
+  localStorage.removeItem("loggedUser");
+  window.location.href = "login.html";
 }
 </script>
 
