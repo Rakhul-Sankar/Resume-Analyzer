@@ -59,6 +59,7 @@ const previewBox = document.getElementById("previewBox");
 const previewText = document.getElementById("previewText");
 const progressBox = document.getElementById("progressBox");
 const progressBar = document.getElementById("progressBar");
+const resumeCount = document.getElementById("resumeCount");
 
 dropZone.onclick = () => fileInput.click();
 
@@ -129,7 +130,7 @@ async function saveResume() {
     }
 
     const key = "advancedResumes_v2";
-    const user = JSON.parse(localStorage.getItem("userProfile"));
+    const userProfile = JSON.parse(localStorage.getItem("userProfile"));
     let resumes = JSON.parse(localStorage.getItem(key) || "[]");
 
     resumes.unshift({
@@ -138,14 +139,22 @@ async function saveResume() {
         content: extractedText.trim(),
         uploaded: new Date().toLocaleString("en-IN"),
         status: "uploaded",
-        email: user?.email || "unknown"
+        email: userProfile?.email || "unknown"
     });
 
     localStorage.setItem(key, JSON.stringify(resumes));
 
+    // ✅ SMART REDIRECT LOGIC
+    const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+
     setTimeout(() => {
         alert("Resume Uploaded Successfully ✔");
-        window.location.href = "login.html";
+
+        if (loggedUser) {
+            window.location.href = "analyze.html"; // existing user
+        } else {
+            window.location.href = "login.html";   // new user
+        }
     }, 700);
 }
 
