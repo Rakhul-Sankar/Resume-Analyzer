@@ -37,9 +37,10 @@
     </div>
 
     <!-- Preview -->
-    <div id="previewBox" class="hidden bg-gray-50 border rounded-lg p-3 text-sm h-32 overflow-y-auto">
-        <p class="font-semibold mb-1">Resume Preview:</p>
-        <pre id="previewText" class="text-gray-600 whitespace-pre-wrap"></pre>
+    <div id="previewBox" class="hidden bg-gray-50 border rounded-lg p-3 text-sm">
+        <p class="font-semibold mb-2">Resume Preview</p>
+        <p id="previewName" class="text-gray-700"></p>
+        <p id="previewEmail" class="text-gray-600 text-sm"></p>
     </div>
 
     <button onclick="saveResume()"
@@ -47,7 +48,6 @@
         Upload & Analyze
     </button>
 
-    <!-- Upload Count -->
     <p id="resumeCount" class="text-center text-xs text-gray-500"></p>
 
 </div>
@@ -56,7 +56,8 @@
 const fileInput = document.getElementById("resumeFile");
 const dropZone = document.getElementById("dropZone");
 const previewBox = document.getElementById("previewBox");
-const previewText = document.getElementById("previewText");
+const previewName = document.getElementById("previewName");
+const previewEmail = document.getElementById("previewEmail");
 const progressBox = document.getElementById("progressBox");
 const progressBar = document.getElementById("progressBar");
 const resumeCount = document.getElementById("resumeCount");
@@ -101,7 +102,12 @@ async function previewFile() {
         text = result.value;
     }
 
-    previewText.textContent = text.slice(0, 600) + "...";
+    // ✅ Extract email only
+    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+
+    previewName.textContent = "📄 File: " + file.name;
+    previewEmail.textContent = "📧 Email: " + (emailMatch ? emailMatch[0] : "Not found");
+
     previewBox.classList.remove("hidden");
 }
 
@@ -130,7 +136,7 @@ async function saveResume() {
     }
 
     const key = "advancedResumes_v2";
-    const userProfile = JSON.parse(localStorage.getItem("userProfile"));
+    const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
     let resumes = JSON.parse(localStorage.getItem(key) || "[]");
 
     resumes.unshift({
@@ -139,21 +145,19 @@ async function saveResume() {
         content: extractedText.trim(),
         uploaded: new Date().toLocaleString("en-IN"),
         status: "uploaded",
-        email: userProfile?.email || "unknown"
+        email: loggedUser?.email || "unknown"
     });
 
     localStorage.setItem(key, JSON.stringify(resumes));
 
-    // ✅ SMART REDIRECT LOGIC
-    const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
-
+    // ✅ FORCE REDIRECT (no dashboard interference)
     setTimeout(() => {
         alert("Resume Uploaded Successfully ✔");
 
         if (loggedUser) {
-            window.location.href = "analyze.html"; // existing user
+            location.replace("analyze.html");
         } else {
-            window.location.href = "login.html";   // new user
+            location.replace("login.html");
         }
     }, 700);
 }
