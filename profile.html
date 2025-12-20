@@ -21,7 +21,6 @@
   </div>
 </nav>
 
-<!-- ================= MAIN ================= -->
 <main class="flex justify-center p-6">
 
 <!-- ================= LOGIN ================= -->
@@ -30,23 +29,6 @@
   <input id="loginEmail" placeholder="Email" class="w-full p-3 border rounded mb-3">
   <input id="loginPass" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4">
   <button id="loginBtn" class="w-full bg-indigo-600 text-white p-3 rounded">Login</button>
-  <p class="text-center mt-4 text-sm">
-    No account?
-    <span id="toSignup" class="text-blue-600 cursor-pointer">Create one</span>
-  </p>
-</div>
-
-<!-- ================= SIGNUP ================= -->
-<div id="signupBox" class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border hidden">
-  <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">Create Account</h2>
-  <input id="signupName" placeholder="Full Name" class="w-full p-3 border rounded mb-3">
-  <input id="signupEmail" placeholder="Email" class="w-full p-3 border rounded mb-3">
-  <input id="signupPass" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4">
-  <button id="createBtn" class="w-full bg-green-600 text-white p-3 rounded">Create</button>
-  <p class="text-center mt-4 text-sm">
-    Already have an account?
-    <span id="toLogin" class="text-blue-600 cursor-pointer">Login</span>
-  </p>
 </div>
 
 <!-- ================= PROFILE ================= -->
@@ -54,13 +36,12 @@
 
   <h2 class="text-3xl font-bold text-indigo-600 mb-6">My Profile</h2>
 
-  <!-- Profile Info -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
     <input id="nameInput" class="p-3 border rounded">
     <input id="emailInput" disabled class="p-3 border rounded bg-gray-100">
   </div>
 
-  <button onclick="saveProfile()"
+  <button id="saveBtn"
     class="mb-8 bg-indigo-600 text-white px-4 py-2 rounded-lg">
     Save Profile
   </button>
@@ -81,7 +62,6 @@
     </div>
   </div>
 
-  <!-- History -->
   <h3 class="text-xl font-bold mb-3">
     Resume History (<span id="reportCount">0</span>)
   </h3>
@@ -92,84 +72,103 @@
 </main>
 
 <script>
-/* ===== LOAD PROFILE (FROM REPORTS ONLY – FIXED) ===== */
+/* ===== ELEMENTS ===== */
+const navbar = document.getElementById("navbar");
+const loginBox = document.getElementById("loginBox");
+const profilePage = document.getElementById("profilePage");
+
+const nameInput = document.getElementById("nameInput");
+const emailInput = document.getElementById("emailInput");
+const totalResumes = document.getElementById("totalResumes");
+const avgScore = document.getElementById("avgScore");
+const lastDate = document.getElementById("lastDate");
+const resumeList = document.getElementById("resumeList");
+const reportCount = document.getElementById("reportCount");
+
+/* ===== VIEW ===== */
+function showLogin() {
+  navbar.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+  profilePage.classList.add("hidden");
+}
+
+function showProfile() {
+  navbar.classList.remove("hidden");
+  profilePage.classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  loadProfile();
+}
+
+/* ===== LOAD PROFILE (FROM REPORTS) ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (!user) return;
+  if (!user) return showLogin();
 
-  nameInput.value = user.name || "";
-  emailInput.value = user.email || "";
+  nameInput.value = user.name;
+  emailInput.value = user.email;
 
-  /* ✅ SOURCE OF TRUTH */
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-
-  /* ✅ FILTER BY USER */
   const userReports = reports.filter(r => r.email === user.email);
 
-  /* ===== COUNTS ===== */
   totalResumes.innerText = userReports.length;
   reportCount.innerText = userReports.length;
 
-  /* ===== ATS + LAST DATE ===== */
   if (userReports.length) {
-    const scores = userReports
-      .map(r => r.score ?? r.atsScore)
-      .filter(s => typeof s === "number");
+    const scores = userReports.map(r => r.score ?? r.atsScore).filter(n => typeof n === "number");
+    avgScore.innerText = scores.length
+      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
+      : "0%";
 
-    const avg = scores.length
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : 0;
-
-    avgScore.innerText = avg + "%";
-
-    /* latest report */
-    const latest = userReports[0];
     lastDate.innerText =
-      latest.analyzedDate ||
-      latest.date ||
-      latest.uploaded ||
+      userReports[0].analyzedDate ||
+      userReports[0].date ||
       "--";
-  } else {
-    avgScore.innerText = "0%";
-    lastDate.innerText = "--";
   }
 
-  /* ===== HISTORY LIST ===== */
   resumeList.innerHTML = userReports.length
-    ? userReports.map(r => {
-        const resumeName =
-          r.name ||
-          r.filename ||
-          r.fileName ||
-          "Resume";
-
-        const score =
-          r.score ??
-          r.atsScore ??
-          "--";
-
-        const date =
-          r.analyzedDate ||
-          r.date ||
-          r.uploaded ||
-          "--";
-
-        return `
-          <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-            <div>
-              <b>${resumeName}</b>
-              <div class="text-xs text-gray-500">${date}</div>
-            </div>
-            <span class="font-bold text-indigo-600">
-              ${typeof score === "number" ? score + "%" : score}
-            </span>
+    ? userReports.map(r => `
+      <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+        <div>
+          <b>${r.name || r.filename || "Resume"}</b>
+          <div class="text-xs text-gray-500">
+            ${r.analyzedDate || r.date || "--"}
           </div>
-        `;
-      }).join("")
-    : "<p class='text-gray-500'>No analyzed resumes yet.</p>";
+        </div>
+        <span class="font-bold text-indigo-600">
+          ${(r.score ?? r.atsScore) + "%"}
+        </span>
+      </div>
+    `).join("")
+    : "<p class='text-gray-500'>No reports found.</p>";
 }
-</script>
 
+/* ===== AUTH ===== */
+loginBtn.onclick = () => {
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  if (user && user.email === loginEmail.value && user.pass === loginPass.value) {
+    showProfile();
+  } else {
+    alert("Invalid login");
+  }
+};
+
+logoutBtn.onclick = () => {
+  localStorage.removeItem("loggedUser");
+  showLogin();
+};
+
+saveBtn.onclick = () => {
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  user.name = nameInput.value;
+  localStorage.setItem("loggedUser", JSON.stringify(user));
+  alert("Profile updated");
+};
+
+/* ===== INIT ===== */
+window.onload = () => {
+  localStorage.getItem("loggedUser") ? showProfile() : showLogin();
+};
+</script>
 
 </body>
 </html>
