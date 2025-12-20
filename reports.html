@@ -43,12 +43,12 @@ if (!currentUser) window.location.href = "login.html";
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p class="text-gray-500">Best ATS Score</p>
-    <h2 id="bestScore" class="text-3xl font-bold text-green-600">--</h2>
+    <h2 id="bestScore" class="text-3xl font-bold text-green-600">0%</h2>
   </div>
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p class="text-gray-500">Average ATS</p>
-    <h2 id="avgScore" class="text-3xl font-bold text-blue-600">--</h2>
+    <h2 id="avgScore" class="text-3xl font-bold text-blue-600">0%</h2>
   </div>
 </section>
 
@@ -65,8 +65,16 @@ window.storage = {
   load() {
     const saved = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    // ✅ ONLY READ SCORE FROM ANALYZE PAGE
-    this.reports = saved.filter(r => r.email === currentUser.email);
+    // ✅ Normalize ATS score from analyze page
+    this.reports = saved
+      .filter(r => r.email === currentUser.email)
+      .map(r => ({
+        ...r,
+        finalScore:
+          typeof r.score === "number" ? r.score :
+          typeof r.atsScore === "number" ? r.atsScore :
+          null
+      }));
 
     this.updateStats();
     this.render();
@@ -74,19 +82,19 @@ window.storage = {
 
   updateStats() {
     const total = this.reports.length;
-    const scored = this.reports.filter(r => typeof r.score === "number");
+    const scored = this.reports.filter(r => typeof r.finalScore === "number");
 
-    let avg = "--", best = "--";
+    let avg = 0, best = 0;
 
     if (scored.length) {
-      const scores = scored.map(r => r.score);
-      avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%";
-      best = Math.max(...scores) + "%";
+      const scores = scored.map(r => r.finalScore);
+      avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+      best = Math.max(...scores);
     }
 
     totalCount.innerText = total;
-    avgScore.innerText = avg;
-    bestScore.innerText = best;
+    avgScore.innerText = avg + "%";
+    bestScore.innerText = best + "%";
   },
 
   render() {
@@ -112,22 +120,22 @@ window.storage = {
         <p class="text-xs text-gray-500">📅 ${r.uploaded || r.date}</p>
 
         ${
-          typeof r.score === "number"
+          typeof r.finalScore === "number"
           ? `
             <div class="text-center text-3xl font-black text-indigo-600">
-              ${r.score}%
+              ${r.finalScore}%
             </div>
 
-            <!-- Tailwind Liquid Bar -->
+            <!-- Tailwind Liquid Progress -->
             <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div class="absolute inset-y-0 left-0
-                ${r.score >= 80 ? 'bg-green-500' :
-                  r.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}
-                rounded-full transition-all duration-700 ease-out"
-                style="width:${r.score}%">
+              <div class="absolute left-0 top-0 h-full
+                ${r.finalScore >= 80 ? 'bg-green-500' :
+                  r.finalScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}
+                transition-all duration-1000 ease-out"
+                style="width:${r.finalScore}%">
               </div>
 
-              <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+              <div class="absolute inset-0 bg-white/30 animate-pulse"></div>
             </div>
 
             <p class="text-center text-sm font-semibold text-green-700">
@@ -136,7 +144,7 @@ window.storage = {
           `
           : `
             <div class="text-center text-lg font-semibold text-gray-400">
-              ⏳ Pending Analysis
+              ⏳ Waiting for Analysis
             </div>
           `
         }
