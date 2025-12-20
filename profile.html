@@ -68,7 +68,7 @@
   <!-- Stats -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-gray-100 p-4 rounded text-center">
-      <p class="text-gray-500 text-sm">Total Resumes</p>
+      <p class="text-gray-500 text-sm">Total Reports</p>
       <h3 id="totalResumes" class="text-2xl font-bold">0</h3>
     </div>
     <div class="bg-gray-100 p-4 rounded text-center">
@@ -121,7 +121,7 @@ function showProfile() {
   loadProfile();
 }
 
-/* ===== LOAD PROFILE DATA ===== */
+/* ===== LOAD PROFILE (FROM REPORTS ONLY) ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return;
@@ -129,40 +129,34 @@ function loadProfile() {
   nameInput.value = user.name;
   emailInput.value = user.email;
 
-  const resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-  const userResumes = resumes.filter(r => r.email === user.email);
+  const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+  const userReports = reports.filter(r => r.email === user.email);
 
-  /* Total uploads */
-  totalResumes.innerText = userResumes.length;
-  reportCount.innerText = userResumes.length;
+  totalResumes.innerText = userReports.length;
+  reportCount.innerText = userReports.length;
 
-  /* Analyzed resumes */
-  const analyzed = userResumes.filter(r => r.analyzed === true);
-
-  if (analyzed.length) {
+  if (userReports.length) {
     const avg = Math.round(
-      analyzed.reduce((sum, r) => sum + r.score, 0) / analyzed.length
+      userReports.reduce((sum, r) => sum + r.score, 0) / userReports.length
     );
     avgScore.innerText = avg + "%";
-    lastDate.innerText = analyzed[0].analyzedDate || "--";
+    lastDate.innerText = userReports[0].analyzedDate || "--";
   } else {
     avgScore.innerText = "0%";
     lastDate.innerText = "--";
   }
 
-  /* Resume List */
-  resumeList.innerHTML = userResumes.length
-    ? userResumes.map(r => `
+  resumeList.innerHTML = userReports.length
+    ? userReports.map(r => `
       <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
         <div>
           <b>${r.name}</b>
-          <div class="text-xs text-gray-500">${r.uploaded}</div>
+          <div class="text-xs text-gray-500">${r.analyzedDate}</div>
         </div>
-        <span class="font-bold">
-          ${r.analyzed ? r.score + "%" : "Pending"}
-        </span>
-      </div>`).join("")
-    : "<p class='text-gray-500'>No resumes uploaded yet.</p>";
+        <span class="font-bold text-indigo-600">${r.score}%</span>
+      </div>
+    `).join("")
+    : "<p class='text-gray-500'>No analyzed resumes yet.</p>";
 }
 
 /* ===== SAVE PROFILE ===== */
@@ -170,7 +164,7 @@ function saveProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   user.name = nameInput.value;
   localStorage.setItem("loggedUser", JSON.stringify(user));
-  alert("Profile updated");
+  alert("Profile updated successfully");
 }
 
 /* ===== AUTH ===== */
