@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard - Resume Analyzer</title>
-<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Resume Analyzer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
@@ -23,8 +23,6 @@
   </div>
 </nav>
 
-
-
 <!-- ================= MAIN ================= -->
 <main class="max-w-md mx-auto px-6 py-12">
   <div class="bg-white p-8 rounded-xl shadow-lg text-center">
@@ -32,23 +30,23 @@
     <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
 
     <p class="text-gray-600 mb-8 text-lg">
-      Continue to upload your resume or explore your profile and past reports.
+      Continue by uploading your resume or exploring your profile and past reports.
     </p>
 
     <div class="space-y-4">
       <a href="profile.html"
          class="block bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">
-         View Profile
+        View Profile
       </a>
 
       <a href="reports.html"
          class="block bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">
-         Past Reports
+        Past Reports
       </a>
 
       <a href="upload.html"
          class="block bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700">
-         Upload Resume
+        Upload Resume
       </a>
     </div>
 
@@ -57,62 +55,27 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
-/* ===== AUTH CHECK ===== */
-const user = JSON.parse(localStorage.getItem("loggedUser"));
-if (!user) window.location.href = "login.html";
+  /* ===== AUTH CHECK ===== */
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  if (!user) {
+    window.location.href = "login.html";
+  }
 
-/* ===== GREETING ===== */
-const hour = new Date().getHours();
-const greeting =
-  hour < 12 ? "Good Morning" :
-  hour < 16 ? "Good Afternoon" :
-  "Good Evening";
+  /* ===== GREETING ===== */
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good Morning" :
+    hour < 16 ? "Good Afternoon" :
+    "Good Evening";
 
-document.getElementById("greeting").innerText =
-  `Welcome, ${greeting} ${user.name}!`;
+  document.getElementById("greeting").innerText =
+    `Welcome, ${greeting} ${user.name}!`;
 
-/* ======================================================
-   SINGLE SOURCE OF TRUTH → UPLOAD PAGE STORAGE
-====================================================== */
-const resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-
-/* ✅ MATCH BOTH OLD & NEW EMAIL STORAGE (CRITICAL FIX) */
-const userResumes = resumes.filter(r =>
-  r.email === user.email ||
-  r.email === JSON.parse(localStorage.getItem("userProfile"))?.email
-);
-
-/* ✅ TOTAL UPLOADED (100% MATCHES UPLOAD PAGE) */
-document.getElementById("totalResumes").innerText = userResumes.length;
-
-/* ✅ LAST UPLOAD DATE */
-if (userResumes.length) {
-  document.getElementById("lastUpload").innerText =
-    userResumes[0].uploaded || "--";
-}
-
-/* ======================================================
-   ATS CALCULATIONS (ONLY ANALYZED RESUMES)
-====================================================== */
-const analyzedResumes = userResumes.filter(r =>
-  typeof r.score === "number"
-);
-
-if (analyzedResumes.length) {
-  const avg = Math.round(
-    analyzedResumes.reduce((sum, r) => sum + r.score, 0) /
-    analyzedResumes.length
-  );
-  document.getElementById("avgScore").innerText = avg + "%";
-} else {
-  document.getElementById("avgScore").innerText = "0%";
-}
-
-/* ===== LOGOUT ===== */
-function logout() {
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-}
+  /* ===== LOGOUT ===== */
+  function logout() {
+    localStorage.removeItem("loggedUser");
+    window.location.href = "login.html";
+  }
 </script>
 
 </body>
