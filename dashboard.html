@@ -89,29 +89,37 @@ const greeting =
 document.getElementById("greeting").innerText =
   `Welcome, ${greeting} ${user.name}!`;
 
-/* ===== LOAD RESUMES FROM UPLOAD (SINGLE SOURCE) ===== */
-const resumes =
-  JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+/* ======================================================
+   SINGLE SOURCE OF TRUTH → UPLOAD PAGE STORAGE
+====================================================== */
+const resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
 
-/* ✅ TOTAL RESUMES = ALL UPLOADS */
-const userResumes = resumes.filter(r => r.email === user.email);
+/* ✅ MATCH BOTH OLD & NEW EMAIL STORAGE (CRITICAL FIX) */
+const userResumes = resumes.filter(r =>
+  r.email === user.email ||
+  r.email === JSON.parse(localStorage.getItem("userProfile"))?.email
+);
+
+/* ✅ TOTAL UPLOADED (100% MATCHES UPLOAD PAGE) */
 document.getElementById("totalResumes").innerText = userResumes.length;
 
-/* ✅ LAST UPLOAD */
+/* ✅ LAST UPLOAD DATE */
 if (userResumes.length) {
   document.getElementById("lastUpload").innerText =
     userResumes[0].uploaded || "--";
 }
 
-/* ✅ ANALYZED RESUMES ONLY */
-const analyzed = userResumes.filter(r =>
-  r.analyzed === true && typeof r.score === "number"
+/* ======================================================
+   ATS CALCULATIONS (ONLY ANALYZED RESUMES)
+====================================================== */
+const analyzedResumes = userResumes.filter(r =>
+  typeof r.score === "number"
 );
 
-/* ✅ AVERAGE ATS */
-if (analyzed.length) {
+if (analyzedResumes.length) {
   const avg = Math.round(
-    analyzed.reduce((sum, r) => sum + r.score, 0) / analyzed.length
+    analyzedResumes.reduce((sum, r) => sum + r.score, 0) /
+    analyzedResumes.length
   );
   document.getElementById("avgScore").innerText = avg + "%";
 } else {
