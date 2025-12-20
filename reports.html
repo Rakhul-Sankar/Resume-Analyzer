@@ -31,24 +31,24 @@ if (!currentUser) window.location.href = "login.html";
 <main class="max-w-6xl mx-auto px-6 py-10">
 
 <h1 class="text-4xl font-black text-center mb-10 text-green-700">
-📊 Resume Analysis Reports
+📊 Resume Reports
 </h1>
 
 <!-- ===== STATS ===== -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
   <div class="bg-white p-6 rounded-xl shadow text-center">
-    <p class="text-gray-500">Total Reports</p>
+    <p class="text-gray-500">Total Resumes</p>
     <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
   </div>
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p class="text-gray-500">Best ATS Score</p>
-    <h2 id="bestScore" class="text-3xl font-bold text-green-600">0%</h2>
+    <h2 id="bestScore" class="text-3xl font-bold text-green-600">--</h2>
   </div>
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p class="text-gray-500">Average ATS</p>
-    <h2 id="avgScore" class="text-3xl font-bold text-blue-600">0%</h2>
+    <h2 id="avgScore" class="text-3xl font-bold text-blue-600">--</h2>
   </div>
 </section>
 
@@ -65,10 +65,8 @@ window.storage = {
   load() {
     const saved = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    // ✅ fetch resumes generated from analyze page
-    this.reports = saved.filter(r =>
-      r.email === currentUser.email && r.score !== undefined
-    );
+    // ✅ FETCH DIRECTLY FROM UPLOAD
+    this.reports = saved.filter(r => r.email === currentUser.email);
 
     this.updateStats();
     this.render();
@@ -76,23 +74,26 @@ window.storage = {
 
   updateStats() {
     const total = this.reports.length;
-    let avg = 0, best = 0;
+    const scored = this.reports.filter(r => typeof r.score === "number");
 
-    if (total) {
-      const scores = this.reports.map(r => Number(r.score) || 0);
-      avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-      best = Math.max(...scores);
+    let avg = "--", best = "--";
+
+    if (scored.length) {
+      const scores = scored.map(r => r.score);
+      avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%";
+      best = Math.max(...scores) + "%";
     }
 
     totalCount.innerText = total;
-    avgScore.innerText = avg + "%";
-    bestScore.innerText = best + "%";
+    avgScore.innerText = avg;
+    bestScore.innerText = best;
   },
 
   getBadge(score) {
     if (score >= 80) return "🟢 Excellent Resume";
     if (score >= 60) return "🟡 Good Resume";
-    return "🔴 Needs Improvement";
+    if (typeof score === "number") return "🔴 Needs Improvement";
+    return "⚪ Not Analyzed";
   },
 
   render() {
@@ -102,10 +103,10 @@ window.storage = {
       box.innerHTML = `
         <div class="col-span-full text-center bg-white p-10 rounded-xl shadow">
           <p class="text-xl font-semibold text-gray-600">
-            No analyzed resumes found
+            No resumes found
           </p>
           <p class="text-gray-400 mt-2">
-            Upload and analyze a resume first.
+            Upload a resume to see it here.
           </p>
         </div>`;
       return;
@@ -115,44 +116,48 @@ window.storage = {
       <div class="bg-white p-6 rounded-xl shadow space-y-4">
 
         <h2 class="font-bold truncate">${r.name}</h2>
-        <p class="text-xs text-gray-500">📅 ${r.date || r.uploaded}</p>
+        <p class="text-xs text-gray-500">📅 ${r.uploaded || r.date}</p>
 
-        <div class="text-center text-3xl font-black text-indigo-600">
-          ${r.score}%
-        </div>
-
-        <div class="w-full bg-gray-200 rounded-full h-2">
-          <div class="h-2 rounded-full
-            ${r.score >= 80 ? 'bg-green-500' :
-              r.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}"
-            style="width:${r.score}%">
-          </div>
-        </div>
+        ${
+          typeof r.score === "number"
+          ? `
+            <div class="text-center text-3xl font-black text-indigo-600">
+              ${r.score}%
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="h-2 rounded-full
+                ${r.score >= 80 ? 'bg-green-500' :
+                  r.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}"
+                style="width:${r.score}%"></div>
+            </div>
+          `
+          : `
+            <div class="text-center text-xl font-semibold text-gray-400">
+              Not Analyzed
+            </div>
+          `
+        }
 
         <p class="text-center text-sm font-semibold">
           ${this.getBadge(r.score)}
         </p>
 
-        <p class="text-center text-xs text-gray-500">
-          Status: <span class="font-semibold text-green-600">Analyzed</span>
-        </p>
-
         <button onclick="storage.delete('${r.id}')"
           class="w-full bg-red-600 text-white py-2 rounded text-sm">
-          🗑 Delete Report
+          🗑 Delete Resume
         </button>
       </div>
     `).join("");
   },
 
   delete(id) {
-    if (!confirm("Delete this report?")) return;
+    if (!confirm("Delete this resume?")) return;
 
     let all = JSON.parse(localStorage.getItem(this.key)) || [];
     all = all.filter(r => r.id !== id);
     localStorage.setItem(this.key, JSON.stringify(all));
 
-    this.load(); // refresh UI
+    this.load();
   }
 };
 
