@@ -56,18 +56,6 @@ if (!currentUser) window.location.href = "login.html";
 
 </main>
 
-<!-- ===== MODAL ===== -->
-<div id="viewModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
-  <div class="bg-white p-6 rounded-xl max-w-md w-full">
-    <h2 id="modalTitle" class="text-xl font-bold mb-2"></h2>
-    <p id="modalInfo" class="text-gray-600 whitespace-pre-line"></p>
-    <button onclick="closeModal()"
-      class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg w-full">
-      Close
-    </button>
-  </div>
-</div>
-
 <script>
 window.storage = {
   key: "resumeReports",
@@ -80,9 +68,7 @@ window.storage = {
       .filter(r => r.email === currentUser.email)
       .map(r => ({
         id: r.id,
-        // ✅ FIX: Proper name priority
         name: r.filename || r.name || "Resume",
-        content: r.content || "",
         score: Number(r.score) || 0,
         date: r.date || new Date().toLocaleString()
       }));
@@ -112,12 +98,6 @@ window.storage = {
     return "🔴 Needs Improvement";
   },
 
-  skillMatch(score) {
-    if (score >= 80) return "High Skill Match";
-    if (score >= 60) return "Medium Skill Match";
-    return "Low Skill Match";
-  },
-
   render() {
     const box = document.getElementById("resumeGrid");
 
@@ -135,47 +115,43 @@ window.storage = {
     }
 
     box.innerHTML = this.reports.map(r => `
-      <div class="bg-white p-6 rounded-xl shadow space-y-3">
+      <div class="bg-white p-6 rounded-xl shadow space-y-4">
+        
+        <!-- Resume Name -->
         <h2 class="font-bold truncate">${r.name}</h2>
         <p class="text-xs text-gray-500">📅 ${r.date}</p>
 
+        <!-- ATS Score -->
         <div class="text-center text-3xl font-black text-indigo-600">
           ${r.score}%
         </div>
 
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="h-2 rounded-full
+            ${r.score >= 80 ? 'bg-green-500' :
+              r.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}"
+            style="width:${r.score}%">
+          </div>
+        </div>
+
+        <!-- Resume Strength -->
         <p class="text-center text-sm font-semibold">
           ${this.getBadge(r.score)}
         </p>
 
+        <!-- Status -->
         <p class="text-center text-xs text-gray-500">
-          ${this.skillMatch(r.score)}
+          Status: <span class="font-semibold text-green-600">Analyzed</span>
         </p>
 
-        <div class="grid grid-cols-2 gap-2 mt-4">
-          <button onclick="storage.view('${r.id}')"
-            class="bg-gray-700 text-white py-2 rounded text-sm">
-            👁 View
-          </button>
-
-          <button onclick="storage.delete('${r.id}')"
-            class="bg-red-600 text-white py-2 rounded text-sm">
-            🗑 Delete
-          </button>
-        </div>
+        <!-- Delete -->
+        <button onclick="storage.delete('${r.id}')"
+          class="w-full bg-red-600 text-white py-2 rounded text-sm">
+          🗑 Delete Report
+        </button>
       </div>
     `).join("");
-  },
-
-  // ✅ FIXED VIEW BUTTON
-  view(id) {
-    const r = this.reports.find(x => x.id === id);
-    if (!r) return;
-
-    modalTitle.innerText = r.name;
-    modalInfo.innerText =
-      `ATS Score: ${r.score}%\n\nResume Strength:\n${this.getBadge(r.score)}\n\nSkill Match:\n${this.skillMatch(r.score)}`;
-
-    viewModal.classList.remove("hidden");
   },
 
   delete(id) {
@@ -188,10 +164,6 @@ window.storage = {
     this.load();
   }
 };
-
-function closeModal() {
-  viewModal.classList.add("hidden");
-}
 
 storage.load();
 </script>
