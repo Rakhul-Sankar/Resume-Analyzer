@@ -9,14 +9,16 @@
 
 <body class="bg-gray-100 min-h-screen">
 
-<!-- ================= NAVBAR ================= -->
-<nav id="navbar" class="bg-white shadow border-b hidden">
+<!-- ================= NAVIGATION ================= -->
+<nav class="bg-white shadow-lg border-b">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
-    <div class="space-x-4">
-      <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</a>
-      <a href="reports.html" class="text-gray-700 hover:text-indigo-600 font-medium">Past Reports</a>
-      <button id="logoutBtn" class="text-red-600 font-medium">Logout</button>
+
+    <div class="flex space-x-4 items-center">
+      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
   </div>
 </nav>

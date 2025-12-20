@@ -14,13 +14,16 @@ const currentUser = JSON.parse(localStorage.getItem("loggedUser"));
 if (!currentUser) window.location.href = "login.html";
 </script>
 
-<nav class="bg-white shadow border-b">
-  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between">
+<!-- ================= NAVIGATION ================= -->
+<nav class="bg-white shadow-lg border-b">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
-    <div class="space-x-4">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="upload.html">Upload</a>
-      <a href="profile.html">Profile</a>
+
+    <div class="flex space-x-4 items-center">
+      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
   </div>
 </nav>
