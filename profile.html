@@ -92,114 +92,84 @@
 </main>
 
 <script>
-/* ===== ELEMENTS ===== */
-const navbar = document.getElementById("navbar");
-const loginBox = document.getElementById("loginBox");
-const signupBox = document.getElementById("signupBox");
-const profilePage = document.getElementById("profilePage");
-
-/* ===== VIEW SWITCH ===== */
-function showLogin() {
-  navbar.classList.add("hidden");
-  loginBox.classList.remove("hidden");
-  signupBox.classList.add("hidden");
-  profilePage.classList.add("hidden");
-}
-
-function showSignup() {
-  navbar.classList.add("hidden");
-  signupBox.classList.remove("hidden");
-  loginBox.classList.add("hidden");
-  profilePage.classList.add("hidden");
-}
-
-function showProfile() {
-  navbar.classList.remove("hidden");
-  profilePage.classList.remove("hidden");
-  loginBox.classList.add("hidden");
-  signupBox.classList.add("hidden");
-  loadProfile();
-}
-
-/* ===== LOAD PROFILE (FROM REPORTS ONLY) ===== */
+/* ===== LOAD PROFILE (FROM REPORTS ONLY – FIXED) ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return;
 
-  nameInput.value = user.name;
-  emailInput.value = user.email;
+  nameInput.value = user.name || "";
+  emailInput.value = user.email || "";
 
+  /* ✅ SOURCE OF TRUTH */
   const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+
+  /* ✅ FILTER BY USER */
   const userReports = reports.filter(r => r.email === user.email);
 
+  /* ===== COUNTS ===== */
   totalResumes.innerText = userReports.length;
   reportCount.innerText = userReports.length;
 
+  /* ===== ATS + LAST DATE ===== */
   if (userReports.length) {
-    const avg = Math.round(
-      userReports.reduce((sum, r) => sum + r.score, 0) / userReports.length
-    );
+    const scores = userReports
+      .map(r => r.score ?? r.atsScore)
+      .filter(s => typeof s === "number");
+
+    const avg = scores.length
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : 0;
+
     avgScore.innerText = avg + "%";
-    lastDate.innerText = userReports[0].analyzedDate || "--";
+
+    /* latest report */
+    const latest = userReports[0];
+    lastDate.innerText =
+      latest.analyzedDate ||
+      latest.date ||
+      latest.uploaded ||
+      "--";
   } else {
     avgScore.innerText = "0%";
     lastDate.innerText = "--";
   }
 
+  /* ===== HISTORY LIST ===== */
   resumeList.innerHTML = userReports.length
-    ? userReports.map(r => `
-      <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-        <div>
-          <b>${r.name}</b>
-          <div class="text-xs text-gray-500">${r.analyzedDate}</div>
-        </div>
-        <span class="font-bold text-indigo-600">${r.score}%</span>
-      </div>
-    `).join("")
+    ? userReports.map(r => {
+        const resumeName =
+          r.name ||
+          r.filename ||
+          r.fileName ||
+          "Resume";
+
+        const score =
+          r.score ??
+          r.atsScore ??
+          "--";
+
+        const date =
+          r.analyzedDate ||
+          r.date ||
+          r.uploaded ||
+          "--";
+
+        return `
+          <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+            <div>
+              <b>${resumeName}</b>
+              <div class="text-xs text-gray-500">${date}</div>
+            </div>
+            <span class="font-bold text-indigo-600">
+              ${typeof score === "number" ? score + "%" : score}
+            </span>
+          </div>
+        `;
+      }).join("")
     : "<p class='text-gray-500'>No analyzed resumes yet.</p>";
 }
-
-/* ===== SAVE PROFILE ===== */
-function saveProfile() {
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  user.name = nameInput.value;
-  localStorage.setItem("loggedUser", JSON.stringify(user));
-  alert("Profile updated successfully");
-}
-
-/* ===== AUTH ===== */
-createBtn.onclick = () => {
-  const user = {
-    name: signupName.value,
-    email: signupEmail.value,
-    pass: signupPass.value
-  };
-  localStorage.setItem("loggedUser", JSON.stringify(user));
-  showProfile();
-};
-
-loginBtn.onclick = () => {
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (user && user.email === loginEmail.value && user.pass === loginPass.value) {
-    showProfile();
-  } else {
-    alert("Invalid credentials");
-  }
-};
-
-logoutBtn.onclick = () => {
-  localStorage.removeItem("loggedUser");
-  showLogin();
-};
-
-toSignup.onclick = showSignup;
-toLogin.onclick = showLogin;
-
-/* ===== INIT ===== */
-window.onload = () => {
-  localStorage.getItem("loggedUser") ? showProfile() : showLogin();
-};
 </script>
+
 
 </body>
 </html>
