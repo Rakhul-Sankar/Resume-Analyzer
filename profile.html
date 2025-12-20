@@ -14,20 +14,14 @@
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
     <div class="space-x-4">
-      <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 font-medium">
-        Dashboard
-      </a>
-      <a href="reports.html" class="text-gray-700 hover:text-indigo-600 font-medium">
-        Past Reports
-      </a>
-      <button id="logoutBtn" class="text-red-600 font-medium">
-        Logout
-      </button>
+      <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</a>
+      <a href="reports.html" class="text-gray-700 hover:text-indigo-600 font-medium">Past Reports</a>
+      <button id="logoutBtn" class="text-red-600 font-medium">Logout</button>
     </div>
   </div>
 </nav>
 
-<!-- ================= MAIN CONTENT ================= -->
+<!-- ================= MAIN ================= -->
 <main class="flex justify-center p-6">
 
 <!-- ================= LOGIN ================= -->
@@ -55,7 +49,7 @@
   </p>
 </div>
 
-<!-- ================= PROFILE PAGE ================= -->
+<!-- ================= PROFILE ================= -->
 <div id="profilePage" class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-xl border hidden">
 
   <h2 class="text-3xl font-bold text-indigo-600 mb-6">My Profile</h2>
@@ -89,7 +83,7 @@
 
   <!-- History -->
   <h3 class="text-xl font-bold mb-3">
-    Resume Analysis History (<span id="reportCount">0</span>)
+    Resume History (<span id="reportCount">0</span>)
   </h3>
 
   <div id="resumeList" class="space-y-3"></div>
@@ -104,7 +98,7 @@ const loginBox = document.getElementById("loginBox");
 const signupBox = document.getElementById("signupBox");
 const profilePage = document.getElementById("profilePage");
 
-/* ===== SHOW / HIDE ===== */
+/* ===== VIEW SWITCH ===== */
 function showLogin() {
   navbar.classList.add("hidden");
   loginBox.classList.remove("hidden");
@@ -127,7 +121,7 @@ function showProfile() {
   loadProfile();
 }
 
-/* ===== LOAD PROFILE ===== */
+/* ===== LOAD PROFILE DATA ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return;
@@ -135,30 +129,40 @@ function loadProfile() {
   nameInput.value = user.name;
   emailInput.value = user.email;
 
-  const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-  const userReports = reports.filter(r => r.email === user.email);
+  const resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+  const userResumes = resumes.filter(r => r.email === user.email);
 
-  reportCount.textContent = userReports.length;
-  totalResumes.innerText = userReports.length;
+  /* Total uploads */
+  totalResumes.innerText = userResumes.length;
+  reportCount.innerText = userResumes.length;
 
-  if (userReports.length) {
+  /* Analyzed resumes */
+  const analyzed = userResumes.filter(r => r.analyzed === true);
+
+  if (analyzed.length) {
     const avg = Math.round(
-      userReports.reduce((a, b) => a + b.score, 0) / userReports.length
+      analyzed.reduce((sum, r) => sum + r.score, 0) / analyzed.length
     );
     avgScore.innerText = avg + "%";
-    lastDate.innerText = userReports[0].date;
+    lastDate.innerText = analyzed[0].analyzedDate || "--";
+  } else {
+    avgScore.innerText = "0%";
+    lastDate.innerText = "--";
   }
 
-  resumeList.innerHTML = userReports.length
-    ? userReports.map(r => `
+  /* Resume List */
+  resumeList.innerHTML = userResumes.length
+    ? userResumes.map(r => `
       <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
         <div>
-          <b>${r.filename}</b>
-          <div class="text-xs text-gray-500">${r.date}</div>
+          <b>${r.name}</b>
+          <div class="text-xs text-gray-500">${r.uploaded}</div>
         </div>
-        <span class="font-bold">${r.score}%</span>
+        <span class="font-bold">
+          ${r.analyzed ? r.score + "%" : "Pending"}
+        </span>
       </div>`).join("")
-    : "<p class='text-gray-500'>No resumes analyzed yet.</p>";
+    : "<p class='text-gray-500'>No resumes uploaded yet.</p>";
 }
 
 /* ===== SAVE PROFILE ===== */
