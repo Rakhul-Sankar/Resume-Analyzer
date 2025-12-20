@@ -37,12 +37,12 @@ if (!currentUser) window.location.href = "login.html";
 <!-- ===== STATS ===== -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
   <div class="bg-white p-6 rounded-xl shadow text-center">
-    <p class="text-gray-500">Total Resumes</p>
+    <p class="text-gray-500">Total Analyzed</p>
     <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
   </div>
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
-    <p class="text-gray-500">Best ATS Score</p>
+    <p class="text-gray-500">Best ATS</p>
     <h2 id="bestScore" class="text-3xl font-bold text-green-600">0%</h2>
   </div>
 
@@ -63,58 +63,27 @@ window.storage = {
   reports: [],
 
   load() {
-    let all = JSON.parse(localStorage.getItem(this.key)) || [];
+    const all = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    // Process resumes
-    this.reports = all
-      .filter(r => r.email === currentUser.email)
-      .map(r => {
-        let score =
-          typeof r.score === "number" ? r.score :
-          typeof r.atsScore === "number" ? r.atsScore :
-          this.calculateATS(r.content || "");
-
-        // ✅ persist score once
-        r.score = score;
-        return { ...r, finalScore: score };
-      });
-
-    // Save back once
-    localStorage.setItem(this.key, JSON.stringify(all));
+    // ✅ ONLY FETCH ANALYZED RESUMES
+    this.reports = all.filter(r =>
+      r.email === currentUser.email &&
+      typeof r.score === "number"
+    );
 
     this.updateStats();
     this.render();
   },
 
-  // 🔥 ATS calculation (used only if missing)
-  calculateATS(text) {
-    let score = 45;
-    const keywords = [
-      "skills","experience","education","project",
-      "html","css","javascript","python",
-      "java","django","react","sql","internship"
-    ];
-
-    const lower = text.toLowerCase();
-    keywords.forEach(k => {
-      if (lower.includes(k)) score += 3;
-    });
-
-    if (text.length > 1000) score += 10;
-    if (text.length > 2000) score += 10;
-
-    return Math.min(score, 100);
-  },
-
   updateStats() {
     const total = this.reports.length;
-    const scores = this.reports.map(r => r.finalScore);
+    const scores = this.reports.map(r => r.score);
 
-    const avg = scores.length
-      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)
+    const avg = total
+      ? Math.round(scores.reduce((a,b)=>a+b,0) / total)
       : 0;
 
-    const best = scores.length ? Math.max(...scores) : 0;
+    const best = total ? Math.max(...scores) : 0;
 
     totalCount.innerText = total;
     avgScore.innerText = avg + "%";
@@ -128,10 +97,10 @@ window.storage = {
       box.innerHTML = `
         <div class="col-span-full text-center bg-white p-10 rounded-xl shadow">
           <p class="text-xl font-semibold text-gray-600">
-            No resumes found
+            No analyzed resumes found
           </p>
           <p class="text-gray-400 mt-2">
-            Upload a resume to see it here.
+            Analyze a resume to see reports here.
           </p>
         </div>`;
       return;
@@ -143,18 +112,18 @@ window.storage = {
         <h2 class="font-bold truncate">${r.name}</h2>
         <p class="text-xs text-gray-500">📅 ${r.uploaded || r.date}</p>
 
-        <!-- ATS % -->
+        <!-- ATS SCORE -->
         <div class="text-center text-3xl font-black text-indigo-600">
-          ${r.finalScore}%
+          ${r.score}%
         </div>
 
         <!-- Tailwind Liquid Bar -->
         <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
           <div class="absolute left-0 top-0 h-full
-            ${r.finalScore >= 80 ? 'bg-green-500' :
-              r.finalScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}
+            ${r.score >= 80 ? 'bg-green-500' :
+              r.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}
             transition-all duration-1000 ease-out"
-            style="width:${r.finalScore}%">
+            style="width:${r.score}%">
           </div>
           <div class="absolute inset-0 bg-white/30 animate-pulse"></div>
         </div>
