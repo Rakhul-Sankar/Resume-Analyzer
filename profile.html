@@ -99,7 +99,7 @@ function showProfile() {
   loadProfile();
 }
 
-/* ===== LOAD PROFILE (FROM REPORTS) ===== */
+/* ===== LOAD PROFILE (UPDATED – LATEST FIX) ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return showLogin();
@@ -113,33 +113,50 @@ function loadProfile() {
   totalResumes.innerText = userReports.length;
   reportCount.innerText = userReports.length;
 
-  if (userReports.length) {
-    const scores = userReports.map(r => r.score ?? r.atsScore).filter(n => typeof n === "number");
-    avgScore.innerText = scores.length
-      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
-      : "0%";
-
-    lastDate.innerText =
-      userReports[0].analyzedDate ||
-      userReports[0].date ||
-      "--";
+  if (!userReports.length) {
+    avgScore.innerText = "0%";
+    lastDate.innerText = "--";
+    resumeList.innerHTML = "<p class='text-gray-500'>No reports found.</p>";
+    return;
   }
 
-  resumeList.innerHTML = userReports.length
-    ? userReports.map(r => `
-      <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-        <div>
-          <b>${r.name || r.filename || "Resume"}</b>
-          <div class="text-xs text-gray-500">
-            ${r.analyzedDate || r.date || "--"}
-          </div>
+  /* 🔥 FIX: SORT BY LATEST DATE */
+  const sortedReports = userReports.map(r => ({
+    ...r,
+    _date: new Date(r.analyzedDate || r.date || r.uploaded || 0)
+  })).sort((a, b) => b._date - a._date);
+
+  /* ===== LATEST ===== */
+  const latest = sortedReports[0];
+  lastDate.innerText =
+    latest.analyzedDate ||
+    latest.date ||
+    latest.uploaded ||
+    "--";
+
+  /* ===== AVG ATS ===== */
+  const scores = sortedReports
+    .map(r => r.score ?? r.atsScore)
+    .filter(n => typeof n === "number");
+
+  avgScore.innerText = scores.length
+    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) + "%"
+    : "0%";
+
+  /* ===== HISTORY ===== */
+  resumeList.innerHTML = sortedReports.map(r => `
+    <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+      <div>
+        <b>${r.name || r.filename || "Resume"}</b>
+        <div class="text-xs text-gray-500">
+          ${r.analyzedDate || r.date || r.uploaded || "--"}
         </div>
-        <span class="font-bold text-indigo-600">
-          ${(r.score ?? r.atsScore) + "%"}
-        </span>
       </div>
-    `).join("")
-    : "<p class='text-gray-500'>No reports found.</p>";
+      <span class="font-bold text-indigo-600">
+        ${(r.score ?? r.atsScore) + "%"}
+      </span>
+    </div>
+  `).join("");
 }
 
 /* ===== AUTH ===== */
