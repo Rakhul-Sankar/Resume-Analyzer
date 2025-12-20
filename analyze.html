@@ -7,51 +7,35 @@
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 flex flex-col items-center p-6 min-h-screen">
+<body class="bg-gray-100 min-h-screen p-6 flex justify-center">
 
-<div class="w-full max-w-4xl">
+<div class="w-full max-w-4xl space-y-6">
 
-    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">
-        Resume Analysis Result
-    </h1>
+  <h1 class="text-3xl font-bold text-center text-indigo-600">
+    Resume Analysis Result
+  </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- ATS SCORE -->
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <h2 class="text-xl font-semibold">ATS Score</h2>
+    <p id="atsScore" class="text-5xl font-black text-indigo-600 mt-4">--%</p>
+    <p id="atsLabel" class="mt-2 text-gray-600 font-medium"></p>
+  </div>
 
-        <!-- ATS Score -->
-        <div class="bg-white p-6 rounded-xl shadow text-center">
-            <h2 class="text-xl font-semibold mb-2">ATS Score</h2>
-            <p id="atsScore" class="text-4xl font-bold text-blue-600 mt-4">--%</p>
-            <p id="atsLabel" class="mt-2 font-medium text-gray-600"></p>
-        </div>
+  <!-- SKILLS -->
+  <div class="bg-white p-6 rounded-xl shadow">
+    <h2 class="text-xl font-semibold">
+      Skills Found (<span id="skillCount">0</span>)
+    </h2>
+    <ul id="skillsList" class="list-disc pl-5 mt-4 text-gray-700"></ul>
+  </div>
 
-        <!-- Skills Found -->
-        <div class="bg-white p-6 rounded-xl shadow">
-            <h2 class="text-xl font-semibold mb-2">
-                Skills Found (<span id="skillCount">0</span>)
-            </h2>
-            <ul id="skillsList"
-                class="list-disc pl-5 mt-4 text-gray-700 font-medium"></ul>
-        </div>
-
-    </div>
-
-    <!-- Resume Status -->
-    <div class="bg-white p-6 rounded-xl shadow mt-6 text-center">
-        <p class="text-lg font-semibold">
-            Analysis Status:
-            <span class="text-green-600 font-bold">✔ Analyzed</span>
-        </p>
-        <p class="text-sm text-gray-500 mt-1">
-            This resume has been successfully processed by the ATS engine.
-        </p>
-    </div>
-
-    <div class="text-center">
-        <a href="dashboard.html"
-           class="mt-10 inline-block bg-gray-800 text-white px-6 py-3 rounded-xl hover:bg-black">
-           Back to Dashboard
-        </a>
-    </div>
+  <div class="text-center">
+    <a href="reports.html"
+       class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700">
+      View Reports
+    </a>
+  </div>
 
 </div>
 
@@ -59,77 +43,71 @@
 /* ===== AUTH CHECK ===== */
 const user = JSON.parse(localStorage.getItem("loggedUser"));
 if (!user) {
-    alert("Session expired. Please login again.");
-    window.location.href = "login.html";
+  alert("Session expired. Please login again.");
+  window.location.href = "login.html";
 }
 
-/* ===== GET LATEST RESUME ===== */
+/* ===== LOAD UPLOADED RESUMES ===== */
 let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-let latest = resumes[0];
 
-if (!latest || !latest.content) {
-    alert("No resume found! Please upload again.");
-    window.location.href = "upload.html";
+/* ===== GET LATEST USER RESUME ===== */
+const index = resumes.findIndex(r => r.email === user.email);
+if (index === -1) {
+  alert("No resume found. Upload again.");
+  window.location.href = "upload.html";
 }
 
-let resumeText = latest.content.toLowerCase();
+const resume = resumes[index];
+const text = (resume.content || "").toLowerCase();
 
-/* ===== ATS SCORE ===== */
-const score = Math.floor(Math.random() * 21) + 80;
-document.getElementById("atsScore").innerText = score + "%";
-
-let label =
-    score >= 85 ? "Excellent ATS Match" :
-    score >= 70 ? "Good ATS Match" :
-    "Needs Improvement";
-
-document.getElementById("atsLabel").innerText = label;
-
-/* ===== SKILL EXTRACTION ===== */
-const skills = [
-    "python","java","django","html","css","javascript","js",
-    "web development","sql","mysql","react","node","tailwind",
-    "docker","git","machine learning","mongodb","typescript"
+/* ===== ATS SCORE LOGIC ===== */
+let score = 45;
+const keywords = [
+  "skills","experience","education","project",
+  "html","css","javascript","python",
+  "java","django","react","sql","internship"
 ];
 
-const matchedSkills = skills.filter(skill => resumeText.includes(skill));
+keywords.forEach(k => {
+  if (text.includes(k)) score += 3;
+});
+
+if (text.length > 1000) score += 10;
+if (text.length > 2000) score += 10;
+score = Math.min(score, 100);
+
+/* ===== DISPLAY SCORE ===== */
+document.getElementById("atsScore").innerText = score + "%";
+document.getElementById("atsLabel").innerText =
+  score >= 80 ? "Excellent ATS Match" :
+  score >= 65 ? "Good ATS Match" :
+  "Needs Improvement";
+
+/* ===== SKILL EXTRACTION ===== */
+const skillDB = [
+  "python","java","django","html","css","javascript",
+  "react","node","sql","mongodb","git","tailwind"
+];
+
+const matched = skillDB.filter(s => text.includes(s));
+document.getElementById("skillCount").innerText = matched.length;
 
 const list = document.getElementById("skillsList");
-document.getElementById("skillCount").innerText = matchedSkills.length;
+list.innerHTML = matched.length
+  ? matched.map(s => `<li>${s.toUpperCase()}</li>`).join("")
+  : "<li>No skills detected</li>";
 
-if (matchedSkills.length) {
-    matchedSkills.forEach(s => {
-        const li = document.createElement("li");
-        li.textContent = s.charAt(0).toUpperCase() + s.slice(1);
-        list.appendChild(li);
-    });
-} else {
-    list.innerHTML = "<li>No skills detected</li>";
-}
+/* ===== SAVE RESULT BACK TO SAME RESUME ===== */
+resumes[index] = {
+  ...resume,
+  score: score,
+  analyzed: true,
+  analyzedDate: new Date().toLocaleString()
+};
 
-/* ===== SAVE REPORT (NO DUPLICATES) ===== */
-const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
+localStorage.setItem("advancedResumes_v2", JSON.stringify(resumes));
 
-const alreadySaved = reports.some(r =>
-    r.filename === latest.name && r.email === user.email
-);
-
-if (!alreadySaved) {
-    reports.unshift({
-        id: crypto.randomUUID(),
-        filename: latest.name,
-        score: score,
-        skills: matchedSkills,
-        status: "analyzed",
-        date: new Date().toLocaleString(),
-        email: user.email
-    });
-
-    localStorage.setItem("resumeReports", JSON.stringify(reports));
-    console.log("✅ Report saved successfully");
-} else {
-    console.log("ℹ Report already exists, skipping save");
-}
+console.log("✅ ATS saved into uploaded resume");
 </script>
 
 </body>
