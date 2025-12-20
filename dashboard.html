@@ -17,16 +17,16 @@
 
             <div class="flex space-x-4 items-center">
                 <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-                   Upload
+                    Upload
                 </a>
                 <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-                   Profile
+                    Profile
                 </a>
                 <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-                   Past Reports
+                    Past Reports
                 </a>
                 <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">
-                        Logout
+                    Logout
                 </button>
             </div>
         </div>
@@ -102,32 +102,39 @@ const greeting =
 document.getElementById("greeting").innerText =
     `Welcome, ${greeting} ${user.name}!`;
 
-/* ===== DASHBOARD DATA ===== */
-const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+/* ===== LOAD ALL RESUMES ===== */
+const allResumes =
+    JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
 
-/* Only this user's resumes */
-const userResumes = allResumes.filter(r => r.email === user.email);
-
-/* Total uploaded */
-document.getElementById("totalResumes").innerText = userResumes.length;
-
-/* Only analyzed resumes */
-const analyzed = userResumes.filter(r =>
-    r.analyzed === true && typeof r.score === "number"
+/* ===== TOTAL RESUMES (UPLOAD PAGE ONLY) ===== */
+const uploadedResumes = allResumes.filter(r =>
+    r.email === user.email &&
+    r.status === "uploaded"
 );
 
-/* Average ATS */
-if (analyzed.length) {
+document.getElementById("totalResumes").innerText =
+    uploadedResumes.length;
+
+/* ===== ANALYZED RESUMES (ANALYZE PAGE ONLY) ===== */
+const analyzedResumes = allResumes.filter(r =>
+    r.email === user.email &&
+    r.analyzed === true &&
+    typeof r.score === "number"
+);
+
+/* ===== AVERAGE ATS ===== */
+if (analyzedResumes.length) {
     const avg = Math.round(
-        analyzed.reduce((sum, r) => sum + r.score, 0) / analyzed.length
+        analyzedResumes.reduce((sum, r) => sum + r.score, 0) /
+        analyzedResumes.length
     );
     document.getElementById("avgScore").innerText = avg + "%";
 }
 
-/* Last upload date */
-if (userResumes.length) {
+/* ===== LAST UPLOAD DATE ===== */
+if (uploadedResumes.length) {
     document.getElementById("lastUpload").innerText =
-        userResumes[0].uploaded || "--";
+        uploadedResumes[0].uploaded || "--";
 }
 
 /* ===== LOGOUT ===== */
