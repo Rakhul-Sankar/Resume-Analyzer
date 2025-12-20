@@ -68,14 +68,20 @@ const storage = {
 
     this.updateStats();
     this.render();
+
+    /* ✅ SYNC WITH PROFILE PAGE */
+    this.syncProfile();
   },
 
   updateStats() {
     const scores = this.reports.map(r => r.score);
+
     totalCount.innerText = scores.length;
+
     avgScore.innerText = scores.length
-      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) + "%"
       : "0%";
+
     bestScore.innerText = scores.length
       ? Math.max(...scores) + "%"
       : "0%";
@@ -102,7 +108,6 @@ const storage = {
           ${r.score}%
         </div>
 
-        <!-- Liquid Tailwind Bar -->
         <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
           <div class="absolute left-0 top-0 h-full
             ${r.score >= 80 ? 'bg-green-500' :
@@ -125,16 +130,30 @@ const storage = {
     `).join("");
   },
 
+  /* ✅ NEW: SYNC DATA FOR PROFILE PAGE */
+  syncProfile() {
+    const normalized = this.reports.map(r => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      score: r.score,
+      analyzedDate: r.analyzedDate
+    }));
+
+    localStorage.setItem("resumeReports", JSON.stringify(normalized));
+  },
+
   delete(id) {
     let all = JSON.parse(localStorage.getItem(this.key)) || [];
     all = all.filter(r => r.id !== id);
     localStorage.setItem(this.key, JSON.stringify(all));
-    this.load();
+    this.load(); // reload + resync
   }
 };
 
 storage.load();
 </script>
+
 
 </body>
 </html>
