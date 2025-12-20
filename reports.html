@@ -29,60 +29,40 @@ if (!currentUser) window.location.href = "login.html";
 <!-- ===== MAIN ===== -->
 <main class="max-w-6xl mx-auto px-6 py-10">
 
-<h1 class="text-4xl font-black text-center mb-8 text-green-700">
-📊 Past Resume Reports
+<h1 class="text-4xl font-black text-center mb-10 text-green-700">
+📊 Resume Analysis Reports
 </h1>
 
 <!-- ===== STATS ===== -->
-<section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p class="text-gray-500">Total Reports</p>
     <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
   </div>
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
-    <p class="text-gray-500">Analyzed</p>
-    <h2 id="analyzedCount" class="text-3xl font-bold text-green-600">0</h2>
+    <p class="text-gray-500">Best ATS Score</p>
+    <h2 id="bestScore" class="text-3xl font-bold text-green-600">0%</h2>
   </div>
 
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p class="text-gray-500">Average ATS</p>
     <h2 id="avgScore" class="text-3xl font-bold text-blue-600">0%</h2>
   </div>
-
-  <div class="bg-white p-6 rounded-xl shadow text-center">
-    <p class="text-gray-500">Best Score</p>
-    <h2 id="bestScore" class="text-3xl font-bold text-purple-600">0%</h2>
-  </div>
 </section>
-
-<!-- ===== CONTROLS ===== -->
-<div class="flex flex-wrap gap-3 justify-between mb-8">
-  <input id="searchInput" placeholder="Search resume..."
-    class="px-4 py-3 rounded-xl border w-full md:w-80">
-
-  <div class="flex gap-3">
-    <button onclick="storage.sortByScore()"
-      class="bg-blue-600 text-white px-5 py-3 rounded-xl">⬆ Score</button>
-    <button onclick="storage.sortByDate()"
-      class="bg-gray-600 text-white px-5 py-3 rounded-xl">📅 Date</button>
-    <button onclick="storage.exportAll()"
-      class="bg-indigo-600 text-white px-5 py-3 rounded-xl">📦 Export</button>
-  </div>
-</div>
 
 <!-- ===== GRID ===== -->
 <div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
 </main>
 
-<!-- ===== VIEW MODAL ===== -->
+<!-- ===== MODAL ===== -->
 <div id="viewModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
   <div class="bg-white p-6 rounded-xl max-w-md w-full">
     <h2 id="modalTitle" class="text-xl font-bold mb-2"></h2>
     <p id="modalInfo" class="text-gray-600 whitespace-pre-line"></p>
     <button onclick="closeModal()"
-      class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg">
+      class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg w-full">
       Close
     </button>
   </div>
@@ -96,66 +76,94 @@ window.storage = {
   load() {
     const saved = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    // ✅ FIX: normalize + user filter
     this.reports = saved
       .filter(r => r.email === currentUser.email)
       .map(r => ({
         id: r.id || crypto.randomUUID(),
         name: r.filename || r.name || "Untitled Resume",
         score: Number(r.score) || 0,
-        date: r.date || new Date().toLocaleString(),
-        status: "Analyzed"
+        date: r.date || new Date().toLocaleString()
       }));
 
-    this.updateStats(this.reports);
-    this.render(this.reports);
+    this.updateStats();
+    this.render();
   },
 
-  updateStats(list) {
-    const total = list.length;
-    const analyzed = list.length;
-
+  updateStats() {
+    const total = this.reports.length;
     let avg = 0, best = 0;
-    if (list.length) {
-      const scores = list.map(r => r.score);
+
+    if (total) {
+      const scores = this.reports.map(r => r.score);
       avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
       best = Math.max(...scores);
     }
 
     totalCount.innerText = total;
-    analyzedCount.innerText = analyzed;
     avgScore.innerText = avg + "%";
     bestScore.innerText = best + "%";
   },
 
-  render(list) {
+  getBadge(score) {
+    if (score >= 80) return "🟢 Excellent Resume";
+    if (score >= 60) return "🟡 Good Resume";
+    return "🔴 Needs Improvement";
+  },
+
+  skillMatch(score) {
+    if (score >= 80) return "High Skill Match";
+    if (score >= 60) return "Medium Skill Match";
+    return "Low Skill Match";
+  },
+
+  render() {
     const box = document.getElementById("resumeGrid");
-    if (!list.length) {
-      box.innerHTML = "<p class='col-span-full text-center'>No reports yet.</p>";
+
+    if (!this.reports.length) {
+      box.innerHTML = `
+        <div class="col-span-full text-center bg-white p-10 rounded-xl shadow">
+          <p class="text-xl font-semibold text-gray-600">
+            No resume reports found
+          </p>
+          <p class="text-gray-400 mt-2">
+            Upload and analyze a resume to see reports here.
+          </p>
+        </div>`;
       return;
     }
 
-    box.innerHTML = list.map(r => `
-      <div class="bg-white p-5 rounded-xl shadow">
+    box.innerHTML = this.reports.map(r => `
+      <div class="bg-white p-6 rounded-xl shadow space-y-3">
         <h2 class="font-bold truncate">${r.name}</h2>
         <p class="text-xs text-gray-500">📅 ${r.date}</p>
 
-        <div class="mt-3 font-bold text-center
-          ${r.score >= 80 ? 'text-green-600' :
-            r.score >= 60 ? 'text-yellow-600' : 'text-red-600'}">
-          ${r.score}% ATS
+        <div class="text-center text-3xl font-black text-indigo-600">
+          ${r.score}%
         </div>
 
-        <p class="text-xs text-center mt-1">
-          ${r.score >= 80 ? "Strong Match" :
-            r.score >= 60 ? "Moderate Match" : "Low Match"}
+        <p class="text-center text-sm font-semibold">
+          ${this.getBadge(r.score)}
         </p>
 
-        <div class="flex gap-2 mt-4">
+        <p class="text-center text-xs text-gray-500">
+          ${this.skillMatch(r.score)}
+        </p>
+
+        <div class="grid grid-cols-3 gap-2 mt-4">
           <button onclick="storage.view('${r.id}')"
-            class="flex-1 bg-gray-700 text-white py-2 rounded">👁 View</button>
+            class="bg-gray-700 text-white py-2 rounded text-sm">
+            👁 View
+          </button>
+
+          <button onclick="alert('Re-analysis feature coming soon')"
+            class="bg-blue-600 text-white py-2 rounded text-sm">
+            🔁 Re-Analyze
+          </button>
+
           <button onclick="storage.delete('${r.id}')"
-            class="flex-1 bg-red-600 text-white py-2 rounded">🗑 Delete</button>
+            class="bg-red-600 text-white py-2 rounded text-sm">
+            🗑 Delete
+          </button>
         </div>
       </div>
     `).join("");
@@ -165,7 +173,7 @@ window.storage = {
     const r = this.reports.find(x => x.id === id);
     modalTitle.innerText = r.name;
     modalInfo.innerText =
-      `Score: ${r.score}%\nDate: ${r.date}\nStatus: ${r.status}`;
+      `ATS Score: ${r.score}%\n\nResume Strength:\n${this.getBadge(r.score)}\n\nSkill Match:\n${this.skillMatch(r.score)}`;
     viewModal.classList.remove("hidden");
   },
 
@@ -177,42 +185,12 @@ window.storage = {
       JSON.stringify(all.filter(r => r.id !== id))
     );
     this.load();
-  },
-
-  sortByScore() {
-    this.reports.sort((a,b) => b.score - a.score);
-    this.updateStats(this.reports);
-    this.render(this.reports);
-  },
-
-  sortByDate() {
-    this.reports.sort((a,b) => new Date(b.date) - new Date(a.date));
-    this.updateStats(this.reports);
-    this.render(this.reports);
-  },
-
-  exportAll() {
-    const blob = new Blob([JSON.stringify(this.reports, null, 2)],
-      { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "resume_reports.json";
-    a.click();
   }
 };
 
 function closeModal() {
   viewModal.classList.add("hidden");
 }
-
-searchInput.oninput = e => {
-  const q = e.target.value.toLowerCase();
-  const filtered = storage.reports.filter(r =>
-    r.name.toLowerCase().includes(q)
-  );
-  storage.updateStats(filtered);
-  storage.render(filtered);
-};
 
 storage.load();
 </script>
