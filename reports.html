@@ -59,20 +59,16 @@ if (!currentUser) window.location.href = "login.html";
 
 <script>
 window.storage = {
-  key: "resumeReports",
+  key: "advancedResumes_v2",
   reports: [],
 
   load() {
     const saved = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    this.reports = saved
-      .filter(r => r.email === currentUser.email)
-      .map(r => ({
-        id: r.id,
-        name: r.filename || r.name || "Resume",
-        score: Number(r.score) || 0,
-        date: r.date || new Date().toLocaleString()
-      }));
+    // ✅ fetch resumes generated from analyze page
+    this.reports = saved.filter(r =>
+      r.email === currentUser.email && r.score !== undefined
+    );
 
     this.updateStats();
     this.render();
@@ -83,7 +79,7 @@ window.storage = {
     let avg = 0, best = 0;
 
     if (total) {
-      const scores = this.reports.map(r => r.score);
+      const scores = this.reports.map(r => Number(r.score) || 0);
       avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
       best = Math.max(...scores);
     }
@@ -106,10 +102,10 @@ window.storage = {
       box.innerHTML = `
         <div class="col-span-full text-center bg-white p-10 rounded-xl shadow">
           <p class="text-xl font-semibold text-gray-600">
-            No resume reports found
+            No analyzed resumes found
           </p>
           <p class="text-gray-400 mt-2">
-            Upload and analyze a resume to see reports here.
+            Upload and analyze a resume first.
           </p>
         </div>`;
       return;
@@ -117,17 +113,14 @@ window.storage = {
 
     box.innerHTML = this.reports.map(r => `
       <div class="bg-white p-6 rounded-xl shadow space-y-4">
-        
-        <!-- Resume Name -->
-        <h2 class="font-bold truncate">${r.name}</h2>
-        <p class="text-xs text-gray-500">📅 ${r.date}</p>
 
-        <!-- ATS Score -->
+        <h2 class="font-bold truncate">${r.name}</h2>
+        <p class="text-xs text-gray-500">📅 ${r.date || r.uploaded}</p>
+
         <div class="text-center text-3xl font-black text-indigo-600">
           ${r.score}%
         </div>
 
-        <!-- Progress Bar -->
         <div class="w-full bg-gray-200 rounded-full h-2">
           <div class="h-2 rounded-full
             ${r.score >= 80 ? 'bg-green-500' :
@@ -136,17 +129,14 @@ window.storage = {
           </div>
         </div>
 
-        <!-- Resume Strength -->
         <p class="text-center text-sm font-semibold">
           ${this.getBadge(r.score)}
         </p>
 
-        <!-- Status -->
         <p class="text-center text-xs text-gray-500">
           Status: <span class="font-semibold text-green-600">Analyzed</span>
         </p>
 
-        <!-- Delete -->
         <button onclick="storage.delete('${r.id}')"
           class="w-full bg-red-600 text-white py-2 rounded text-sm">
           🗑 Delete Report
@@ -157,12 +147,12 @@ window.storage = {
 
   delete(id) {
     if (!confirm("Delete this report?")) return;
-    const all = JSON.parse(localStorage.getItem(this.key)) || [];
-    localStorage.setItem(
-      this.key,
-      JSON.stringify(all.filter(r => r.id !== id))
-    );
-    this.load();
+
+    let all = JSON.parse(localStorage.getItem(this.key)) || [];
+    all = all.filter(r => r.id !== id);
+    localStorage.setItem(this.key, JSON.stringify(all));
+
+    this.load(); // refresh UI
   }
 };
 
