@@ -63,34 +63,58 @@ window.storage = {
   reports: [],
 
   load() {
-    const saved = JSON.parse(localStorage.getItem(this.key)) || [];
+    let all = JSON.parse(localStorage.getItem(this.key)) || [];
 
-    // ✅ Normalize ATS score from analyze page
-    this.reports = saved
+    // Process resumes
+    this.reports = all
       .filter(r => r.email === currentUser.email)
-      .map(r => ({
-        ...r,
-        finalScore:
+      .map(r => {
+        let score =
           typeof r.score === "number" ? r.score :
           typeof r.atsScore === "number" ? r.atsScore :
-          null
-      }));
+          this.calculateATS(r.content || "");
+
+        // ✅ persist score once
+        r.score = score;
+        return { ...r, finalScore: score };
+      });
+
+    // Save back once
+    localStorage.setItem(this.key, JSON.stringify(all));
 
     this.updateStats();
     this.render();
   },
 
+  // 🔥 ATS calculation (used only if missing)
+  calculateATS(text) {
+    let score = 45;
+    const keywords = [
+      "skills","experience","education","project",
+      "html","css","javascript","python",
+      "java","django","react","sql","internship"
+    ];
+
+    const lower = text.toLowerCase();
+    keywords.forEach(k => {
+      if (lower.includes(k)) score += 3;
+    });
+
+    if (text.length > 1000) score += 10;
+    if (text.length > 2000) score += 10;
+
+    return Math.min(score, 100);
+  },
+
   updateStats() {
     const total = this.reports.length;
-    const scored = this.reports.filter(r => typeof r.finalScore === "number");
+    const scores = this.reports.map(r => r.finalScore);
 
-    let avg = 0, best = 0;
+    const avg = scores.length
+      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)
+      : 0;
 
-    if (scored.length) {
-      const scores = scored.map(r => r.finalScore);
-      avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-      best = Math.max(...scores);
-    }
+    const best = scores.length ? Math.max(...scores) : 0;
 
     totalCount.innerText = total;
     avgScore.innerText = avg + "%";
@@ -107,7 +131,7 @@ window.storage = {
             No resumes found
           </p>
           <p class="text-gray-400 mt-2">
-            Upload and analyze a resume first.
+            Upload a resume to see it here.
           </p>
         </div>`;
       return;
@@ -119,35 +143,25 @@ window.storage = {
         <h2 class="font-bold truncate">${r.name}</h2>
         <p class="text-xs text-gray-500">📅 ${r.uploaded || r.date}</p>
 
-        ${
-          typeof r.finalScore === "number"
-          ? `
-            <div class="text-center text-3xl font-black text-indigo-600">
-              ${r.finalScore}%
-            </div>
+        <!-- ATS % -->
+        <div class="text-center text-3xl font-black text-indigo-600">
+          ${r.finalScore}%
+        </div>
 
-            <!-- Tailwind Liquid Progress -->
-            <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div class="absolute left-0 top-0 h-full
-                ${r.finalScore >= 80 ? 'bg-green-500' :
-                  r.finalScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}
-                transition-all duration-1000 ease-out"
-                style="width:${r.finalScore}%">
-              </div>
+        <!-- Tailwind Liquid Bar -->
+        <div class="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div class="absolute left-0 top-0 h-full
+            ${r.finalScore >= 80 ? 'bg-green-500' :
+              r.finalScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}
+            transition-all duration-1000 ease-out"
+            style="width:${r.finalScore}%">
+          </div>
+          <div class="absolute inset-0 bg-white/30 animate-pulse"></div>
+        </div>
 
-              <div class="absolute inset-0 bg-white/30 animate-pulse"></div>
-            </div>
-
-            <p class="text-center text-sm font-semibold text-green-700">
-              ✔ Analyzed Successfully
-            </p>
-          `
-          : `
-            <div class="text-center text-lg font-semibold text-gray-400">
-              ⏳ Waiting for Analysis
-            </div>
-          `
-        }
+        <p class="text-center text-sm font-semibold text-green-700">
+          ✔ Analyzed Successfully
+        </p>
 
         <button onclick="storage.delete('${r.id}')"
           class="w-full bg-red-600 text-white py-2 rounded text-sm">
