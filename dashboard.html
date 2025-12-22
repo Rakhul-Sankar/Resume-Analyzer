@@ -68,8 +68,17 @@
     hour < 16 ? "Good Afternoon" :
     "Good Evening";
 
+  // ✅ SAFE DISPLAY NAME LOGIC
+  let displayName = "User";
+
+  if (user.name && user.name.trim() !== "") {
+    displayName = user.name;
+  } else if (user.email) {
+    displayName = user.email.split("@")[0];
+  }
+
   document.getElementById("greeting").innerText =
-    `Welcome, ${greeting} ${user.name}!`;
+    `Welcome, ${greeting} ${displayName}!`;
 
   /* ===== LOGOUT ===== */
   function logout() {
