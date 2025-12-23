@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen hidden" id="page">
+<body class="bg-gray-100 min-h-screen">
 
 <!-- ================= NAVIGATION ================= -->
 <nav class="bg-white shadow-lg border-b">
@@ -31,7 +31,7 @@
     <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
 
     <p class="text-gray-600 mb-8 text-lg">
-      Continue by uploading your resume or exploring your profile and past reports.
+      Upload your resume to analyze ATS score, skills, and improvements.
     </p>
 
     <div class="space-y-4">
@@ -56,37 +56,28 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
   const user = JSON.parse(localStorage.getItem("loggedUser"));
 
-  // 🔐 AUTH CHECK
-  if (!user) {
-    window.location.replace("login.html");
-    return;
-  }
-
-  // 👋 GREETING
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good Morning" :
     hour < 16 ? "Good Afternoon" :
     "Good Evening";
 
-  let displayName = user.name?.trim() || user.email?.split("@")[0] || "User";
+  if (user) {
+    const displayName = user.name?.trim() || user.email?.split("@")[0];
+    document.getElementById("greeting").innerText =
+      `Welcome back, ${greeting} ${displayName}!`;
+  } else {
+    document.getElementById("greeting").innerText =
+      `Welcome, ${greeting}!`;
+  }
 
-  document.getElementById("greeting").innerText =
-    `Welcome, ${greeting} ${displayName}!`;
-
-  // ✅ SHOW PAGE ONLY AFTER AUTH
-  document.getElementById("page").classList.remove("hidden");
-});
-
-// 🚪 LOGOUT
-function logout() {
-  localStorage.removeItem("loggedUser");
-  window.location.replace("login.html");
-}
+  function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.reload();
+  }
 </script>
 
 </body>
