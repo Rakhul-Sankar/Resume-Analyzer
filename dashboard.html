@@ -19,7 +19,13 @@
       <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
       <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
       <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
-      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
+
+      <!-- Logout only for logged users -->
+      <button id="logoutBtn"
+              onclick="logout()"
+              class="text-red-600 font-medium px-3 py-2 hidden">
+        Logout
+      </button>
     </div>
   </div>
 </nav>
@@ -65,9 +71,12 @@
     "Good Evening";
 
   if (user) {
-    const displayName = user.name?.trim() || user.email?.split("@")[0];
+    const displayName = user.name?.trim() || user.email?.split("@")[0] || "User";
     document.getElementById("greeting").innerText =
       `Welcome back, ${greeting} ${displayName}!`;
+
+    // show logout only if logged in
+    document.getElementById("logoutBtn").classList.remove("hidden");
   } else {
     document.getElementById("greeting").innerText =
       `Welcome, ${greeting}!`;
@@ -76,7 +85,7 @@
   function logout() {
     localStorage.removeItem("loggedUser");
     alert("Logged out successfully");
-    window.location.reload();
+    window.location.href = "login.html"; // stay on dashboard
   }
 </script>
 
