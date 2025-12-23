@@ -19,7 +19,13 @@
       <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
       <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
       <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
-      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
+
+      <!-- Logout only for logged users -->
+      <button id="logoutBtn"
+              onclick="logout()"
+              class="text-red-600 font-medium px-3 py-2 hidden">
+        Logout
+      </button>
     </div>
   </div>
 </nav>
@@ -31,7 +37,7 @@
     <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
 
     <p class="text-gray-600 mb-8 text-lg">
-      Continue by uploading your resume or exploring your profile and past reports.
+      Upload your resume to analyze ATS score, skills, and improvements.
     </p>
 
     <div class="space-y-4">
@@ -56,35 +62,30 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
-  /* ===== AUTH CHECK ===== */
   const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (!user) {
-    window.location.href = "login.html";
-  }
 
-  /* ===== GREETING ===== */
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good Morning" :
     hour < 16 ? "Good Afternoon" :
     "Good Evening";
 
-  // ✅ SAFE DISPLAY NAME LOGIC
-  let displayName = "User";
+  if (user) {
+    const displayName = user.name?.trim() || user.email?.split("@")[0] || "User";
+    document.getElementById("greeting").innerText =
+      `Welcome back, ${greeting} ${displayName}!`;
 
-  if (user.name && user.name.trim() !== "") {
-    displayName = user.name;
-  } else if (user.email) {
-    displayName = user.email.split("@")[0];
+    // show logout only if logged in
+    document.getElementById("logoutBtn").classList.remove("hidden");
+  } else {
+    document.getElementById("greeting").innerText =
+      `Welcome, ${greeting}!`;
   }
 
-  document.getElementById("greeting").innerText =
-    `Welcome, ${greeting} ${displayName}!`;
-
-  /* ===== LOGOUT ===== */
   function logout() {
     localStorage.removeItem("loggedUser");
-    window.location.href = "login.html";
+    alert("Logged out successfully");
+    window.location.href = "login.html"; // stay on dashboard
   }
 </script>
 
