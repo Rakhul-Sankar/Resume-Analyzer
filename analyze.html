@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon"  href="logo.avif">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resume Analysis</title>
-<script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-6 flex justify-center">
@@ -41,17 +41,16 @@
 </div>
 
 <script>
-/* ===== AUTH CHECK ===== */
+/* ================= AUTH CHECK ================= */
 const user = JSON.parse(localStorage.getItem("loggedUser"));
 if (!user) {
   alert("Session expired. Please login again.");
   window.location.href = "login.html";
 }
 
-/* ===== LOAD UPLOADED RESUMES ===== */
+/* ================= LOAD RESUMES ================= */
 let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
 
-/* ===== GET LATEST USER RESUME ===== */
 const index = resumes.findIndex(r => r.email === user.email);
 if (index === -1) {
   alert("No resume found. Upload again.");
@@ -61,44 +60,58 @@ if (index === -1) {
 const resume = resumes[index];
 const text = (resume.content || "").toLowerCase();
 
-/* ===== ATS SCORE LOGIC ===== */
-let score = 45;
-const keywords = [
-  "skills","experience","education","project",
-  "html","css","javascript","python",
-  "java","django","react","sql","internship"
+/* ================= ATS SCORING ================= */
+let score = 0;
+
+/* SECTION BASED SCORING */
+const sections = [
+  { keywords: ["@", "email", "phone"], weight: 15 },      // Contact
+  { keywords: ["education", "college", "university"], weight: 15 },
+  { keywords: ["experience", "internship", "work"], weight: 20 },
+  { keywords: ["skills", "technologies", "tools"], weight: 20 },
+  { keywords: ["project", "projects"], weight: 10 }
 ];
 
-keywords.forEach(k => {
-  if (text.includes(k)) score += 3;
+sections.forEach(sec => {
+  if (sec.keywords.some(k => text.includes(k))) {
+    score += sec.weight;
+  }
 });
 
-if (text.length > 1000) score += 10;
-if (text.length > 2000) score += 10;
-score = Math.min(score, 100);
-
-/* ===== DISPLAY SCORE ===== */
-document.getElementById("atsScore").innerText = score + "%";
-document.getElementById("atsLabel").innerText =
-  score >= 80 ? "Excellent ATS Match" :
-  score >= 65 ? "Good ATS Match" :
-  "Needs Improvement";
-
-/* ===== SKILL EXTRACTION ===== */
+/* SKILL BASED SCORING */
 const skillDB = [
   "python","java","django","html","css","javascript",
   "react","node","sql","mongodb","git","tailwind"
 ];
 
-const matched = skillDB.filter(s => text.includes(s));
-document.getElementById("skillCount").innerText = matched.length;
+const matchedSkills = skillDB.filter(s => text.includes(s));
+score += Math.min(matchedSkills.length * 2, 20);
+
+/* LENGTH QUALITY CHECK */
+if (text.length > 800) score += 10;
+if (text.length > 1500) score += 10;
+
+/* FINAL SCORE LIMIT */
+score = Math.min(score, 100);
+
+/* ================= DISPLAY ================= */
+document.getElementById("atsScore").innerText = score + "%";
+
+document.getElementById("atsLabel").innerText =
+  score >= 85 ? "Excellent ATS Match" :
+  score >= 70 ? "Good ATS Match" :
+  score >= 50 ? "Average – Needs Improvement" :
+  "Poor ATS Match";
+
+/* ================= SKILL DISPLAY ================= */
+document.getElementById("skillCount").innerText = matchedSkills.length;
 
 const list = document.getElementById("skillsList");
-list.innerHTML = matched.length
-  ? matched.map(s => `<li>${s.toUpperCase()}</li>`).join("")
+list.innerHTML = matchedSkills.length
+  ? matchedSkills.map(s => `<li>${s.toUpperCase()}</li>`).join("")
   : "<li>No skills detected</li>";
 
-/* ===== SAVE RESULT BACK TO SAME RESUME ===== */
+/* ================= SAVE RESULT ================= */
 resumes[index] = {
   ...resume,
   score: score,
@@ -108,7 +121,7 @@ resumes[index] = {
 
 localStorage.setItem("advancedResumes_v2", JSON.stringify(resumes));
 
-console.log("✅ ATS saved into uploaded resume");
+console.log("✅ ATS analysis completed successfully");
 </script>
 
 </body>
