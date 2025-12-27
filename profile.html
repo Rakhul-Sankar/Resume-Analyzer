@@ -99,41 +99,51 @@ function showProfile() {
   loadProfile();
 }
 
-/* ===== LOAD PROFILE ===== */
+/* ===== LOAD PROFILE DATA ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return showLogin();
 
-  nameInput.value = user.name;
-  emailInput.value = user.email;
+  nameInput.value = user.name || "";
+  emailInput.value = user.email || "";
 
-  const reports = JSON.parse(localStorage.getItem("resumeReports")) || [];
-  const userReports = reports.filter(r => r.email === user.email);
+  /* ✅ READ FROM MAIN STORAGE */
+  const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+
+  const userReports = allResumes.filter(r =>
+    r.email === user.email &&
+    r.analyzed === true &&
+    typeof r.score === "number"
+  );
 
   totalResumes.innerText = userReports.length;
   reportCount.innerText = userReports.length;
 
   if (userReports.length) {
-    const scores = userReports.map(r => r.score).filter(n => typeof n === "number");
-    avgScore.innerText = scores.length
-      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
-      : "0%";
+    const scores = userReports.map(r => r.score);
+    avgScore.innerText =
+      Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) + "%";
 
     lastDate.innerText = userReports[0].analyzedDate || "--";
+  } else {
+    avgScore.innerText = "0%";
+    lastDate.innerText = "--";
   }
 
+  /* ✅ RESUME HISTORY LIST */
   resumeList.innerHTML = userReports.length
     ? userReports.map(r => `
-      <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-        <div>
-          <b>${r.name}</b>
-          <div class="text-xs text-gray-500">${r.analyzedDate}</div>
+        <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+          <div>
+            <b>${r.name}</b>
+            <div class="text-xs text-gray-500">${r.analyzedDate}</div>
+          </div>
+          <span class="font-bold text-indigo-600">${r.score}%</span>
         </div>
-        <span class="font-bold text-indigo-600">${r.score}%</span>
-      </div>
-    `).join("")
-    : "<p class='text-gray-500'>No reports found.</p>";
+      `).join("")
+    : "<p class='text-gray-500'>No analyzed reports found.</p>";
 }
+
 
 /* ===== AUTH ===== */
 loginBtn.onclick = () => {
