@@ -31,6 +31,14 @@
     <ul id="skillsList" class="list-disc pl-5 mt-4 text-gray-700"></ul>
   </div>
 
+  <!-- SUGGESTIONS -->
+  <div class="bg-white p-6 rounded-xl shadow">
+    <h2 class="text-xl font-semibold text-red-600">
+      Improvement Suggestions
+    </h2>
+    <ul id="suggestionsList" class="list-disc pl-5 mt-4 text-gray-700"></ul>
+  </div>
+
   <div class="text-center">
     <a href="reports.html"
        class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700">
@@ -65,7 +73,7 @@ let score = 0;
 
 /* SECTION BASED SCORING */
 const sections = [
-  { keywords: ["@", "email", "phone"], weight: 15 },      // Contact
+  { keywords: ["@", "email", "phone"], weight: 15 },
   { keywords: ["education", "college", "university"], weight: 15 },
   { keywords: ["experience", "internship", "work"], weight: 20 },
   { keywords: ["skills", "technologies", "tools"], weight: 20 },
@@ -91,10 +99,10 @@ score += Math.min(matchedSkills.length * 2, 20);
 if (text.length > 800) score += 10;
 if (text.length > 1500) score += 10;
 
-/* FINAL SCORE LIMIT */
+/* FINAL SCORE */
 score = Math.min(score, 100);
 
-/* ================= DISPLAY ================= */
+/* ================= DISPLAY SCORE ================= */
 document.getElementById("atsScore").innerText = score + "%";
 
 document.getElementById("atsLabel").innerText =
@@ -106,10 +114,54 @@ document.getElementById("atsLabel").innerText =
 /* ================= SKILL DISPLAY ================= */
 document.getElementById("skillCount").innerText = matchedSkills.length;
 
-const list = document.getElementById("skillsList");
-list.innerHTML = matchedSkills.length
+const skillsList = document.getElementById("skillsList");
+skillsList.innerHTML = matchedSkills.length
   ? matchedSkills.map(s => `<li>${s.toUpperCase()}</li>`).join("")
   : "<li>No skills detected</li>";
+
+/* ================= SUGGESTIONS ================= */
+const suggestions = [];
+
+// Contact
+if (!text.includes("@") && !text.includes("phone")) {
+  suggestions.push("Add clear contact details (email and phone number) at the top.");
+}
+
+// Education
+if (!text.includes("education")) {
+  suggestions.push("Include an Education section with degree, college, and year.");
+}
+
+// Experience
+if (!text.includes("experience") && !text.includes("internship")) {
+  suggestions.push("Add Work Experience or Internship details to improve ATS score.");
+}
+
+// Skills section
+if (!text.includes("skills")) {
+  suggestions.push("Add a dedicated Skills section listing your technical abilities.");
+}
+
+// Projects
+if (!text.includes("project")) {
+  suggestions.push("Mention academic or personal projects with brief descriptions.");
+}
+
+// Resume length
+if (text.length < 600) {
+  suggestions.push("Resume content is too short. Add more details to strengthen it.");
+}
+
+// Skill strength
+if (matchedSkills.length < 5) {
+  suggestions.push("Include more relevant technical skills for better ATS matching.");
+}
+
+/* DISPLAY SUGGESTIONS */
+const suggestionList = document.getElementById("suggestionsList");
+suggestionList.innerHTML = suggestions.length
+  ? suggestions.map(s => `<li>${s}</li>`).join("")
+  : "<li class='text-green-600 font-medium'>Great job! Your resume is ATS friendly.</li>";
 
 /* ================= SAVE RESULT ================= */
 resumes[index] = {
@@ -120,8 +172,6 @@ resumes[index] = {
 };
 
 localStorage.setItem("advancedResumes_v2", JSON.stringify(resumes));
-
-console.log("✅ ATS analysis completed successfully");
 </script>
 
 </body>
