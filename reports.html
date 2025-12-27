@@ -55,6 +55,16 @@ if (!currentUser) window.location.href = "login.html";
 
 <!-- ================= CONTROLS ================= -->
 <section class="flex flex-wrap gap-4 mb-8">
+
+  <!-- 🔍 Search -->
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search by resume name..."
+    oninput="storage.applyFilters()"
+    class="p-2 rounded border w-full md:w-64"
+  />
+
   <select id="sortSelect"
           onchange="storage.applyFilters()"
           class="p-2 rounded border">
@@ -71,6 +81,7 @@ if (!currentUser) window.location.href = "login.html";
     <option value="good">Good (60–79)</option>
     <option value="poor">Needs Improvement (&lt;60)</option>
   </select>
+
 </section>
 
 <div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -90,8 +101,8 @@ const storage = {
       r.analyzed === true &&
       typeof r.score === "number"
     );
-    this.applyFilters();
     this.updateStats();
+    this.applyFilters();
   },
 
   updateStats() {
@@ -107,6 +118,11 @@ const storage = {
 
   applyFilters() {
     let list = [...this.reports];
+
+    const search = searchInput.value.toLowerCase();
+    if (search) {
+      list = list.filter(r => r.name.toLowerCase().includes(search));
+    }
 
     const filter = filterSelect.value;
     if (filter === "excellent") list = list.filter(r => r.score >= 80);
@@ -124,10 +140,12 @@ const storage = {
 
   render() {
     const box = document.getElementById("resumeGrid");
+
     if (!this.filtered.length) {
-      box.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
-        No reports found
-      </div>`;
+      box.innerHTML = `
+        <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
+          No matching reports found
+        </div>`;
       return;
     }
 
@@ -144,11 +162,6 @@ const storage = {
           ${r.score>=80?'text-green-600':r.score>=60?'text-yellow-600':'text-red-600'}">
           ${r.score>=80?'Excellent':r.score>=60?'Good':'Needs Improvement'}
         </p>
-
-        <a href="analyze.html"
-           class="block text-center bg-blue-600 text-white py-2 rounded">
-          View Detailed Report
-        </a>
 
         <button onclick="storage.confirmDelete('${r.id}')"
           class="w-full bg-red-600 text-white py-2 rounded">
