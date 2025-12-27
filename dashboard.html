@@ -1,46 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+    <link rel="icon"  href="logo.avif">
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen transition-colors" id="body">
+<body class="bg-gray-100 min-h-screen">
 
 <!-- ================= NAVIGATION ================= -->
-<nav class="bg-white shadow-lg border-b transition-colors" id="navbar">
+<nav class="bg-white shadow-lg border-b">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-indigo-600">
-      Resume Analyzer
-    </h1>
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
     <div class="flex space-x-4 items-center">
+      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
 
-      <!-- Dark Mode Toggle -->
-      <button onclick="toggleDarkMode()"
-              id="themeBtn"
-              class="px-3 py-2 rounded-lg border text-gray-700 hover:bg-gray-200">
-        🌙
-      </button>
-
-      <a href="upload.html"
-         class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-        Upload
-      </a>
-
-      <a href="profile.html"
-         class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-        Profile
-      </a>
-
-      <a href="reports.html"
-         class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">
-        Past Reports
-      </a>
-
+      <!-- Logout only for logged users -->
       <button id="logoutBtn"
               onclick="logout()"
               class="text-red-600 font-medium px-3 py-2 hidden">
@@ -52,11 +33,9 @@
 
 <!-- ================= MAIN ================= -->
 <main class="max-w-md mx-auto px-6 py-12">
-  <div id="card"
-       class="bg-white p-8 rounded-xl shadow-lg text-center transition-colors">
+  <div class="bg-white p-8 rounded-xl shadow-lg text-center">
 
-    <h2 id="greeting"
-        class="text-3xl font-bold mb-6 text-gray-800"></h2>
+    <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
 
     <p class="text-gray-600 mb-8 text-lg">
       Upload your resume to analyze ATS score, skills, and improvements.
@@ -84,67 +63,6 @@
 
 <!-- ================= SCRIPT ================= -->
 <script>
-  const body = document.getElementById("body");
-  const navbar = document.getElementById("navbar");
-  const card = document.getElementById("card");
-  const themeBtn = document.getElementById("themeBtn");
-
-  /* ---------- LOAD THEME ---------- */
-  if (localStorage.getItem("theme") === "dark") {
-    enableDarkMode();
-  }
-
-  function toggleDarkMode() {
-    if (body.classList.contains("dark")) {
-      disableDarkMode();
-    } else {
-      enableDarkMode();
-    }
-  }
-
-  function enableDarkMode() {
-    body.classList.add("dark");
-    body.classList.replace("bg-gray-100", "bg-gray-900");
-
-    navbar.classList.replace("bg-white", "bg-gray-800");
-    navbar.classList.replace("border-b", "border-gray-700");
-
-    card.classList.replace("bg-white", "bg-gray-800");
-
-    document.querySelectorAll("p,h2").forEach(el =>
-      el.classList.replace("text-gray-600", "text-gray-300")
-    );
-
-    document.querySelectorAll("h2").forEach(el =>
-      el.classList.replace("text-gray-800", "text-white")
-    );
-
-    themeBtn.textContent = "☀️";
-    localStorage.setItem("theme", "dark");
-  }
-
-  function disableDarkMode() {
-    body.classList.remove("dark");
-    body.classList.replace("bg-gray-900", "bg-gray-100");
-
-    navbar.classList.replace("bg-gray-800", "bg-white");
-    navbar.classList.replace("border-gray-700", "border-b");
-
-    card.classList.replace("bg-gray-800", "bg-white");
-
-    document.querySelectorAll("p").forEach(el =>
-      el.classList.replace("text-gray-300", "text-gray-600")
-    );
-
-    document.querySelectorAll("h2").forEach(el =>
-      el.classList.replace("text-white", "text-gray-800")
-    );
-
-    themeBtn.textContent = "🌙";
-    localStorage.setItem("theme", "light");
-  }
-
-  /* ---------- USER ---------- */
   const user = JSON.parse(localStorage.getItem("loggedUser"));
 
   const hour = new Date().getHours();
@@ -158,6 +76,7 @@
     document.getElementById("greeting").innerText =
       `Welcome back, ${greeting} ${displayName}!`;
 
+    // show logout only if logged in
     document.getElementById("logoutBtn").classList.remove("hidden");
   } else {
     document.getElementById("greeting").innerText =
@@ -167,9 +86,10 @@
   function logout() {
     localStorage.removeItem("loggedUser");
     alert("Logged out successfully");
-    window.location.href = "login.html";
+    window.location.href = "login.html"; // stay on dashboard
   }
 </script>
 
 </body>
+
 </html>
