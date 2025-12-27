@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon"  href="logo.avif">
-
+  <link rel="icon" href="logo.avif">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
@@ -21,7 +20,6 @@
       <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
       <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
 
-      <!-- Logout only for logged users -->
       <button id="logoutBtn"
               onclick="logout()"
               class="text-red-600 font-medium px-3 py-2 hidden">
@@ -32,30 +30,43 @@
 </nav>
 
 <!-- ================= MAIN ================= -->
-<main class="max-w-md mx-auto px-6 py-12">
-  <div class="bg-white p-8 rounded-xl shadow-lg text-center">
+<main class="max-w-2xl mx-auto px-6 py-12">
+  <div class="bg-white p-8 rounded-xl shadow-lg">
 
-    <h2 id="greeting" class="text-3xl font-bold mb-6 text-gray-800"></h2>
+    <!-- Greeting -->
+    <h2 id="greeting" class="text-3xl font-bold mb-4 text-gray-800 text-center"></h2>
 
-    <p class="text-gray-600 mb-8 text-lg">
-      Upload your resume to analyze ATS score, skills, and improvements.
+    <!-- Project Summary -->
+    <p class="text-gray-600 text-lg mb-6 text-center">
+      Resume Analyzer is a web-based application designed to help students and job seekers
+      evaluate their resumes using Applicant Tracking System (ATS) principles.
     </p>
 
-    <div class="space-y-4">
-      <a href="profile.html"
-         class="block bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">
-        View Profile
-      </a>
+    <div class="space-y-4 text-gray-700 leading-relaxed">
+      <p>
+        🔍 <b>Resume Analysis:</b> Upload your resume in TXT or DOCX format to receive an
+        ATS score based on structure, keywords, and content quality.
+      </p>
 
-      <a href="reports.html"
-         class="block bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">
-        Past Reports
-      </a>
+      <p>
+        🧠 <b>Skill Extraction:</b> The system automatically identifies technical skills
+        present in your resume and highlights missing or weak areas.
+      </p>
 
-      <a href="upload.html"
-         class="block bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700">
-        Upload Resume
-      </a>
+      <p>
+        📊 <b>ATS Score & Suggestions:</b> Get actionable improvement suggestions to
+        increase your resume’s compatibility with modern hiring systems.
+      </p>
+
+      <p>
+        🌙 <b>User Experience:</b> The platform includes secure login, profile management,
+        past report tracking, and dark mode for better usability.
+      </p>
+    </div>
+
+    <!-- Footer Note -->
+    <div class="mt-8 text-center text-sm text-gray-500">
+      Use the navigation menu above to upload resumes, view reports, and manage your profile.
     </div>
 
   </div>
@@ -76,7 +87,6 @@
     document.getElementById("greeting").innerText =
       `Welcome back, ${greeting} ${displayName}!`;
 
-    // show logout only if logged in
     document.getElementById("logoutBtn").classList.remove("hidden");
   } else {
     document.getElementById("greeting").innerText =
@@ -86,10 +96,9 @@
   function logout() {
     localStorage.removeItem("loggedUser");
     alert("Logged out successfully");
-    window.location.href = "login.html"; // stay on dashboard
+    window.location.href = "login.html";
   }
 </script>
 
 </body>
-
 </html>
