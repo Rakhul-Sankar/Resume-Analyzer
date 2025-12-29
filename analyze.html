@@ -33,16 +33,17 @@
     </button>
   </div>
 
-  <!-- Mobile Menu -->
-  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-    <a href="upload.html" class="mobile-link">Upload</a>
-    <a href="dashboard.html" class="mobile-link">Dashboard</a>
-    <a href="reports.html" class="mobile-link">Past Reports</a>
-    <a href="profile.html" class="mobile-link">Profile</a>
-    <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
-      Logout
-    </button>
-  </div>
+  <<!-- Mobile Menu -->
+<div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+  <a href="upload.html" class="mobile-link" onclick="toggleMenu()">Upload</a>
+  <a href="dashboard.html" class="mobile-link" onclick="toggleMenu()">Dashboard</a>
+  <a href="reports.html" class="mobile-link" onclick="toggleMenu()">Past Reports</a>
+  <a href="profile.html" class="mobile-link" onclick="toggleMenu()">Profile</a>
+  <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
+    Logout
+  </button>
+</div>
+
 </nav>
 
 
@@ -88,6 +89,13 @@
 </main>
 
 <script>
+
+  /* ===== MOBILE NAV TOGGLE ===== */
+function toggleMenu() {
+  const menu = document.getElementById("mobileMenu");
+  menu.classList.toggle("hidden");
+}
+
 /* ================= AUTH CHECK ================= */
 const user = JSON.parse(localStorage.getItem("loggedUser"));
 if (!user) {
