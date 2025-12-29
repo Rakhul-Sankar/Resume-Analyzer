@@ -16,18 +16,21 @@
   </h2>
 
   <form onsubmit="loginUser(event)" class="space-y-4">
+
     <!-- Email -->
     <input id="email" type="email" placeholder="Email"
       class="w-full p-3 border rounded-lg" required>
 
-    <!-- Password with toggle -->
+    <!-- Password with eye toggle -->
     <div class="relative">
       <input id="password" type="password" placeholder="Password"
         class="w-full p-3 border rounded-lg pr-10" required>
 
-      <button type="button"
+      <button
+        type="button"
+        id="eyeBtn"
         onclick="togglePassword()"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg select-none">
         👁️
       </button>
     </div>
@@ -52,10 +55,18 @@ window.onload = () => {
   document.getElementById("login-box").classList.remove("hidden");
 };
 
-/* ===== TOGGLE PASSWORD ===== */
+/* ===== TOGGLE PASSWORD + ICON ===== */
 function togglePassword() {
   const pass = document.getElementById("password");
-  pass.type = pass.type === "password" ? "text" : "password";
+  const eye = document.getElementById("eyeBtn");
+
+  if (pass.type === "password") {
+    pass.type = "text";
+    eye.innerText = "🙈"; // visible
+  } else {
+    pass.type = "password";
+    eye.innerText = "👁️"; // hidden
+  }
 }
 
 /* ===== LOGIN FUNCTION ===== */
