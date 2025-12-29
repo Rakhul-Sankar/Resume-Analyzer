@@ -37,18 +37,6 @@
 </div>
 
 <script>
-/* ===== AUTO LOGIN CHECK ===== */
-window.onload = () => {
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (user) {
-    // Already logged in → Dashboard
-    window.location.href = "dashboard.html";
-  } else {
-    document.getElementById("login-box").classList.remove("hidden");
-  }
-};
-
-/* ===== LOGIN FUNCTION ===== */
 function loginUser(event) {
   event.preventDefault();
 
@@ -57,6 +45,7 @@ function loginUser(event) {
   const errorMsg = document.getElementById("errorMsg");
 
   const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
+  const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
 
   if (!savedUser) {
     errorMsg.innerText = "No account found. Please sign up first.";
@@ -66,17 +55,23 @@ function loginUser(event) {
 
   if (email === savedUser.email && password === savedUser.password) {
 
-    // FIRST TIME LOGIN → ANALYZE
-    if (savedUser.isNew === true) {
-      savedUser.isNew = false; // mark as existing
-      localStorage.setItem("registeredUser", JSON.stringify(savedUser));
-      localStorage.setItem("loggedUser", JSON.stringify(savedUser));
-      window.location.href = "analyze.html";
-    }
-    // EXISTING USER → DASHBOARD
-    else {
-      localStorage.setItem("loggedUser", JSON.stringify(savedUser));
+    // Save logged-in user
+    localStorage.setItem("loggedUser", JSON.stringify(savedUser));
+
+    // Check if user already analyzed resumes
+    const userReports = allResumes.filter(r =>
+      r.email === savedUser.email &&
+      r.analyzed === true &&
+      typeof r.score === "number"
+    );
+
+    // 🔁 REDIRECT LOGIC
+    if (userReports.length > 0) {
+      // Existing user with reports → Dashboard
       window.location.href = "dashboard.html";
+    } else {
+      // No reports yet → Analyze
+      window.location.href = "analyze.html";
     }
 
   } else {
@@ -85,6 +80,7 @@ function loginUser(event) {
   }
 }
 </script>
+
 
 </body>
 </html>
