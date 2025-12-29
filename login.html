@@ -1,76 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon"  href="logo.avif">
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Login</title>
-<script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen p-6 flex items-center justify-center">
 
 <div id="login-box" class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg hidden">
-    <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
-        Login
-    </h2>
+  <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
+    Login
+  </h2>
 
-    <form onsubmit="loginUser(event)" class="space-y-4">
-        <input id="email" type="email" placeholder="Email"
-            class="w-full p-3 border rounded-lg" required>
+  <form onsubmit="loginUser(event)" class="space-y-4">
+    <input id="email" type="email" placeholder="Email"
+      class="w-full p-3 border rounded-lg" required>
 
-        <input id="password" type="password" placeholder="Password"
-            class="w-full p-3 border rounded-lg" required>
+    <input id="password" type="password" placeholder="Password"
+      class="w-full p-3 border rounded-lg" required>
 
-        <p id="errorMsg" class="text-red-600 text-sm hidden"></p>
+    <p id="errorMsg" class="text-red-600 text-sm hidden"></p>
 
-        <button type="submit"
-            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
-            Login
-        </button>
-    </form>
+    <button type="submit"
+      class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+      Login
+    </button>
+  </form>
 
-    <p class="mt-4 text-center text-sm">
-        No account?
-        <a href="signup.html" class="text-blue-600 font-medium">Create one</a>
-    </p>
+  <p class="mt-4 text-center text-sm">
+    No account?
+    <a href="signup.html" class="text-blue-600 font-medium">Create one</a>
+  </p>
 </div>
 
 <script>
 /* ===== AUTO LOGIN CHECK ===== */
 window.onload = () => {
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
-    if (user) {
-        window.location.href = "analyze.html";
-    } else {
-        document.getElementById("login-box").classList.remove("hidden");
-    }
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  if (user) {
+    // Already logged in → Dashboard
+    window.location.href = "dashboard.html";
+  } else {
+    document.getElementById("login-box").classList.remove("hidden");
+  }
 };
 
 /* ===== LOGIN FUNCTION ===== */
 function loginUser(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const errorMsg = document.getElementById("errorMsg");
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorMsg = document.getElementById("errorMsg");
 
-    // Fetch saved user (created in signup page)
-    const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
+  const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
 
-    if (!savedUser) {
-        errorMsg.innerText = "No account found. Please sign up first.";
-        errorMsg.classList.remove("hidden");
-        return;
+  if (!savedUser) {
+    errorMsg.innerText = "No account found. Please sign up first.";
+    errorMsg.classList.remove("hidden");
+    return;
+  }
+
+  if (email === savedUser.email && password === savedUser.password) {
+
+    // FIRST TIME LOGIN → ANALYZE
+    if (savedUser.isNew === true) {
+      savedUser.isNew = false; // mark as existing
+      localStorage.setItem("registeredUser", JSON.stringify(savedUser));
+      localStorage.setItem("loggedUser", JSON.stringify(savedUser));
+      window.location.href = "analyze.html";
+    }
+    // EXISTING USER → DASHBOARD
+    else {
+      localStorage.setItem("loggedUser", JSON.stringify(savedUser));
+      window.location.href = "dashboard.html";
     }
 
-    if (email === savedUser.email && password === savedUser.password) {
-        localStorage.setItem("loggedUser", JSON.stringify(savedUser));
-        window.location.href = "analyze.html";
-    } else {
-        errorMsg.innerText = "Invalid email or password";
-        errorMsg.classList.remove("hidden");
-    }
+  } else {
+    errorMsg.innerText = "Invalid email or password";
+    errorMsg.classList.remove("hidden");
+  }
 }
 </script>
 
