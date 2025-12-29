@@ -13,16 +13,38 @@
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
-    <div class="flex space-x-4 items-center">
-      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
-      <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
-      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
-      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="reports.html" class="nav-link">Past Reports</a>
+      <a href="profile.html" class="nav-link">Profile</a>
       <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
+
+    <!-- Mobile Hamburger -->
+    <button
+      onclick="toggleMenu()"
+      class="md:hidden text-gray-700 text-2xl focus:outline-none">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="upload.html" class="mobile-link">Upload</a>
+    <a href="dashboard.html" class="mobile-link">Dashboard</a>
+    <a href="reports.html" class="mobile-link">Past Reports</a>
+    <a href="profile.html" class="mobile-link">Profile</a>
+    <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
+      Logout
+    </button>
   </div>
 </nav>
+
 
 <!-- MAIN CONTENT -->
 <main class="flex justify-center p-6">
