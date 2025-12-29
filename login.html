@@ -37,6 +37,11 @@
 </div>
 
 <script>
+/* ===== SHOW LOGIN BOX ===== */
+window.onload = () => {
+  document.getElementById("login-box").classList.remove("hidden");
+};
+
 function loginUser(event) {
   event.preventDefault();
 
@@ -55,22 +60,17 @@ function loginUser(event) {
 
   if (email === savedUser.email && password === savedUser.password) {
 
-    // Save logged-in user
     localStorage.setItem("loggedUser", JSON.stringify(savedUser));
 
-    // Check if user already analyzed resumes
     const userReports = allResumes.filter(r =>
       r.email === savedUser.email &&
       r.analyzed === true &&
       typeof r.score === "number"
     );
 
-    // 🔁 REDIRECT LOGIC
     if (userReports.length > 0) {
-      // Existing user with reports → Dashboard
       window.location.href = "dashboard.html";
     } else {
-      // No reports yet → Analyze
       window.location.href = "analyze.html";
     }
 
@@ -80,6 +80,7 @@ function loginUser(event) {
   }
 }
 </script>
+
 
 
 </body>
