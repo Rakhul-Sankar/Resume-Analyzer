@@ -50,6 +50,11 @@
 </div>
 
 <script>
+/* ===== SHOW LOGIN BOX ON LOAD ===== */
+window.onload = () => {
+  document.getElementById("login-box").classList.remove("hidden");
+};
+
 /* ===== TOGGLE PASSWORD + SLASHED EYE ===== */
 function togglePassword() {
   const pass = document.getElementById("password");
@@ -57,13 +62,14 @@ function togglePassword() {
 
   if (pass.type === "password") {
     pass.type = "text";
-    eye.innerText = "👁️‍🗨️"; // slashed / visible state
+    eye.innerText = "👁️‍🗨️"; // visible (slashed eye)
   } else {
     pass.type = "password";
-    eye.innerText = "👁️"; // normal eye / hidden state
+    eye.innerText = "👁️"; // hidden
   }
 }
 </script>
+
 
 
 </body>
