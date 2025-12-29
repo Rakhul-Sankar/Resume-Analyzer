@@ -85,6 +85,48 @@ function togglePassword() {
     eye.innerText = "👁️"; // hidden
   }
 }
+
+/* ===== LOGIN + REDIRECT LOGIC ===== */
+function loginUser(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorMsg = document.getElementById("errorMsg");
+
+  const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
+  const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+
+  if (!savedUser) {
+    errorMsg.innerText = "No account found. Please sign up first.";
+    errorMsg.classList.remove("hidden");
+    return;
+  }
+
+  if (email === savedUser.email && password === savedUser.password) {
+
+    // Save logged user
+    localStorage.setItem("loggedUser", JSON.stringify(savedUser));
+
+    // Check if user already analyzed resumes
+    const userReports = allResumes.filter(r =>
+      r.email === savedUser.email &&
+      r.analyzed === true &&
+      typeof r.score === "number"
+    );
+
+    // Redirect logic
+    if (userReports.length > 0) {
+      window.location.href = "dashboard.html"; // existing user
+    } else {
+      window.location.href = "analyze.html"; // new user
+    }
+
+  } else {
+    errorMsg.innerText = "Invalid email or password";
+    errorMsg.classList.remove("hidden");
+  }
+}
 </script>
 
 </body>
