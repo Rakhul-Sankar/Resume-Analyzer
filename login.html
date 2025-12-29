@@ -21,10 +21,19 @@
     <input id="email" type="email" placeholder="Email"
       class="w-full p-3 border rounded-lg" required>
 
-    <!-- Password with eye toggle -->
+    <!-- Password with eye toggle (copy disabled) -->
     <div class="relative">
-      <input id="password" type="password" placeholder="Password"
-        class="w-full p-3 border rounded-lg pr-10" required>
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        class="w-full p-3 border rounded-lg pr-10"
+        required
+        oncopy="return false"
+        oncut="return false"
+        onpaste="return false"
+        oncontextmenu="return false"
+      >
 
       <button
         type="button"
@@ -53,6 +62,14 @@
 /* ===== SHOW LOGIN BOX ON LOAD ===== */
 window.onload = () => {
   document.getElementById("login-box").classList.remove("hidden");
+
+  // Block Ctrl+C / Ctrl+V / Ctrl+X for password
+  const pwd = document.getElementById("password");
+  pwd.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+    }
+  });
 };
 
 /* ===== TOGGLE PASSWORD + SLASHED EYE ===== */
@@ -62,15 +79,13 @@ function togglePassword() {
 
   if (pass.type === "password") {
     pass.type = "text";
-    eye.innerText = "👁️‍🗨️"; // visible (slashed eye)
+    eye.innerText = "👁️‍🗨️"; // visible
   } else {
     pass.type = "password";
     eye.innerText = "👁️"; // hidden
   }
 }
 </script>
-
-
 
 </body>
 </html>
