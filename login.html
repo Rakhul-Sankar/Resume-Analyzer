@@ -50,64 +50,21 @@
 </div>
 
 <script>
-/* ===== SHOW LOGIN BOX ===== */
-window.onload = () => {
-  document.getElementById("login-box").classList.remove("hidden");
-};
-
-/* ===== TOGGLE PASSWORD + ICON ===== */
+/* ===== TOGGLE PASSWORD + SLASHED EYE ===== */
 function togglePassword() {
   const pass = document.getElementById("password");
   const eye = document.getElementById("eyeBtn");
 
   if (pass.type === "password") {
     pass.type = "text";
-    eye.innerText = "🙈"; // visible
+    eye.innerText = "👁️‍🗨️"; // slashed / visible state
   } else {
     pass.type = "password";
-    eye.innerText = "👁️"; // hidden
-  }
-}
-
-/* ===== LOGIN FUNCTION ===== */
-function loginUser(event) {
-  event.preventDefault();
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const errorMsg = document.getElementById("errorMsg");
-
-  const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
-  const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-
-  if (!savedUser) {
-    errorMsg.innerText = "No account found. Please sign up first.";
-    errorMsg.classList.remove("hidden");
-    return;
-  }
-
-  if (email === savedUser.email && password === savedUser.password) {
-
-    localStorage.setItem("loggedUser", JSON.stringify(savedUser));
-
-    const userReports = allResumes.filter(r =>
-      r.email === savedUser.email &&
-      r.analyzed === true &&
-      typeof r.score === "number"
-    );
-
-    if (userReports.length > 0) {
-      window.location.href = "dashboard.html";
-    } else {
-      window.location.href = "analyze.html";
-    }
-
-  } else {
-    errorMsg.innerText = "Invalid email or password";
-    errorMsg.classList.remove("hidden");
+    eye.innerText = "👁️"; // normal eye / hidden state
   }
 }
 </script>
+
 
 </body>
 </html>
