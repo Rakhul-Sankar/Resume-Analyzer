@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon"  href="logo.avif">
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Profile</title>
-<script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
@@ -40,14 +40,22 @@
   <h2 class="text-3xl font-bold text-indigo-600 mb-6">Profile</h2>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-    <input id="nameInput" class="p-3 border rounded">
+    <input id="nameInput" placeholder="Name" class="p-3 border rounded">
     <input id="emailInput" disabled class="p-3 border rounded bg-gray-100">
   </div>
 
-  <button id="saveBtn"
-    class="mb-8 bg-indigo-600 text-white px-4 py-2 rounded-lg">
-    Save Profile
-  </button>
+  <!-- ACTION BUTTONS -->
+  <div class="flex gap-3 mb-8">
+    <button id="saveBtn"
+      class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+      Save Profile
+    </button>
+
+    <button id="deleteBtn"
+      class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+      Delete Profile
+    </button>
+  </div>
 
   <!-- Stats -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -99,7 +107,7 @@ function showProfile() {
   loadProfile();
 }
 
-/* ===== LOAD PROFILE DATA ===== */
+/* ===== LOAD PROFILE ===== */
 function loadProfile() {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   if (!user) return showLogin();
@@ -107,7 +115,6 @@ function loadProfile() {
   nameInput.value = user.name || "";
   emailInput.value = user.email || "";
 
-  /* ✅ READ FROM MAIN STORAGE */
   const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
 
   const userReports = allResumes.filter(r =>
@@ -130,7 +137,6 @@ function loadProfile() {
     lastDate.innerText = "--";
   }
 
-  /* ✅ RESUME HISTORY LIST */
   resumeList.innerHTML = userReports.length
     ? userReports.map(r => `
         <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
@@ -143,7 +149,6 @@ function loadProfile() {
       `).join("")
     : "<p class='text-gray-500'>No analyzed reports found.</p>";
 }
-
 
 /* ===== AUTH ===== */
 loginBtn.onclick = () => {
@@ -164,7 +169,28 @@ saveBtn.onclick = () => {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
   user.name = nameInput.value;
   localStorage.setItem("loggedUser", JSON.stringify(user));
-  alert("Profile updated");
+  alert("Profile updated successfully");
+};
+
+/* ===== DELETE PROFILE ===== */
+deleteBtn.onclick = () => {
+  const confirmDelete = confirm(
+    "Are you sure you want to delete your profile?\nAll resume reports will be permanently removed."
+  );
+
+  if (!confirmDelete) return;
+
+  const user = JSON.parse(localStorage.getItem("loggedUser"));
+  if (!user) return;
+
+  let allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+  allResumes = allResumes.filter(r => r.email !== user.email);
+  localStorage.setItem("advancedResumes_v2", JSON.stringify(allResumes));
+
+  localStorage.removeItem("loggedUser");
+
+  alert("Profile deleted successfully!");
+  window.location.href = "signup.html";
 };
 
 /* ===== INIT ===== */
