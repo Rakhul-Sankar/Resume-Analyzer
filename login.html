@@ -16,11 +16,21 @@
   </h2>
 
   <form onsubmit="loginUser(event)" class="space-y-4">
+    <!-- Email -->
     <input id="email" type="email" placeholder="Email"
       class="w-full p-3 border rounded-lg" required>
 
-    <input id="password" type="password" placeholder="Password"
-      class="w-full p-3 border rounded-lg" required>
+    <!-- Password with toggle -->
+    <div class="relative">
+      <input id="password" type="password" placeholder="Password"
+        class="w-full p-3 border rounded-lg pr-10" required>
+
+      <button type="button"
+        onclick="togglePassword()"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
+        👁️
+      </button>
+    </div>
 
     <p id="errorMsg" class="text-red-600 text-sm hidden"></p>
 
@@ -42,6 +52,13 @@ window.onload = () => {
   document.getElementById("login-box").classList.remove("hidden");
 };
 
+/* ===== TOGGLE PASSWORD ===== */
+function togglePassword() {
+  const pass = document.getElementById("password");
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+/* ===== LOGIN FUNCTION ===== */
 function loginUser(event) {
   event.preventDefault();
 
@@ -80,8 +97,6 @@ function loginUser(event) {
   }
 }
 </script>
-
-
 
 </body>
 </html>
