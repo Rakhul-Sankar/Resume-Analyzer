@@ -44,16 +44,11 @@
     <input id="emailInput" disabled class="p-3 border rounded bg-gray-100">
   </div>
 
-  <!-- ACTION BUTTONS -->
-  <div class="flex gap-3 mb-8">
+  <!-- ACTION BUTTON -->
+  <div class="mb-8">
     <button id="saveBtn"
       class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
       Save Profile
-    </button>
-
-    <button id="deleteBtn"
-      class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
-      Delete Profile
     </button>
   </div>
 
@@ -170,27 +165,6 @@ saveBtn.onclick = () => {
   user.name = nameInput.value;
   localStorage.setItem("loggedUser", JSON.stringify(user));
   alert("Profile updated successfully");
-};
-
-/* ===== DELETE PROFILE ===== */
-deleteBtn.onclick = () => {
-  const confirmDelete = confirm(
-    "Are you sure you want to delete your profile?\nAll resume reports will be permanently removed."
-  );
-
-  if (!confirmDelete) return;
-
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-  if (!user) return;
-
-  let allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-  allResumes = allResumes.filter(r => r.email !== user.email);
-  localStorage.setItem("advancedResumes_v2", JSON.stringify(allResumes));
-
-  localStorage.removeItem("loggedUser");
-
-  alert("Profile deleted successfully!");
-  window.location.href = "signup.html";
 };
 
 /* ===== INIT ===== */
