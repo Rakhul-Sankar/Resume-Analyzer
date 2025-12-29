@@ -41,7 +41,7 @@
 window.onload = () => {
     const user = JSON.parse(localStorage.getItem("loggedUser"));
     if (user) {
-        window.location.href = "dashboard.html";
+        window.location.href = "analyze.html";
     } else {
         document.getElementById("login-box").classList.remove("hidden");
     }
@@ -66,7 +66,7 @@ function loginUser(event) {
 
     if (email === savedUser.email && password === savedUser.password) {
         localStorage.setItem("loggedUser", JSON.stringify(savedUser));
-        window.location.href = "dashboard.html";
+        window.location.href = "analyze.html";
     } else {
         errorMsg.innerText = "Invalid email or password";
         errorMsg.classList.remove("hidden");
