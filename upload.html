@@ -211,8 +211,15 @@ function updateCount() {
   resumeCount.textContent = `Total resumes uploaded: ${resumes.length}`;
 }
 updateCount();
+
+  function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+  }
 </script>
 
 </body>
 </html>
+
 
