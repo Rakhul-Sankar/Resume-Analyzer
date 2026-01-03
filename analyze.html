@@ -133,9 +133,7 @@ sections.forEach(sec => {
   }
 });
 
-/* ================= SKILL EXTRACTION ================= */
-
-// Master skill dictionary (write ONCE, reusable)
+/* SKILL BASED SCORING */
 const MASTER_SKILLS = [
   "python","java","c","c++","c#",
   "html","css","javascript","typescript",
@@ -147,19 +145,15 @@ const MASTER_SKILLS = [
   "tailwindcss","bootstrap"
 ];
 
-// Function to extract skills from resume text
-function extractSkills(resumeText) {
-  const found = MASTER_SKILLS.filter(skill =>
-    new RegExp(`\\b${skill}\\b`, "i").test(resumeText)
-  );
-  return [...new Set(found)];
-}
-
-const matchedSkills = extractSkills(text);
-
-/* Skill-based ATS scoring */
+const matchedSkills = MASTER_SKILLS.filter(s => text.includes(s));
 score += Math.min(matchedSkills.length * 2, 20);
 
+/* LENGTH QUALITY CHECK */
+if (text.length > 800) score += 10;
+if (text.length > 1500) score += 10;
+
+/* FINAL SCORE */
+score = Math.min(score, 100);
 
 /* ================= DISPLAY SCORE ================= */
 document.getElementById("atsScore").innerText = score + "%";
