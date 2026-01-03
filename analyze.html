@@ -13,10 +13,8 @@
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
       <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
       <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
@@ -25,27 +23,17 @@
       <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
 
-    <!-- Mobile Hamburger -->
-    <button
-      onclick="toggleMenu()"
-      class="md:hidden text-gray-700 text-2xl focus:outline-none">
-      ☰
-    </button>
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">☰</button>
   </div>
 
-  <!-- Mobile Menu -->
-<div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-  <a href="upload.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Upload</a>
-  <a href="dashboard.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Dashboard</a>
-  <a href="reports.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Past Reports</a>
-  <a href="profile.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Profile</a>
-  <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
-    Logout
-  </button>
-</div>
-
+  <div id="mobileMenu" class="hidden bg-white border-t">
+    <a href="upload.html" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="dashboard.html" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <a href="reports.html" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="profile.html" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+    <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">Logout</button>
+  </div>
 </nav>
-
 
 <!-- MAIN CONTENT -->
 <main class="flex justify-center p-6">
@@ -78,34 +66,24 @@
     <ul id="suggestionsList" class="list-disc pl-5 mt-4 text-gray-700"></ul>
   </div>
 
-  <div class="text-center">
-    <a href="reports.html"
-       class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700">
-      View Reports
-    </a>
-  </div>
-
 </div>
 </main>
 
 <script>
-
-  /* ===== MOBILE NAV TOGGLE ===== */
+/* ===== MENU ===== */
 function toggleMenu() {
-  const menu = document.getElementById("mobileMenu");
-  menu.classList.toggle("hidden");
+  document.getElementById("mobileMenu").classList.toggle("hidden");
 }
 
-/* ================= AUTH CHECK ================= */
+/* ===== AUTH ===== */
 const user = JSON.parse(localStorage.getItem("loggedUser"));
 if (!user) {
   alert("Session expired. Please login again.");
   window.location.href = "login.html";
 }
 
-/* ================= LOAD RESUMES ================= */
+/* ===== LOAD RESUME ===== */
 let resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
-
 const index = resumes.findIndex(r => r.email === user.email);
 if (index === -1) {
   alert("No resume found. Upload again.");
@@ -115,25 +93,22 @@ if (index === -1) {
 const resume = resumes[index];
 const text = (resume.content || "").toLowerCase();
 
-/* ================= ATS SCORING ================= */
+/* ===== ATS SCORE ===== */
 let score = 0;
 
-/* SECTION BASED SCORING */
 const sections = [
   { keywords: ["@", "email", "phone"], weight: 15 },
   { keywords: ["education", "college", "university"], weight: 15 },
   { keywords: ["experience", "internship", "work"], weight: 20 },
   { keywords: ["skills", "technologies", "tools"], weight: 20 },
-  { keywords: ["project", "projects"], weight: 10 }
+  { keywords: ["project"], weight: 10 }
 ];
 
 sections.forEach(sec => {
-  if (sec.keywords.some(k => text.includes(k))) {
-    score += sec.weight;
-  }
+  if (sec.keywords.some(k => text.includes(k))) score += sec.weight;
 });
 
-/* SKILL BASED SCORING */
+/* ===== SKILLS ===== */
 const MASTER_SKILLS = [
   "python","java","c","c++","c#",
   "html","css","javascript","typescript",
@@ -148,36 +123,32 @@ const MASTER_SKILLS = [
 const matchedSkills = MASTER_SKILLS.filter(s => text.includes(s));
 score += Math.min(matchedSkills.length * 2, 20);
 
-/* LENGTH QUALITY CHECK */
+/* ===== LENGTH ===== */
 if (text.length > 800) score += 10;
 if (text.length > 1500) score += 10;
-
-/* FINAL SCORE */
 score = Math.min(score, 100);
 
-/* ================= DISPLAY SCORE ================= */
+/* ===== DISPLAY SCORE ===== */
 document.getElementById("atsScore").innerText = score + "%";
-
 document.getElementById("atsLabel").innerText =
   score >= 85 ? "Excellent ATS Match" :
   score >= 70 ? "Good ATS Match" :
   score >= 50 ? "Average – Needs Improvement" :
   "Poor ATS Match";
 
-/* ================= SKILL DISPLAY ================= */
+/* ===== DISPLAY SKILLS ===== */
 document.getElementById("skillCount").innerText = matchedSkills.length;
+document.getElementById("skillsList").innerHTML =
+  matchedSkills.length
+    ? matchedSkills.map(s => `<li>${s.toUpperCase()}</li>`).join("")
+    : "<li>No skills detected</li>";
 
-const skillsList = document.getElementById("skillsList");
-skillsList.innerHTML = matchedSkills.length
-  ? matchedSkills.map(s => `<li>${s.toUpperCase()}</li>`).join("")
-  : "<li>No skills detected</li>";
-
-/* ================= SUGGESTIONS ================= */
+/* ===== SMART SUGGESTIONS ===== */
 const suggestions = [];
 
 // Contact
-if (!text.includes("@") && !text.includes("phone")) {
-  suggestions.push("Add clear contact details (email and phone number) at the top.");
+if (!text.includes("@")) {
+  suggestions.push("Add clear contact details including email and phone number.");
 }
 
 // Education
@@ -185,45 +156,42 @@ if (!text.includes("education")) {
   suggestions.push("Include an Education section with degree, college, and year.");
 }
 
-// Experience
-if (!text.includes("experience") && !text.includes("internship")) {
+// Experience (expanded)
+const expKeywords = ["experience","internship","company","organization","role","worked"];
+if (!expKeywords.some(k => text.includes(k))) {
   suggestions.push("Add Work Experience or Internship details to improve ATS score.");
+  suggestions.push("Mention company name, role, duration, and responsibilities.");
 }
 
-// Skills section
+// Skills
 if (!text.includes("skills")) {
   suggestions.push("Add a dedicated Skills section listing your technical abilities.");
 }
 
 // Projects
 if (!text.includes("project")) {
-  suggestions.push("Mention academic or personal projects with brief descriptions.");
+  suggestions.push("Include academic or personal projects with technologies used.");
 }
 
-// Resume length
+// Length
 if (text.length < 600) {
-  suggestions.push("Resume content is too short. Add more details to strengthen it.");
+  suggestions.push("Resume content is too short. Add more details and achievements.");
 }
 
-// Skill strength
-if (matchedSkills.length < 5) {
-  suggestions.push("Include more relevant technical skills for better ATS matching.");
+// Force minimum suggestions
+if (score < 70 && suggestions.length < 2) {
+  suggestions.push("Improve resume formatting with clear headings and bullet points.");
+  suggestions.push("Customize your resume keywords based on job descriptions.");
 }
 
-/* DISPLAY SUGGESTIONS */
-const suggestionList = document.getElementById("suggestionsList");
-suggestionList.innerHTML = suggestions.length
-  ? suggestions.map(s => `<li>${s}</li>`).join("")
-  : "<li class='text-green-600 font-medium'>Great job! Your resume is ATS friendly.</li>";
+/* ===== DISPLAY SUGGESTIONS ===== */
+document.getElementById("suggestionsList").innerHTML =
+  suggestions.length
+    ? suggestions.map(s => `<li>${s}</li>`).join("")
+    : "<li class='text-green-600 font-medium'>Great job! Your resume is ATS friendly.</li>";
 
-/* ================= SAVE RESULT ================= */
-resumes[index] = {
-  ...resume,
-  score: score,
-  analyzed: true,
-  analyzedDate: new Date().toLocaleString()
-};
-
+/* ===== SAVE ===== */
+resumes[index] = { ...resume, score, analyzed: true, analyzedDate: new Date().toLocaleString() };
 localStorage.setItem("advancedResumes_v2", JSON.stringify(resumes));
 </script>
 
