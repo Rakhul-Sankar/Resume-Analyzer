@@ -16,17 +16,38 @@ if (!currentUser) window.location.href = "login.html";
 </script>
 
 <!-- ================= NAVIGATION ================= -->
-<nav class="bg-white shadow-lg border-b">
+<!-- NAVIGATION -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-    <div class="flex space-x-4 items-center">
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex space-x-4 items-center">
       <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
       <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
-      <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
       <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
+
+    <!-- Mobile Hamburger -->
+    <button
+      onclick="toggleMenu()"
+      class="md:hidden text-gray-700 text-2xl focus:outline-none">
+      ☰
+    </button>
   </div>
+
+  <!-- Mobile Menu -->
+<div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+  <a href="upload.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Upload</a>
+  <a href="reports.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+  <a href="profile.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Profile</a>
+  <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
+    Logout
+  </button>
+</div>
+
 </nav>
 
 <main class="max-w-6xl mx-auto px-6 py-10">
@@ -78,6 +99,12 @@ if (!currentUser) window.location.href = "login.html";
 </main>
 
 <script>
+    /* ===== MOBILE NAV TOGGLE ===== */
+function toggleMenu() {
+  const menu = document.getElementById("mobileMenu");
+  menu.classList.toggle("hidden");
+}
+
 const storage = {
   key: "advancedResumes_v2",
   reports: [],
