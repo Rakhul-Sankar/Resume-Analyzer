@@ -133,7 +133,7 @@ function toggleMenu() {
   if (user) {
     const displayName = user.name?.trim() || user.email?.split("@")[0] || "User";
     document.getElementById("greeting").innerText =
-      `Welcome back, ${greeting} ${displayName}!`;
+      `${greeting} ${displayName}!`;
 
     document.getElementById("logoutBtn").classList.remove("hidden");
   } else {
