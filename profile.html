@@ -19,7 +19,8 @@
     <div class="hidden md:flex space-x-4 items-center">
       <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
       <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
-      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>   
     </div>
 
     <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">☰</button>
@@ -28,7 +29,8 @@
   <div id="mobileMenu" class="hidden bg-white border-t">
     <a href="upload.html" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
     <a href="reports.html" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
-    <a href="profile.html" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+    <a href="dashboard.html" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">Logout</button>
   </div>
 </nav>
 
@@ -130,6 +132,12 @@ document.getElementById("saveBtn").onclick = () => {
 
 /* ===== INIT ===== */
 window.onload = loadProfile;
+
+ function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+  }
 </script>
 
 </body>
