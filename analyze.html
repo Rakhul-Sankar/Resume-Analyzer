@@ -193,6 +193,12 @@ document.getElementById("suggestionsList").innerHTML =
 /* ===== SAVE ===== */
 resumes[index] = { ...resume, score, analyzed: true, analyzedDate: new Date().toLocaleString() };
 localStorage.setItem("advancedResumes_v2", JSON.stringify(resumes));
+
+function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+  }
 </script>
 
 </body>

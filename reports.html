@@ -198,10 +198,11 @@ const storage = {
 
 storage.load();
 
-function logout() {
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-}
+ function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+ }
 </script>
 
 </body>

@@ -181,9 +181,10 @@ loginBtn.onclick = () => {
 };
 
 function logout() {
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-}
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+  }
 
 saveBtn.onclick = () => {
   const user = JSON.parse(localStorage.getItem("loggedUser"));
