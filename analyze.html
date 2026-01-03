@@ -133,21 +133,33 @@ sections.forEach(sec => {
   }
 });
 
-/* SKILL BASED SCORING */
-const skillDB = [
-  "python","java","django","html","css","javascript",
-  "react","node","sql","mongodb","git","tailwind"
+/* ================= SKILL EXTRACTION ================= */
+
+// Master skill dictionary (write ONCE, reusable)
+const MASTER_SKILLS = [
+  "python","java","c","c++","c#",
+  "html","css","javascript","typescript",
+  "react","angular","vue",
+  "node","express",
+  "django","flask",
+  "sql","mysql","postgresql","mongodb",
+  "git","github","docker","aws",
+  "tailwindcss","bootstrap"
 ];
 
-const matchedSkills = skillDB.filter(s => text.includes(s));
+// Function to extract skills from resume text
+function extractSkills(resumeText) {
+  const found = MASTER_SKILLS.filter(skill =>
+    new RegExp(`\\b${skill}\\b`, "i").test(resumeText)
+  );
+  return [...new Set(found)];
+}
+
+const matchedSkills = extractSkills(text);
+
+/* Skill-based ATS scoring */
 score += Math.min(matchedSkills.length * 2, 20);
 
-/* LENGTH QUALITY CHECK */
-if (text.length > 800) score += 10;
-if (text.length > 1500) score += 10;
-
-/* FINAL SCORE */
-score = Math.min(score, 100);
 
 /* ================= DISPLAY SCORE ================= */
 document.getElementById("atsScore").innerText = score + "%";
