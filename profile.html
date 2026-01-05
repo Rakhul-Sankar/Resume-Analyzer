@@ -10,23 +10,31 @@
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
-<!-- NAVIGATION -->
+<!-- ================= NAVIGATION ================= -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="upload.html" class="nav-link">Upload</a>
-      <a href="reports.html" class="nav-link">Past Reports</a>
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <button onclick="logout()" class="text-red-600">Logout</button>
+      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>   
     </div>
 
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">☰</button>
+  </div>
+
+  <div id="mobileMenu" class="hidden bg-white border-t">
+    <a href="upload.html" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="reports.html" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="dashboard.html" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">Logout</button>
   </div>
 </nav>
 
-<!-- PROFILE -->
+<!-- ================= PROFILE ================= -->
 <main class="flex justify-center p-6">
 <div class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-xl border">
 
@@ -34,30 +42,30 @@
 
   <!-- NAME -->
   <div class="mb-6">
-    <input
-      id="nameInput"
-      placeholder="Your Name"
-      class="p-3 border rounded w-full md:w-1/2"
-    >
+    <input id="nameInput" placeholder="Your Name"
+      class="p-3 border rounded w-full md:w-1/2">
   </div>
 
-  <button
-    onclick="saveProfile()"
-    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-8"
-  >
+  <button id="saveBtn"
+    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-8">
     Save Profile
   </button>
 
-  <!-- STATS (ONLY 2 – NO LAST ANALYZED) -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  <!-- STATS -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-gray-100 p-4 rounded text-center">
       <p class="text-gray-500 text-sm">Total Reports</p>
-      <h3 id="totalReports" class="text-2xl font-bold">0</h3>
+      <h3 id="totalResumes" class="text-2xl font-bold">0</h3>
     </div>
 
     <div class="bg-gray-100 p-4 rounded text-center">
       <p class="text-gray-500 text-sm">Average ATS Score</p>
       <h3 id="avgScore" class="text-2xl font-bold">0%</h3>
+    </div>
+
+    <div class="bg-gray-100 p-4 rounded text-center">
+      <p class="text-gray-500 text-sm">Last Analyzed</p>
+      <h3 id="lastDate" class="text-sm font-semibold">--</h3>
     </div>
   </div>
 
@@ -71,67 +79,65 @@
 </main>
 
 <script>
-/* NAV */
+/* ===== MENU ===== */
 function toggleMenu() {
-  document.getElementById("mobileMenu")?.classList.toggle("hidden");
+  document.getElementById("mobileMenu").classList.toggle("hidden");
 }
 
-function logout() {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
+/* ===== ELEMENTS ===== */
+const nameInput = document.getElementById("nameInput");
+const totalResumes = document.getElementById("totalResumes");
+const avgScore = document.getElementById("avgScore");
+const lastDate = document.getElementById("lastDate");
+const resumeList = document.getElementById("resumeList");
+const reportCount = document.getElementById("reportCount");
 
-/* LOAD PROFILE – BACKEND DRIVEN (NO LAST ANALYZED) */
-async function loadProfile() {
-  try {
-    const res = await fetch("http://127.0.0.1:8000/api/profile/");
-    const data = await res.json();
+/* ===== LOAD PROFILE ===== */
+function loadProfile() {
+  const savedName = localStorage.getItem("profileName");
+  if (savedName) nameInput.value = savedName;
 
-    document.getElementById("nameInput").value = data.name || "";
-    document.getElementById("totalReports").innerText =
-      data.total_reports || 0;
+  const resumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+  const analyzed = resumes.filter(r => r.analyzed && typeof r.score === "number");
 
-    document.getElementById("avgScore").innerText =
-      (data.average_score ?? 0) + "%";
+  totalResumes.innerText = analyzed.length;
+  reportCount.innerText = analyzed.length;
 
-    document.getElementById("reportCount").innerText =
-      data.reports?.length || 0;
+  if (analyzed.length) {
+    const scores = analyzed.map(r => r.score);
+    avgScore.innerText =
+      Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) + "%";
 
-    document.getElementById("resumeList").innerHTML =
-      data.reports && data.reports.length
-        ? data.reports.map(r => `
-            <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-              <div>
-                <b>${r.name}</b>
-                <div class="text-xs text-gray-500">${r.date}</div>
-              </div>
-              <span class="font-bold text-indigo-600">${r.score}%</span>
-            </div>
-          `).join("")
-        : "<p class='text-gray-500'>No analyzed reports found.</p>";
-
-  } catch {
-    document.getElementById("resumeList").innerHTML =
-      "<p class='text-red-600'>Backend not reachable</p>";
+    lastDate.innerText = analyzed[analyzed.length - 1].analyzedDate || "--";
   }
+
+  resumeList.innerHTML = analyzed.length
+    ? analyzed.map(r => `
+        <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+          <div>
+            <b>${r.name || "Resume"}</b>
+            <div class="text-xs text-gray-500">${r.analyzedDate}</div>
+          </div>
+          <span class="font-bold text-indigo-600">${r.score}%</span>
+        </div>
+      `).join("")
+    : "<p class='text-gray-500'>No analyzed reports found.</p>";
 }
 
-/* SAVE PROFILE NAME */
-async function saveProfile() {
-  const name = document.getElementById("nameInput").value.trim();
-  try {
-    await fetch("http://127.0.0.1:8000/api/profile/", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name })
-    });
-    alert("Profile updated successfully");
-  } catch {
-    alert("Backend not reachable");
-  }
-}
+/* ===== SAVE NAME ===== */
+document.getElementById("saveBtn").onclick = () => {
+  localStorage.setItem("profileName", nameInput.value);
+  alert("Profile saved successfully");
+};
 
+/* ===== INIT ===== */
 window.onload = loadProfile;
+
+ function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+  }
 </script>
 
 </body>
