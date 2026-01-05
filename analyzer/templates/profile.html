@@ -34,22 +34,17 @@
 
   <!-- NAME -->
   <div class="mb-6">
-    <input
-      id="nameInput"
-      placeholder="Your Name"
-      class="p-3 border rounded w-full md:w-1/2"
-    >
+    <input id="nameInput" placeholder="Your Name"
+      class="p-3 border rounded w-full md:w-1/2">
   </div>
 
-  <button
-    onclick="saveProfile()"
-    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-8"
-  >
+  <button onclick="saveProfile()"
+    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-8">
     Save Profile
   </button>
 
-  <!-- STATS (ONLY 2 – NO LAST ANALYZED) -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  <!-- STATS -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-gray-100 p-4 rounded text-center">
       <p class="text-gray-500 text-sm">Total Reports</p>
       <h3 id="totalReports" class="text-2xl font-bold">0</h3>
@@ -59,7 +54,6 @@
       <p class="text-gray-500 text-sm">Average ATS Score</p>
       <h3 id="avgScore" class="text-2xl font-bold">0%</h3>
     </div>
-  </div>
 
   <h3 class="text-xl font-bold mb-3">
     Resume History (<span id="reportCount">0</span>)
@@ -71,7 +65,6 @@
 </main>
 
 <script>
-/* NAV */
 function toggleMenu() {
   document.getElementById("mobileMenu")?.classList.toggle("hidden");
 }
@@ -81,24 +74,20 @@ function logout() {
   window.location.href = "login.html";
 }
 
-/* LOAD PROFILE – BACKEND DRIVEN (NO LAST ANALYZED) */
+/* LOAD PROFILE FROM BACKEND */
 async function loadProfile() {
   try {
     const res = await fetch("http://127.0.0.1:8000/api/profile/");
     const data = await res.json();
 
     document.getElementById("nameInput").value = data.name || "";
-    document.getElementById("totalReports").innerText =
-      data.total_reports || 0;
-
-    document.getElementById("avgScore").innerText =
-      (data.average_score ?? 0) + "%";
-
-    document.getElementById("reportCount").innerText =
-      data.reports?.length || 0;
+    document.getElementById("totalReports").innerText = data.total_reports;
+    document.getElementById("avgScore").innerText = data.average_score + "%";
+    document.getElementById("lastDate").innerText = data.last_analyzed || "--";
+    document.getElementById("reportCount").innerText = data.reports.length;
 
     document.getElementById("resumeList").innerHTML =
-      data.reports && data.reports.length
+      data.reports.length
         ? data.reports.map(r => `
             <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
               <div>
@@ -110,7 +99,7 @@ async function loadProfile() {
           `).join("")
         : "<p class='text-gray-500'>No analyzed reports found.</p>";
 
-  } catch {
+  } catch (err) {
     document.getElementById("resumeList").innerHTML =
       "<p class='text-red-600'>Backend not reachable</p>";
   }
@@ -119,14 +108,17 @@ async function loadProfile() {
 /* SAVE PROFILE NAME */
 async function saveProfile() {
   const name = document.getElementById("nameInput").value.trim();
+
   try {
     await fetch("http://127.0.0.1:8000/api/profile/", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name })
     });
+
     alert("Profile updated successfully");
-  } catch {
+
+  } catch (err) {
     alert("Backend not reachable");
   }
 }
