@@ -10,20 +10,44 @@
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
+<script>
+const currentUser = JSON.parse(localStorage.getItem("loggedUser"));
+if (!currentUser) window.location.href = "login.html";
+</script>
+
+<!-- ================= NAVIGATION ================= -->
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="upload.html" class="nav-link">Upload</a>
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button onclick="logout()" class="text-red-600">Logout</button>
+      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
     </div>
 
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <!-- Mobile Hamburger -->
+    <button
+      onclick="toggleMenu()"
+      class="md:hidden text-gray-700 text-2xl focus:outline-none">
+      ☰
+    </button>
   </div>
+
+  <!-- Mobile Menu -->
+<div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+  <a href="upload.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Upload</a>
+  <a href="dashboard.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+  <a href="profile.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Profile</a>
+  <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
+    Logout
+  </button>
+</div>
+
 </nav>
 
 <main class="max-w-6xl mx-auto px-6 py-10">
@@ -32,7 +56,7 @@
 📊 Analyzed Resume Reports
 </h1>
 
-<!-- STATS -->
+<!-- ================= STATS ================= -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <p>Total Analyzed</p>
@@ -50,96 +74,135 @@
   </div>
 </section>
 
+<!-- ================= CONTROLS ================= -->
+<section class="flex flex-wrap gap-4 mb-8">
+  <select id="sortSelect"
+          onchange="storage.applyFilters()"
+          class="p-2 rounded border">
+    <option value="date">Sort by Date</option>
+    <option value="scoreDesc">Sort by Score (High → Low)</option>
+    <option value="scoreAsc">Sort by Score (Low → High)</option>
+  </select>
+
+  <select id="filterSelect"
+          onchange="storage.applyFilters()"
+          class="p-2 rounded border">
+    <option value="all">All</option>
+    <option value="excellent">Excellent (80+)</option>
+    <option value="good">Good (60–79)</option>
+    <option value="poor">Needs Improvement (&lt;60)</option>
+  </select>
+</section>
+
 <div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
 </main>
 
 <script>
-/* NAV */
+    /* ===== MOBILE NAV TOGGLE ===== */
 function toggleMenu() {
-  document.getElementById("mobileMenu")?.classList.toggle("hidden");
+  const menu = document.getElementById("mobileMenu");
+  menu.classList.toggle("hidden");
 }
 
-function logout() {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
+const storage = {
+  key: "advancedResumes_v2",
+  reports: [],
+  filtered: [],
 
-/* LOAD REPORTS FROM BACKEND */
-async function loadReports() {
-  try {
-    const res = await fetch("http://127.0.0.1:8000/api/reports/");
-    const data = await res.json();
+  load() {
+    const all = JSON.parse(localStorage.getItem(this.key)) || [];
+    this.reports = all.filter(r =>
+      r.email === currentUser.email &&
+      r.analyzed === true &&
+      typeof r.score === "number"
+    );
+    this.updateStats();
+    this.applyFilters();
+  },
 
-    const reports = data.reports || [];
-    updateStats(reports);
-    renderReports(reports);
+  updateStats() {
+    const scores = this.reports.map(r => r.score);
+    totalCount.innerText = scores.length;
+    avgScore.innerText = scores.length
+      ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
+      : "0%";
+    bestScore.innerText = scores.length
+      ? Math.max(...scores) + "%"
+      : "0%";
+  },
 
-  } catch (err) {
-    document.getElementById("resumeGrid").innerHTML = `
-      <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
-        Backend not connected yet
-      </div>`;
-  }
-}
+  applyFilters() {
+    let list = [...this.reports];
 
-function updateStats(reports) {
-  const scores = reports.map(r => r.score);
-  totalCount.innerText = scores.length;
-  avgScore.innerText = scores.length
-    ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
-    : "0%";
-  bestScore.innerText = scores.length
-    ? Math.max(...scores) + "%"
-    : "0%";
-}
+    const filter = filterSelect.value;
+    if (filter === "excellent") list = list.filter(r => r.score >= 80);
+    if (filter === "good") list = list.filter(r => r.score >= 60 && r.score < 80);
+    if (filter === "poor") list = list.filter(r => r.score < 60);
 
-function renderReports(reports) {
-  const box = document.getElementById("resumeGrid");
+    const sort = sortSelect.value;
+    if (sort === "scoreDesc") list.sort((a,b)=>b.score-a.score);
+    if (sort === "scoreAsc") list.sort((a,b)=>a.score-b.score);
+    if (sort === "date") list.sort((a,b)=>new Date(b.analyzedDate)-new Date(a.analyzedDate));
 
-  if (!reports.length) {
-    box.innerHTML = `
-      <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
-        No reports found
-      </div>`;
-    return;
-  }
+    this.filtered = list;
+    this.render();
+  },
 
-  box.innerHTML = reports.map(r => `
-    <div class="bg-white p-6 rounded-xl shadow space-y-4">
-      <h2 class="font-bold truncate">${r.name}</h2>
-      <p class="text-xs text-gray-500">📅 ${r.analyzed_date}</p>
+  render() {
+    const box = document.getElementById("resumeGrid");
 
-      <div class="text-center text-3xl font-black text-indigo-600">
-        ${r.score}%
+    if (!this.filtered.length) {
+      box.innerHTML = `
+        <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
+          No reports found
+        </div>`;
+      return;
+    }
+
+    box.innerHTML = this.filtered.map(r => `
+      <div class="bg-white p-6 rounded-xl shadow space-y-4">
+        <h2 class="font-bold truncate">${r.name}</h2>
+        <p class="text-xs text-gray-500">📅 ${r.analyzedDate}</p>
+
+        <div class="text-center text-3xl font-black text-indigo-600">
+          ${r.score}%
+        </div>
+
+        <p class="text-center font-semibold
+          ${r.score>=80?'text-green-600':r.score>=60?'text-yellow-600':'text-red-600'}">
+          ${r.score>=80?'Excellent':r.score>=60?'Good':'Needs Improvement'}
+        </p>
+
+        <button onclick="storage.confirmDelete('${r.id}')"
+          class="w-full bg-red-600 text-white py-2 rounded">
+          🗑 Delete
+        </button>
       </div>
+    `).join("");
+  },
 
-      <p class="text-center font-semibold ${
-        r.score>=80?'text-green-600':
-        r.score>=60?'text-yellow-600':'text-red-600'
-      }">
-        ${r.status}
-      </p>
+  confirmDelete(id) {
+    if (confirm("Are you sure you want to delete this report?")) {
+      this.delete(id);
+    }
+  },
 
-      <button onclick="deleteReport('${r.id}')"
-        class="w-full bg-red-600 text-white py-2 rounded">
-        🗑 Delete
-      </button>
-    </div>
-  `).join("");
-}
+  delete(id) {
+    let all = JSON.parse(localStorage.getItem(this.key)) || [];
+    all = all.filter(r => r.id !== id);
+    localStorage.setItem(this.key, JSON.stringify(all));
+    this.load();
+  }
+};
 
-async function deleteReport(id) {
-  if (!confirm("Delete this report?")) return;
+storage.load();
 
-  await fetch(`http://127.0.0.1:8000/api/reports/${id}/`, {
-    method: "DELETE"
-  });
-
-  loadReports();
-}
-
-loadReports();
+ function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+ }
 </script>
 
 </body>
