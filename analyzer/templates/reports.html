@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+<!-- NAVIGATION -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="profile.html" class="nav-link">Profile</a>
+      <button onclick="logout()" class="text-red-600">Logout</button>
+    </div>
+
+    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-10">
+
+<h1 class="text-4xl font-black text-center mb-10 text-green-700">
+📊 Analyzed Resume Reports
+</h1>
+
+<!-- STATS -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p>Total Analyzed</p>
+    <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p>Best ATS</p>
+    <h2 id="bestScore" class="text-3xl font-bold text-green-600">0%</h2>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow text-center">
+    <p>Average ATS</p>
+    <h2 id="avgScore" class="text-3xl font-bold text-blue-600">0%</h2>
+  </div>
+</section>
+
+<div id="resumeGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+</main>
+
+<script>
+/* NAV */
+function toggleMenu() {
+  document.getElementById("mobileMenu")?.classList.toggle("hidden");
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+/* LOAD REPORTS FROM BACKEND */
+async function loadReports() {
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/reports/");
+    const data = await res.json();
+
+    const reports = data.reports || [];
+    updateStats(reports);
+    renderReports(reports);
+
+  } catch (err) {
+    document.getElementById("resumeGrid").innerHTML = `
+      <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
+        Backend not connected yet
+      </div>`;
+  }
+}
+
+function updateStats(reports) {
+  const scores = reports.map(r => r.score);
+  totalCount.innerText = scores.length;
+  avgScore.innerText = scores.length
+    ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
+    : "0%";
+  bestScore.innerText = scores.length
+    ? Math.max(...scores) + "%"
+    : "0%";
+}
+
+function renderReports(reports) {
+  const box = document.getElementById("resumeGrid");
+
+  if (!reports.length) {
+    box.innerHTML = `
+      <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
+        No reports found
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = reports.map(r => `
+    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+      <h2 class="font-bold truncate">${r.name}</h2>
+      <p class="text-xs text-gray-500">📅 ${r.analyzed_date}</p>
+
+      <div class="text-center text-3xl font-black text-indigo-600">
+        ${r.score}%
+      </div>
+
+      <p class="text-center font-semibold ${
+        r.score>=80?'text-green-600':
+        r.score>=60?'text-yellow-600':'text-red-600'
+      }">
+        ${r.status}
+      </p>
+
+      <button onclick="deleteReport('${r.id}')"
+        class="w-full bg-red-600 text-white py-2 rounded">
+        🗑 Delete
+      </button>
+    </div>
+  `).join("");
+}
+
+async function deleteReport(id) {
+  if (!confirm("Delete this report?")) return;
+
+  await fetch(`http://127.0.0.1:8000/api/reports/${id}/`, {
+    method: "DELETE"
+  });
+
+  loadReports();
+}
+
+loadReports();
+</script>
+
+</body>
+</html>
