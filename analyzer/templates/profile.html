@@ -80,21 +80,31 @@ function logout() {
   window.location.href = "login.html";
 }
 
-/* LOAD PROFILE FROM BACKEND */
+/* LOAD PROFILE FROM BACKEND (FIXED) */
 async function loadProfile() {
   try {
     const res = await fetch("http://127.0.0.1:8000/api/profile/");
     const data = await res.json();
 
+    // BASIC DETAILS
     document.getElementById("nameInput").value = data.name || "";
     document.getElementById("totalReports").innerText = data.total_reports;
     document.getElementById("avgScore").innerText = data.average_score + "%";
-    document.getElementById("lastDate").innerText = data.last_analyzed || "--";
     document.getElementById("reportCount").innerText = data.reports.length;
 
+    // 🔴 SORT REPORTS BY DATE (LATEST FIRST)
+    const sortedReports = [...data.reports].sort((a, b) =>
+      new Date(b.date) - new Date(a.date)
+    );
+
+    // ✅ LAST ANALYZED (CORRECT)
+    document.getElementById("lastDate").innerText =
+      sortedReports.length ? sortedReports[0].date : "--";
+
+    // RESUME LIST (LATEST FIRST)
     document.getElementById("resumeList").innerHTML =
-      data.reports.length
-        ? data.reports.map(r => `
+      sortedReports.length
+        ? sortedReports.map(r => `
             <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
               <div>
                 <b>${r.name}</b>
@@ -131,6 +141,7 @@ async function saveProfile() {
 
 window.onload = loadProfile;
 </script>
+
 
 </body>
 </html>
