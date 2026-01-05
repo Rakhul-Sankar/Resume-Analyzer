@@ -17,11 +17,9 @@
 
   <form onsubmit="loginUser(event)" class="space-y-4">
 
-    <!-- Email -->
     <input id="email" type="email" placeholder="Email"
       class="w-full p-3 border rounded-lg" required>
 
-    <!-- Password with eye toggle (copy disabled) -->
     <div class="relative">
       <input
         id="password"
@@ -29,17 +27,11 @@
         placeholder="Password"
         class="w-full p-3 border rounded-lg pr-10"
         required
-        oncopy="return false"
-        oncut="return false"
-        onpaste="return false"
-        oncontextmenu="return false"
       >
-
       <button
         type="button"
-        id="eyeBtn"
         onclick="togglePassword()"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg select-none">
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
         👁️
       </button>
     </div>
@@ -59,71 +51,50 @@
 </div>
 
 <script>
-/* ===== SHOW LOGIN BOX ON LOAD ===== */
+/* SHOW FORM */
 window.onload = () => {
   document.getElementById("login-box").classList.remove("hidden");
-
-  // Block Ctrl+C / Ctrl+V / Ctrl+X for password
-  const pwd = document.getElementById("password");
-  pwd.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key.toLowerCase())) {
-      e.preventDefault();
-    }
-  });
 };
 
-/* ===== TOGGLE PASSWORD + SLASHED EYE ===== */
+/* TOGGLE PASSWORD */
 function togglePassword() {
   const pass = document.getElementById("password");
-  const eye = document.getElementById("eyeBtn");
-
-  if (pass.type === "password") {
-    pass.type = "text";
-    eye.innerText = "👁️‍🗨️"; // visible
-  } else {
-    pass.type = "password";
-    eye.innerText = "👁️"; // hidden
-  }
+  pass.type = pass.type === "password" ? "text" : "password";
 }
 
-/* ===== LOGIN + REDIRECT LOGIC ===== */
-function loginUser(event) {
+/* LOGIN USING BACKEND */
+async function loginUser(event) {
   event.preventDefault();
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   const errorMsg = document.getElementById("errorMsg");
 
-  const savedUser = JSON.parse(localStorage.getItem("registeredUser"));
-  const allResumes = JSON.parse(localStorage.getItem("advancedResumes_v2")) || [];
+  errorMsg.classList.add("hidden");
 
-  if (!savedUser) {
-    errorMsg.innerText = "No account found. Please sign up first.";
-    errorMsg.classList.remove("hidden");
-    return;
-  }
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/login/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
 
-  if (email === savedUser.email && password === savedUser.password) {
+    const data = await response.json();
 
-    // Save logged user
-    localStorage.setItem("loggedUser", JSON.stringify(savedUser));
-
-    // Check if user already analyzed resumes
-    const userReports = allResumes.filter(r =>
-      r.email === savedUser.email &&
-      r.analyzed === true &&
-      typeof r.score === "number"
-    );
-
-    // Redirect logic
-    if (userReports.length > 0) {
-      window.location.href = "dashboard.html"; // existing user
-    } else {
-      window.location.href = "analyze.html"; // new user
+    if (!data.success) {
+      errorMsg.innerText = data.message || "Invalid login";
+      errorMsg.classList.remove("hidden");
+      return;
     }
 
-  } else {
-    errorMsg.innerText = "Invalid email or password";
+    // Save ONLY safe user info
+    localStorage.setItem("loggedUser", JSON.stringify(data.user));
+
+    // Redirect after login
+    window.location.href = "dashboard.html";
+
+  } catch (err) {
+    errorMsg.innerText = "Backend not reachable. Start Django server.";
     errorMsg.classList.remove("hidden");
   }
 }
