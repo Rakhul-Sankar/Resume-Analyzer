@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen p-6 flex items-center justify-center">
+
+<div id="login-box" class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg hidden">
+  <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
+    Login
+  </h2>
+
+  <form onsubmit="loginUser(event)" class="space-y-4">
+
+    <input id="email" type="email" placeholder="Email"
+      class="w-full p-3 border rounded-lg" required>
+
+    <div class="relative">
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        class="w-full p-3 border rounded-lg pr-10"
+        required
+      >
+      <button
+        type="button"
+        onclick="togglePassword()"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+        👁️
+      </button>
+    </div>
+
+    <p id="errorMsg" class="text-red-600 text-sm hidden"></p>
+
+    <button type="submit"
+      class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+      Login
+    </button>
+  </form>
+
+  <p class="mt-4 text-center text-sm">
+    No account?
+    <a href="signup.html" class="text-blue-600 font-medium">Create one</a>
+  </p>
+</div>
+
+<script>
+/* SHOW FORM */
+window.onload = () => {
+  document.getElementById("login-box").classList.remove("hidden");
+};
+
+/* TOGGLE PASSWORD */
+function togglePassword() {
+  const pass = document.getElementById("password");
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+/* LOGIN USING BACKEND */
+async function loginUser(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorMsg = document.getElementById("errorMsg");
+
+  errorMsg.classList.add("hidden");
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/login/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      errorMsg.innerText = data.message || "Invalid login";
+      errorMsg.classList.remove("hidden");
+      return;
+    }
+
+    // Save ONLY safe user info
+    localStorage.setItem("loggedUser", JSON.stringify(data.user));
+
+    // Redirect after login
+    window.location.href = "dashboard.html";
+
+  } catch (err) {
+    errorMsg.innerText = "Backend not reachable. Start Django server.";
+    errorMsg.classList.remove("hidden");
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Resume</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+<!-- NAVIGATION -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="reports.html" class="nav-link">Past Reports</a>
+      <a href="profile.html" class="nav-link">Profile</a>
+      <button onclick="logout()" class="text-red-600">Logout</button>
+    </div>
+
+    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<main class="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-4">
+
+    <h2 class="text-2xl font-bold text-center text-indigo-600">
+      Upload Your Resume
+    </h2>
+
+    <p class="text-sm text-center text-gray-500">
+      Supported formats: TXT, DOCX (Max 2MB)
+    </p>
+
+    <div id="dropZone"
+         class="border-2 border-dashed border-indigo-400 rounded-xl p-6 text-center cursor-pointer">
+      <p id="dropText">Drag & Drop your resume here</p>
+      <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+      <input type="file" id="resumeFile" accept=".txt,.docx" class="hidden">
+    </div>
+
+    <div id="previewBox" class="hidden bg-gray-50 border rounded-lg p-3 text-sm">
+      <p class="font-semibold mb-2">Resume Preview</p>
+      <p id="previewName"></p>
+      <p id="previewEmail"></p>
+    </div>
+
+    <button onclick="uploadResume()"
+      class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold">
+      Upload & Analyze
+    </button>
+
+  </div>
+</main>
+
+<script>
+/* NAV */
+function toggleMenu() {
+  document.getElementById("mobileMenu")?.classList.toggle("hidden");
+}
+
+function logout() {
+  localStorage.removeItem("loggedUser");
+  window.location.href = "login.html";
+}
+
+/* FILE HANDLING */
+const fileInput = document.getElementById("resumeFile");
+const dropZone = document.getElementById("dropZone");
+const previewBox = document.getElementById("previewBox");
+const previewName = document.getElementById("previewName");
+const previewEmail = document.getElementById("previewEmail");
+
+let selectedFile = null;
+
+dropZone.onclick = () => fileInput.click();
+
+fileInput.onchange = () => {
+  selectedFile = fileInput.files[0];
+  previewResume(selectedFile);
+};
+
+async function previewResume(file) {
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("File too large");
+    return;
+  }
+
+  let text = "";
+  if (file.name.endsWith(".txt")) {
+    text = await file.text();
+  } else {
+    const buffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    text = result.value;
+  }
+
+  const emailMatch = text.match(/[^\s]+@[^\s]+\.[^\s]+/);
+
+  previewName.textContent = "File: " + file.name;
+  previewEmail.textContent = "Email: " + (emailMatch ? emailMatch[0] : "Not found");
+
+  previewBox.classList.remove("hidden");
+}
+
+/* BACKEND API CALL */
+async function uploadResume() {
+  if (!selectedFile) {
+    alert("Please select a resume");
+    return;
+  }
+
+  let resumeText = "";
+  if (selectedFile.name.endsWith(".txt")) {
+    resumeText = await selectedFile.text();
+  } else {
+    const buffer = await selectedFile.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    resumeText = result.value;
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/analyze/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resume_text: resumeText })
+    });
+
+    const data = await response.json();
+    localStorage.setItem("analysisResult", JSON.stringify(data));
+    window.location.href = "analyze.html";
+
+  } catch (err) {
+    alert("Backend not reachable");
+  }
+}
+</script>
+
+</body>
+</html>
