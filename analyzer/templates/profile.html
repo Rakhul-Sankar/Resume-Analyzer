@@ -32,7 +32,6 @@
 
   <h2 class="text-3xl font-bold text-indigo-600 mb-6">Profile</h2>
 
-  <!-- NAME -->
   <div class="mb-6">
     <input id="nameInput" placeholder="Your Name"
       class="p-3 border rounded w-full md:w-1/2">
@@ -81,19 +80,36 @@ function logout() {
   window.location.href = "login.html";
 }
 
-/* ===== DATE PARSER (CRITICAL FIX) ===== */
-function parseIndianDate(dateStr) {
-  // Format: DD/MM/YYYY, HH:MM:SS
-  if (!dateStr) return new Date(0);
+/* ===== UNIVERSAL DATE PARSER (FINAL FIX) ===== */
+function parseAnyDate(report) {
+  const raw =
+    report.analyzed_at ||
+    report.date ||
+    report.created_at ||
+    "";
 
-  const [datePart, timePart] = dateStr.split(", ");
-  const [day, month, year] = datePart.split("/").map(Number);
-  const [hour, minute, second] = timePart.split(":").map(Number);
+  // ISO format (backend best practice)
+  if (raw.includes("T")) {
+    const d = new Date(raw);
+    if (!isNaN(d)) return d;
+  }
 
-  return new Date(year, month - 1, day, hour, minute, second);
+  // Indian format: DD/MM/YYYY, HH:MM:SS
+  if (raw.includes("/")) {
+    try {
+      const [d, t] = raw.split(", ");
+      const [day, month, year] = d.split("/").map(Number);
+      const [h = 0, m = 0, s = 0] = (t || "").split(":").map(Number);
+      return new Date(year, month - 1, day, h, m, s);
+    } catch {
+      return new Date(0);
+    }
+  }
+
+  return new Date(0);
 }
 
-/* ===== LOAD PROFILE FROM BACKEND ===== */
+/* ===== LOAD PROFILE ===== */
 async function loadProfile() {
   try {
     const res = await fetch("http://127.0.0.1:8000/api/profile/");
@@ -104,27 +120,31 @@ async function loadProfile() {
     document.getElementById("avgScore").innerText = data.average_score + "%";
     document.getElementById("reportCount").innerText = data.reports.length;
 
-    // ✅ SORT BY REAL DATE (LATEST FIRST)
+    // ✅ GUARANTEED SORT (LATEST FIRST)
     const sortedReports = [...data.reports].sort(
-      (a, b) => parseIndianDate(b.date) - parseIndianDate(a.date)
+      (a, b) => parseAnyDate(b) - parseAnyDate(a)
     );
 
-    // ✅ CORRECT LAST ANALYZED
+    // ✅ LAST ANALYZED (ALWAYS CORRECT)
     document.getElementById("lastDate").innerText =
-      sortedReports.length ? sortedReports[0].date : "--";
+      sortedReports.length
+        ? (sortedReports[0].date || sortedReports[0].analyzed_at)
+        : "--";
 
-    // ✅ RENDER HISTORY
+    // RENDER HISTORY
     document.getElementById("resumeList").innerHTML =
       sortedReports.length
         ? sortedReports.map(r => `
-            <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-              <div>
-                <b>${r.name}</b>
-                <div class="text-xs text-gray-500">${r.date}</div>
+          <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+            <div>
+              <b>${r.name}</b>
+              <div class="text-xs text-gray-500">
+                ${r.date || r.analyzed_at}
               </div>
-              <span class="font-bold text-indigo-600">${r.score}%</span>
             </div>
-          `).join("")
+            <span class="font-bold text-indigo-600">${r.score}%</span>
+          </div>
+        `).join("")
         : "<p class='text-gray-500'>No analyzed reports found.</p>";
 
   } catch (err) {
@@ -136,16 +156,14 @@ async function loadProfile() {
 /* ===== SAVE PROFILE NAME ===== */
 async function saveProfile() {
   const name = document.getElementById("nameInput").value.trim();
-
   try {
     await fetch("http://127.0.0.1:8000/api/profile/", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name })
     });
-
     alert("Profile updated successfully");
-  } catch (err) {
+  } catch {
     alert("Backend not reachable");
   }
 }
