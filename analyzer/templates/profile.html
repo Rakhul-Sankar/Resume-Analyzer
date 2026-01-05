@@ -44,7 +44,7 @@
   </button>
 
   <!-- STATS -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
     <div class="bg-gray-100 p-4 rounded text-center">
       <p class="text-gray-500 text-sm">Total Reports</p>
       <h3 id="totalReports" class="text-2xl font-bold">0</h3>
@@ -53,11 +53,6 @@
     <div class="bg-gray-100 p-4 rounded text-center">
       <p class="text-gray-500 text-sm">Average ATS Score</p>
       <h3 id="avgScore" class="text-2xl font-bold">0%</h3>
-    </div>
-
-    <div class="bg-gray-100 p-4 rounded text-center">
-      <p class="text-gray-500 text-sm">Last Analyzed</p>
-      <h3 id="lastDate" class="text-sm font-semibold">--</h3>
     </div>
   </div>
 
@@ -86,20 +81,13 @@ async function loadProfile() {
     const res = await fetch("http://127.0.0.1:8000/api/profile/");
     const data = await res.json();
 
-    // BASIC INFO
     document.getElementById("nameInput").value = data.name || "";
     document.getElementById("totalReports").innerText = data.total_reports || 0;
     document.getElementById("avgScore").innerText =
       (data.average_score ?? 0) + "%";
-
-    // ✅ BACKEND PROVIDES THIS (NO LOGIC HERE)
-    document.getElementById("lastDate").innerText =
-      data.last_analyzed || "--";
-
     document.getElementById("reportCount").innerText =
       data.reports?.length || 0;
 
-    // RESUME HISTORY (ASSUMED SORTED BY BACKEND)
     document.getElementById("resumeList").innerHTML =
       data.reports && data.reports.length
         ? data.reports.map(r => `
