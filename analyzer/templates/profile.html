@@ -71,6 +71,7 @@
 </main>
 
 <script>
+/* ===== NAV ===== */
 function toggleMenu() {
   document.getElementById("mobileMenu")?.classList.toggle("hidden");
 }
@@ -80,28 +81,39 @@ function logout() {
   window.location.href = "login.html";
 }
 
-/* LOAD PROFILE FROM BACKEND (FIXED) */
+/* ===== DATE PARSER (CRITICAL FIX) ===== */
+function parseIndianDate(dateStr) {
+  // Format: DD/MM/YYYY, HH:MM:SS
+  if (!dateStr) return new Date(0);
+
+  const [datePart, timePart] = dateStr.split(", ");
+  const [day, month, year] = datePart.split("/").map(Number);
+  const [hour, minute, second] = timePart.split(":").map(Number);
+
+  return new Date(year, month - 1, day, hour, minute, second);
+}
+
+/* ===== LOAD PROFILE FROM BACKEND ===== */
 async function loadProfile() {
   try {
     const res = await fetch("http://127.0.0.1:8000/api/profile/");
     const data = await res.json();
 
-    // BASIC DETAILS
     document.getElementById("nameInput").value = data.name || "";
     document.getElementById("totalReports").innerText = data.total_reports;
     document.getElementById("avgScore").innerText = data.average_score + "%";
     document.getElementById("reportCount").innerText = data.reports.length;
 
-    // 🔴 SORT REPORTS BY DATE (LATEST FIRST)
-    const sortedReports = [...data.reports].sort((a, b) =>
-      new Date(b.date) - new Date(a.date)
+    // ✅ SORT BY REAL DATE (LATEST FIRST)
+    const sortedReports = [...data.reports].sort(
+      (a, b) => parseIndianDate(b.date) - parseIndianDate(a.date)
     );
 
-    // ✅ LAST ANALYZED (CORRECT)
+    // ✅ CORRECT LAST ANALYZED
     document.getElementById("lastDate").innerText =
       sortedReports.length ? sortedReports[0].date : "--";
 
-    // RESUME LIST (LATEST FIRST)
+    // ✅ RENDER HISTORY
     document.getElementById("resumeList").innerHTML =
       sortedReports.length
         ? sortedReports.map(r => `
@@ -121,7 +133,7 @@ async function loadProfile() {
   }
 }
 
-/* SAVE PROFILE NAME */
+/* ===== SAVE PROFILE NAME ===== */
 async function saveProfile() {
   const name = document.getElementById("nameInput").value.trim();
 
@@ -133,7 +145,6 @@ async function saveProfile() {
     });
 
     alert("Profile updated successfully");
-
   } catch (err) {
     alert("Backend not reachable");
   }
@@ -141,7 +152,6 @@ async function saveProfile() {
 
 window.onload = loadProfile;
 </script>
-
 
 </body>
 </html>
