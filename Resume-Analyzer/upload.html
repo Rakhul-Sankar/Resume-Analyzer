@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="logo.avif">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+<!-- NAVIGATION -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="dashboard.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button
+      onclick="toggleMenu()"
+      class="md:hidden text-gray-700 text-2xl focus:outline-none">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+<div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+  <a href="dashboard.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+  <a href="reports.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+  <a href="profile.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Profile</a>
+  <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
+    Logout
+  </button>
+</div>
+
+</nav>
+
+<!-- ================= CONTENT ================= -->
+<main class="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-4">
+
+    <h2 class="text-2xl font-bold text-center text-indigo-600">
+      Upload Your Resume
+    </h2>
+
+    <p class="text-sm text-center text-gray-500">
+      Supported formats: <b>.TXT</b>, <b>.DOCX</b> (Max 2MB)
+    </p>
+
+    <!-- Drag & Drop Area -->
+    <div id="dropZone"
+         class="border-2 border-dashed border-indigo-400 rounded-xl p-6 text-center cursor-pointer hover:bg-indigo-50 transition">
+      <p id="dropText" class="text-gray-600">Drag & Drop your resume here</p>
+      <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+      <input type="file" id="resumeFile" accept=".txt,.docx" class="hidden">
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="hidden" id="progressBox">
+      <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+        <div id="progressBar" class="bg-indigo-600 h-2 rounded-full w-0"></div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="previewBox" class="hidden bg-gray-50 border rounded-lg p-3 text-sm">
+      <p class="font-semibold mb-2">Resume Preview</p>
+      <p id="previewName" class="text-gray-700"></p>
+      <p id="previewEmail" class="text-gray-600 text-sm"></p>
+    </div>
+
+    <button onclick="saveResume()"
+            class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">
+      Upload & Analyze
+    </button>
+
+    <p id="resumeCount" class="text-center text-xs text-gray-500"></p>
+
+  </div>
+</main>
+
+<script>
+  /* ===== MOBILE NAV TOGGLE ===== */
+function toggleMenu() {
+  const menu = document.getElementById("mobileMenu");
+  menu.classList.toggle("hidden");
+}
+
+const fileInput = document.getElementById("resumeFile");
+const dropZone = document.getElementById("dropZone");
+const dropText = document.getElementById("dropText");
+const previewBox = document.getElementById("previewBox");
+const previewName = document.getElementById("previewName");
+const previewEmail = document.getElementById("previewEmail");
+const progressBox = document.getElementById("progressBox");
+const progressBar = document.getElementById("progressBar");
+const resumeCount = document.getElementById("resumeCount");
+
+let selectedFile = null;
+
+/* ---------- CLICK UPLOAD ---------- */
+dropZone.onclick = () => fileInput.click();
+
+fileInput.addEventListener("change", () => {
+  selectedFile = fileInput.files[0];
+  previewResume(selectedFile);
+});
+
+/* ---------- DRAG & DROP ---------- */
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.classList.add("bg-indigo-100");
+  dropText.textContent = "Release to upload";
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("bg-indigo-100");
+  dropText.textContent = "Drag & Drop your resume here";
+});
+
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("bg-indigo-100");
+  dropText.textContent = "Drag & Drop your resume here";
+  selectedFile = e.dataTransfer.files[0];
+  previewResume(selectedFile);
+});
+
+/* ---------- PREVIEW ---------- */
+async function previewResume(file) {
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("File size must be under 2MB");
+    selectedFile = null;
+    fileInput.value = "";
+    return;
+  }
+
+  let text = "";
+
+  if (file.name.endsWith(".txt")) {
+    text = await file.text();
+  } else if (file.name.endsWith(".docx")) {
+    const buffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    text = result.value;
+  }
+
+  const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+
+  previewName.textContent = "📄 File: " + file.name;
+  previewEmail.textContent = "📧 Email: " + (emailMatch ? emailMatch[0] : "Not found");
+
+  previewBox.classList.remove("hidden");
+}
+
+/* ---------- SAVE RESUME ---------- */
+async function saveResume() {
+  if (!selectedFile) return alert("Please select a resume");
+
+  progressBox.classList.remove("hidden");
+  progressBar.style.width = "0%";
+
+  let extractedText = "";
+
+  if (selectedFile.name.endsWith(".txt")) {
+    extractedText = await selectedFile.text();
+  } else {
+    const buffer = await selectedFile.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    extractedText = result.value;
+  }
+
+  const key = "advancedResumes_v2";
+  const loggedUser = JSON.parse(localStorage.getItem("loggedUser"));
+  let resumes = JSON.parse(localStorage.getItem(key) || "[]");
+
+  resumes.unshift({
+    id: crypto.randomUUID(),
+    name: selectedFile.name,
+    content: extractedText.trim(),
+    uploaded: new Date().toLocaleString("en-IN"),
+    status: "uploaded",
+    email: loggedUser?.email || "unknown"
+  });
+
+  localStorage.setItem(key, JSON.stringify(resumes));
+
+  setTimeout(() => {
+    alert("Resume Uploaded Successfully ✔");
+    location.replace(loggedUser ? "analyze.html" : "login.html");
+  }, 700);
+}
+
+/* ---------- COUNT ---------- */
+function updateCount() {
+  const resumes = JSON.parse(localStorage.getItem("advancedResumes_v2") || "[]");
+  resumeCount.textContent = `Total resumes uploaded: ${resumes.length}`;
+}
+updateCount();
+
+  function logout() {
+    localStorage.removeItem("loggedUser");
+    alert("Logged out successfully");
+    window.location.href = "login.html";
+  }
+</script>
+
+</body>
+</html>
+
+
