@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
@@ -18,30 +19,38 @@
 
     <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="upload.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
-      <a href="reports.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
-      <a href="profile.html" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
-      <button onclick="logout()" class="text-red-600 font-medium px-3 py-2">Logout</button>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+      <!-- ✅ Proper Django Logout -->
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
+      </form>
     </div>
 
     <!-- Mobile Hamburger -->
-    <button
-      onclick="toggleMenu()"
-      class="md:hidden text-gray-700 text-2xl focus:outline-none">
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
       ☰
     </button>
   </div>
 
   <!-- Mobile Menu -->
-<div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-  <a href="upload.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Upload</a>
-  <a href="reports.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Past Reports</a>
-  <a href="profile.html" class="block text-gray-700 hover:text-purple-600 font-medium px-6 py-3" onclick="toggleMenu()">Profile</a>
-  <button onclick="logout()" class="w-full text-left text-red-600 px-6 py-3">
-    Logout
-  </button>
-</div>
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
 
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
+  </div>
 </nav>
 
 <!-- ================= MAIN ================= -->
@@ -49,8 +58,8 @@
   <div class="bg-white p-10 rounded-xl shadow-lg">
 
     <!-- Greeting -->
-    <h2 id="greeting"
-        class="text-3xl font-bold mb-6 text-gray-800 text-center">
+    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
+      {{ greeting }} {{ request.user.username }}!
     </h2>
 
     <!-- Intro -->
@@ -59,44 +68,36 @@
       evaluate their resumes using Applicant Tracking System (ATS) principles.
     </p>
 
-    <!-- Section: What it does -->
+    <!-- Section -->
     <div class="space-y-6 text-gray-700">
 
       <div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">
-          Resume Analysis
-        </h3>
-        <p class="leading-relaxed">
+        <h3 class="text-lg font-semibold mb-2">Resume Analysis</h3>
+        <p>
           Upload resumes in TXT or DOCX format to receive an ATS score based on
           resume structure, keywords, and content quality.
         </p>
       </div>
 
       <div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">
-          Skill Extraction
-        </h3>
-        <p class="leading-relaxed">
+        <h3 class="text-lg font-semibold mb-2">Skill Extraction</h3>
+        <p>
           The system automatically identifies technical skills present in the resume
           and highlights missing or weak skill areas.
         </p>
       </div>
 
       <div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">
-          ATS Score & Suggestions
-        </h3>
-        <p class="leading-relaxed">
+        <h3 class="text-lg font-semibold mb-2">ATS Score & Suggestions</h3>
+        <p>
           Users receive clear improvement suggestions to increase resume compatibility
           with modern hiring systems.
         </p>
       </div>
 
       <div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">
-          User Experience
-        </h3>
-        <p class="leading-relaxed">
+        <h3 class="text-lg font-semibold mb-2">User Experience</h3>
+        <p>
           The platform includes secure login, profile management, and past report tracking
           to ensure smooth and organized usage.
         </p>
@@ -104,7 +105,6 @@
 
     </div>
 
-    <!-- Footer Note -->
     <div class="mt-12 text-center text-sm text-gray-500">
       Use the navigation menu above to upload resumes, view reports, and manage your profile.
     </div>
@@ -112,40 +112,10 @@
   </div>
 </main>
 
-
-<!-- ================= SCRIPT ================= -->
 <script>
-
-   /* ===== MOBILE NAV TOGGLE ===== */
 function toggleMenu() {
-  const menu = document.getElementById("mobileMenu");
-  menu.classList.toggle("hidden");
+  document.getElementById("mobileMenu").classList.toggle("hidden");
 }
-
-  const user = JSON.parse(localStorage.getItem("loggedUser"));
-
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Good Morning" :
-    hour < 16 ? "Good Afternoon" :
-    "Good Evening";
-
-  if (user) {
-    const displayName = user.name?.trim() || user.email?.split("@")[0] || "User";
-    document.getElementById("greeting").innerText =
-      `${greeting} ${displayName}!`;
-
-    document.getElementById("logoutBtn").classList.remove("hidden");
-  } else {
-    document.getElementById("greeting").innerText =
-      `Welcome, ${greeting}!`;
-  }
-
-  function logout() {
-    localStorage.removeItem("loggedUser");
-    alert("Logged out successfully");
-    window.location.href = "login.html";
-  }
 </script>
 
 </body>

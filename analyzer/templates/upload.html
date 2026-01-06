@@ -1,13 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload Resume</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
@@ -15,16 +15,42 @@
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="reports.html" class="nav-link">Past Reports</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button onclick="logout()" class="text-red-600">Logout</button>
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+      <!-- ✅ Proper Django Logout -->
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
+      </form>
     </div>
 
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
   </div>
 </nav>
 
@@ -37,113 +63,35 @@
     </h2>
 
     <p class="text-sm text-center text-gray-500">
-      Supported formats: TXT, DOCX (Max 2MB)
+      Supported formats: PDF, DOCX (Max 2MB)
     </p>
 
-    <div id="dropZone"
-         class="border-2 border-dashed border-indigo-400 rounded-xl p-6 text-center cursor-pointer">
-      <p id="dropText">Drag & Drop your resume here</p>
-      <p class="text-sm text-gray-400 mt-1">or click to browse</p>
-      <input type="file" id="resumeFile" accept=".txt,.docx" class="hidden">
-    </div>
+    {% if error %}
+      <p class="text-red-600 text-sm text-center">{{ error }}</p>
+    {% endif %}
 
-    <div id="previewBox" class="hidden bg-gray-50 border rounded-lg p-3 text-sm">
-      <p class="font-semibold mb-2">Resume Preview</p>
-      <p id="previewName"></p>
-      <p id="previewEmail"></p>
-    </div>
+    <!-- ✅ DJANGO FORM -->
+    <form method="POST" action="{% url 'analyze' %}" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
 
-    <button onclick="uploadResume()"
-      class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold">
-      Upload & Analyze
-    </button>
+      <input
+        type="file"
+        name="resume"
+        accept=".pdf,.docx"
+        required
+        class="w-full border rounded-lg p-3"
+      >
+
+      <button
+        type="submit"
+        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700"
+      >
+        Upload & Analyze
+      </button>
+    </form>
 
   </div>
 </main>
-
-<script>
-/* NAV */
-function toggleMenu() {
-  document.getElementById("mobileMenu")?.classList.toggle("hidden");
-}
-
-function logout() {
-  localStorage.removeItem("loggedUser");
-  window.location.href = "login.html";
-}
-
-/* FILE HANDLING */
-const fileInput = document.getElementById("resumeFile");
-const dropZone = document.getElementById("dropZone");
-const previewBox = document.getElementById("previewBox");
-const previewName = document.getElementById("previewName");
-const previewEmail = document.getElementById("previewEmail");
-
-let selectedFile = null;
-
-dropZone.onclick = () => fileInput.click();
-
-fileInput.onchange = () => {
-  selectedFile = fileInput.files[0];
-  previewResume(selectedFile);
-};
-
-async function previewResume(file) {
-  if (!file) return;
-
-  if (file.size > 2 * 1024 * 1024) {
-    alert("File too large");
-    return;
-  }
-
-  let text = "";
-  if (file.name.endsWith(".txt")) {
-    text = await file.text();
-  } else {
-    const buffer = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-    text = result.value;
-  }
-
-  const emailMatch = text.match(/[^\s]+@[^\s]+\.[^\s]+/);
-
-  previewName.textContent = "File: " + file.name;
-  previewEmail.textContent = "Email: " + (emailMatch ? emailMatch[0] : "Not found");
-
-  previewBox.classList.remove("hidden");
-}
-
-/* BACKEND API CALL */
-async function uploadResume() {
-  if (!selectedFile) {
-    alert("Please select a resume");
-    return;
-  }
-
-  let resumeText = "";
-  if (selectedFile.name.endsWith(".txt")) {
-    resumeText = await selectedFile.text();
-  } else {
-    const buffer = await selectedFile.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-    resumeText = result.value;
-  }
-
-  try {
-    const response = await fetch("http://127.0.0.1:8000/api/analyze/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resume_text: resumeText })
-    });
-
-    const data = await response.json();
-    localStorage.setItem("analysisResult", JSON.stringify(data));
-    window.location.href = "analyze.html";
-
-  } catch (err) {
-    alert("Backend not reachable");
-  }
-</script>
 
 </body>
 </html>

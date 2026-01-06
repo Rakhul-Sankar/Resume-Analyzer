@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analyze Resume</title>
@@ -13,20 +14,46 @@
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="upload.html" class="nav-link">Upload</a>
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="reports.html" class="nav-link">Past Reports</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button onclick="logout()" class="text-red-600">Logout</button>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+      <!-- ✅ Proper Django Logout -->
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
+      </form>
     </div>
 
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
   </div>
 </nav>
-
 <!-- MAIN -->
 <main class="flex justify-center p-6">
 <div class="w-full max-w-4xl space-y-6">
@@ -38,16 +65,38 @@
   <!-- ATS SCORE -->
   <div class="bg-white p-6 rounded-xl shadow text-center">
     <h2 class="text-xl font-semibold">ATS Score</h2>
-    <p id="atsScore" class="text-5xl font-black text-indigo-600 mt-4">--%</p>
-    <p id="atsLabel" class="mt-2 text-gray-600 font-medium"></p>
+    <p class="text-5xl font-black text-indigo-600 mt-4">
+      {{ score }}%
+    </p>
+
+    <p class="mt-2 text-gray-600 font-medium">
+      {% if score >= 85 %}
+        Excellent ATS Match
+      {% elif score >= 70 %}
+        Good ATS Match
+      {% elif score >= 50 %}
+        Average – Needs Improvement
+      {% else %}
+        Poor ATS Match
+      {% endif %}
+    </p>
   </div>
 
   <!-- SKILLS -->
   <div class="bg-white p-6 rounded-xl shadow">
     <h2 class="text-xl font-semibold">
-      Skills Found (<span id="skillCount">0</span>)
+      Skills Found ({{ skills|length }})
     </h2>
-    <ul id="skillsList" class="list-disc pl-5 mt-4 text-gray-700"></ul>
+
+    <ul class="list-disc pl-5 mt-4 text-gray-700">
+      {% if skills %}
+        {% for skill in skills %}
+          <li>{{ skill }}</li>
+        {% endfor %}
+      {% else %}
+        <li>No skills detected</li>
+      {% endif %}
+    </ul>
   </div>
 
   <!-- SUGGESTIONS -->
@@ -55,59 +104,25 @@
     <h2 class="text-xl font-semibold text-red-600">
       Improvement Suggestions
     </h2>
-    <ul id="suggestionsList" class="list-disc pl-5 mt-4 text-gray-700"></ul>
+
+    <ul class="list-disc pl-5 mt-4 text-gray-700">
+      {% if structure_suggestions or skill_suggestions %}
+        {% for s in structure_suggestions %}
+          <li>{{ s }}</li>
+        {% endfor %}
+        {% for s in skill_suggestions %}
+          <li>{{ s }}</li>
+        {% endfor %}
+      {% else %}
+        <li class="text-green-600 font-medium">
+          Great job! Your resume is ATS friendly.
+        </li>
+      {% endif %}
+    </ul>
   </div>
 
 </div>
 </main>
-
-<!-- SCRIPT -->
-<script>
-function toggleMenu() {
-  document.getElementById("mobileMenu")?.classList.toggle("hidden");
-}
-
-/* AUTH CHECK */
-const user = JSON.parse(localStorage.getItem("loggedUser"));
-if (!user) {
-  alert("Session expired. Please login again.");
-  window.location.href = "login.html";
-}
-
-/* LOAD BACKEND RESULT */
-const result = JSON.parse(localStorage.getItem("analysisResult"));
-if (!result) {
-  alert("No analysis data found. Upload resume again.");
-  window.location.href = "upload.html";
-}
-
-/* DISPLAY ATS SCORE */
-document.getElementById("atsScore").innerText = result.ats_score + "%";
-document.getElementById("atsLabel").innerText =
-  result.ats_score >= 85 ? "Excellent ATS Match" :
-  result.ats_score >= 70 ? "Good ATS Match" :
-  result.ats_score >= 50 ? "Average – Needs Improvement" :
-  "Poor ATS Match";
-
-/* DISPLAY SKILLS */
-document.getElementById("skillCount").innerText = result.skills.length;
-document.getElementById("skillsList").innerHTML =
-  result.skills.length
-    ? result.skills.map(s => `<li>${s.toUpperCase()}</li>`).join("")
-    : "<li>No skills detected</li>";
-
-/* DISPLAY SUGGESTIONS */
-document.getElementById("suggestionsList").innerHTML =
-  result.suggestions.length
-    ? result.suggestions.map(s => `<li>${s}</li>`).join("")
-    : "<li class='text-green-600 font-medium'>Great job! Your resume is ATS friendly.</li>";
-
-function logout() {
-  localStorage.removeItem("loggedUser");
-  localStorage.removeItem("analysisResult");
-  window.location.href = "login.html";
-}
-</script>
 
 </body>
 </html>

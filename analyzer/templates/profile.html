@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profile</title>
@@ -15,115 +16,92 @@
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="upload.html" class="nav-link">Upload</a>
-      <a href="reports.html" class="nav-link">Past Reports</a>
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <button onclick="logout()" class="text-red-600">Logout</button>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium">Upload</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium">Past Reports</a>
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium">Dashboard</a>
+
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium">
+          Logout
+        </button>
+      </form>
     </div>
 
+    <!-- Mobile Menu Button -->
     <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'upload' %}" class="block px-6 py-3">Upload</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3">Past Reports</a>
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3">Dashboard</a>
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
   </div>
 </nav>
 
 <!-- PROFILE -->
 <main class="flex justify-center p-6">
-<div class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-xl border">
+  <div class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-xl border">
 
-  <h2 class="text-3xl font-bold text-indigo-600 mb-6">Profile</h2>
+    <h2 class="text-3xl font-bold text-indigo-600 mb-6">Profile</h2>
 
-  <!-- NAME -->
-  <div class="mb-6">
-    <input id="nameInput" placeholder="Your Name"
-      class="p-3 border rounded w-full md:w-1/2">
+    <!-- USER INFO -->
+    <div class="mb-6 space-y-2">
+      <p><b>Username:</b> {{ request.user.username }}</p>
+      <p><b>Email:</b> {{ request.user.email }}</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="bg-gray-100 p-4 rounded text-center">
+        <p class="text-gray-500 text-sm">Total Reports</p>
+        <h3 class="text-2xl font-bold">{{ total_reports }}</h3>
+      </div>
+
+      <div class="bg-gray-100 p-4 rounded text-center">
+        <p class="text-gray-500 text-sm">Average ATS Score</p>
+        <h3 class="text-2xl font-bold">{{ avg_score }}%</h3>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <h3 class="text-xl font-bold mb-3">
+      Resume History ({{ reports|length }})
+    </h3>
+
+    <div class="space-y-3">
+      {% for r in reports %}
+        <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
+          <div>
+            <b>{{ r.name }}</b>
+            <div class="text-xs text-gray-500">
+              {{ r.analyzed_date|date:"d M Y" }}
+            </div>
+          </div>
+          <span class="font-bold text-indigo-600">{{ r.score }}%</span>
+        </div>
+      {% empty %}
+        <p class="text-gray-500">No analyzed reports found.</p>
+      {% endfor %}
+    </div>
+
   </div>
-
-  <button onclick="saveProfile()"
-    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-8">
-    Save Profile
-  </button>
-
-  <!-- STATS -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-gray-100 p-4 rounded text-center">
-      <p class="text-gray-500 text-sm">Total Reports</p>
-      <h3 id="totalReports" class="text-2xl font-bold">0</h3>
-    </div>
-
-    <div class="bg-gray-100 p-4 rounded text-center">
-      <p class="text-gray-500 text-sm">Average ATS Score</p>
-      <h3 id="avgScore" class="text-2xl font-bold">0%</h3>
-    </div>
-
-  <h3 class="text-xl font-bold mb-3">
-    Resume History (<span id="reportCount">0</span>)
-  </h3>
-
-  <div id="resumeList" class="space-y-3"></div>
-
-</div>
 </main>
 
 <script>
 function toggleMenu() {
-  document.getElementById("mobileMenu")?.classList.toggle("hidden");
+  document.getElementById("mobileMenu").classList.toggle("hidden");
 }
-
-function logout() {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
-
-/* LOAD PROFILE FROM BACKEND */
-async function loadProfile() {
-  try {
-    const res = await fetch("http://127.0.0.1:8000/api/profile/");
-    const data = await res.json();
-
-    document.getElementById("nameInput").value = data.name || "";
-    document.getElementById("totalReports").innerText = data.total_reports;
-    document.getElementById("avgScore").innerText = data.average_score + "%";
-    document.getElementById("lastDate").innerText = data.last_analyzed || "--";
-    document.getElementById("reportCount").innerText = data.reports.length;
-
-    document.getElementById("resumeList").innerHTML =
-      data.reports.length
-        ? data.reports.map(r => `
-            <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-              <div>
-                <b>${r.name}</b>
-                <div class="text-xs text-gray-500">${r.date}</div>
-              </div>
-              <span class="font-bold text-indigo-600">${r.score}%</span>
-            </div>
-          `).join("")
-        : "<p class='text-gray-500'>No analyzed reports found.</p>";
-
-  } catch (err) {
-    document.getElementById("resumeList").innerHTML =
-      "<p class='text-red-600'>Backend not reachable</p>";
-  }
-}
-
-/* SAVE PROFILE NAME */
-async function saveProfile() {
-  const name = document.getElementById("nameInput").value.trim();
-
-  try {
-    await fetch("http://127.0.0.1:8000/api/profile/", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name })
-    });
-
-    alert("Profile updated successfully");
-
-  } catch (err) {
-    alert("Backend not reachable");
-  }
-}
-
-window.onload = loadProfile;
 </script>
 
 </body>

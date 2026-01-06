@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports</title>
@@ -13,38 +14,64 @@
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="upload.html" class="nav-link">Upload</a>
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button onclick="logout()" class="text-red-600">Logout</button>
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+      <!-- ✅ Proper Django Logout -->
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
+      </form>
     </div>
 
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
   </div>
 </nav>
 
+<!-- MAIN -->
 <main class="max-w-6xl mx-auto px-6 py-10">
 
 <h1 class="text-4xl font-black text-center mb-10 text-green-700">
 📊 Analyzed Resume Reports
 </h1>
 
-<!-- STATS -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-  <div class="bg-white p-6 rounded-xl shadow text-center">
+  <div class="bg-white p-6 rounded-xl text-center">
     <p>Total Analyzed</p>
     <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
   </div>
 
-  <div class="bg-white p-6 rounded-xl shadow text-center">
+  <div class="bg-white p-6 rounded-xl text-center">
     <p>Best ATS</p>
     <h2 id="bestScore" class="text-3xl font-bold text-green-600">0%</h2>
   </div>
 
-  <div class="bg-white p-6 rounded-xl shadow text-center">
+  <div class="bg-white p-6 rounded-xl text-center">
     <p>Average ATS</p>
     <h2 id="avgScore" class="text-3xl font-bold text-blue-600">0%</h2>
   </div>
@@ -54,52 +81,43 @@
 
 </main>
 
+<!-- SCRIPT -->
 <script>
-/* NAV */
-function toggleMenu() {
-  document.getElementById("mobileMenu")?.classList.toggle("hidden");
+/* CSRF TOKEN */
+function getCSRFToken() {
+  return document.cookie
+    .split("; ")
+    .find(row => row.startsWith("csrftoken="))
+    ?.split("=")[1];
 }
 
-function logout() {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
-
-/* LOAD REPORTS FROM BACKEND */
+/* LOAD REPORTS */
 async function loadReports() {
-  try {
-    const res = await fetch("http://127.0.0.1:8000/api/reports/");
-    const data = await res.json();
-
-    const reports = data.reports || [];
-    updateStats(reports);
-    renderReports(reports);
-
-  } catch (err) {
-    document.getElementById("resumeGrid").innerHTML = `
-      <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
-        Backend not connected yet
-      </div>`;
-  }
+  const res = await fetch("{% url 'reports_api' %}");
+  const data = await res.json();
+  updateStats(data.reports);
+  renderReports(data.reports);
 }
 
+/* STATS */
 function updateStats(reports) {
   const scores = reports.map(r => r.score);
-  totalCount.innerText = scores.length;
-  avgScore.innerText = scores.length
-    ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%"
-    : "0%";
-  bestScore.innerText = scores.length
-    ? Math.max(...scores) + "%"
-    : "0%";
+
+  document.getElementById("totalCount").innerText = scores.length;
+  document.getElementById("avgScore").innerText =
+    scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%" : "0%";
+
+  document.getElementById("bestScore").innerText =
+    scores.length ? Math.max(...scores) + "%" : "0%";
 }
 
+/* RENDER */
 function renderReports(reports) {
   const box = document.getElementById("resumeGrid");
 
   if (!reports.length) {
     box.innerHTML = `
-      <div class="col-span-full bg-white p-8 rounded-xl shadow text-center">
+      <div class="col-span-full bg-white p-8 text-center">
         No reports found
       </div>`;
     return;
@@ -114,31 +132,36 @@ function renderReports(reports) {
         ${r.score}%
       </div>
 
-      <p class="text-center font-semibold ${
-        r.score>=80?'text-green-600':
-        r.score>=60?'text-yellow-600':'text-red-600'
-      }">
-        ${r.status}
-      </p>
+      <p class="text-center font-semibold">${r.status}</p>
 
-      <button onclick="deleteReport('${r.id}')"
-        class="w-full bg-red-600 text-white py-2 rounded">
+      <button
+        onclick="deleteReport(${r.id})"
+        class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">
         🗑 Delete
       </button>
     </div>
   `).join("");
 }
 
+/* DELETE */
 async function deleteReport(id) {
-  if (!confirm("Delete this report?")) return;
+  if (!confirm("Delete this report permanently?")) return;
 
-  await fetch(`http://127.0.0.1:8000/api/reports/${id}/`, {
-    method: "DELETE"
+  const res = await fetch(`/api/reports/${id}/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCSRFToken()
+    }
   });
 
-  loadReports();
+  if (res.ok) {
+    loadReports();
+  } else {
+    alert("Delete failed");
+  }
 }
 
+/* INIT */
 loadReports();
 </script>
 

@@ -2,167 +2,247 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from datetime import datetime
+
 import PyPDF2
 import docx
 
-# -----------------------------
+from .models import ResumeReport
+
+
+# =============================
 # Authentication Views
-# -----------------------------
+# =============================
 
 def login_page(request):
-    return render(request, 'login.html')
+    return render(request, "login.html")
+
 
 def signup_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
+        name = request.POST.get("name")
         email = request.POST.get("email")
         password = request.POST.get("password")
-        confirm = request.POST.get("confirm")
 
-        if password != confirm:
-            messages.error(request, "Passwords do not match!")
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters")
             return redirect("signup")
 
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists!")
+        if User.objects.filter(username=email).exists():
+            messages.error(request, "User already exists with this email")
             return redirect("signup")
 
-        user = User.objects.create_user(
-            username=username,
+        User.objects.create_user(
+            username=email,   # email as username
             email=email,
+            first_name=name,
             password=password
         )
-        user.save()
-        messages.success(request, "Account created successfully!")
+
+        messages.success(request, "Account created successfully. Please login.")
         return redirect("login")
 
-    return render(request, "signup.html")   
+    return render(request, "signup.html")
 
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
+        username = request.POST.get("username")  # email
         password = request.POST.get("password")
 
-        user = authenticate(username=username, password=password)
+        user = authenticate(request, username=username, password=password)
 
-        if user is not None:
+        if user:
             login(request, user)
             return redirect("dashboard")
-        else:
-            messages.error(request, "Invalid username or password")
 
-    return render(request, "login.html")    
+        messages.error(request, "Invalid email or password")
 
-
-def dashboard_view(request):
-    return render(request, "dashboard.html")  
+    return render(request, "login.html")
 
 
+@login_required(login_url="login")
 def logout_view(request):
-    logout(request)
-    return redirect("login")  
+    if request.method == "POST":
+        logout(request)
+    return redirect("login")
 
 
-# -----------------------------
-# Resume Upload & Analysis Views
-# -----------------------------
+# =============================
+# Dashboard & Profile
+# =============================
+
+@login_required(login_url="login")
+def dashboard_view(request):
+    hour = datetime.now().hour
+
+    greeting = (
+        "Good Morning" if hour < 12 else
+        "Good Afternoon" if hour < 16 else
+        "Good Evening"
+    )
+
+    return render(request, "dashboard.html", {
+        "greeting": greeting,
+        "user": request.user,
+    })
+
+
+@login_required(login_url="login")
+def profile_view(request):
+    reports = ResumeReport.objects.filter(user=request.user)
+
+    total = reports.count()
+    avg = round(sum(r.score for r in reports) / total, 1) if total else 0
+
+    return render(request, "profile.html", {
+        "reports": reports,
+        "total_reports": total,
+        "avg_score": avg,
+        "user": request.user,
+    })
+
+
+# =============================
+# Resume Upload & Analysis
+# =============================
+
+@login_required(login_url="login")
 def upload_resume(request):
     return render(request, "upload.html")
 
 
-# Skills list
 SKILLS = [
     "Python", "Django", "Java", "JavaScript", "HTML", "CSS",
-    "React", "Angular", "Node.js", "SQL", "MongoDB", "Web Development",
-    "Machine Learning", "Data Analysis", "Git", "Docker", "AWS"
+    "React", "Angular", "Node.js", "SQL", "MongoDB",
+    "Web Development", "Machine Learning", "Data Analysis",
+    "Git", "Docker", "AWS"
 ]
 
 
-# Function to extract text from PDF
 def extract_text_from_pdf(file):
     reader = PyPDF2.PdfReader(file)
     text = ""
     for page in reader.pages:
-        text += page.extract_text()
+        if page.extract_text():
+            text += page.extract_text()
     return text
 
 
-# Function to extract text from DOCX
 def extract_text_from_docx(file):
     document = docx.Document(file)
-    return "\n".join([para.text for para in document.paragraphs])
+    return "\n".join(p.text for p in document.paragraphs)
 
 
-# Function to find skills in resume text
 def find_skills(text):
-    found_skills = []
-    text_lower = text.lower()
-    for skill in SKILLS:
-        if skill.lower() in text_lower:
-            found_skills.append(skill)
-    return found_skills
+    text = text.lower()
+    return [skill for skill in SKILLS if skill.lower() in text]
 
-# Function to generate missing skills suggestions
+
 def generate_suggestions(found_skills):
-    missing_skills = [skill for skill in SKILLS if skill not in found_skills]
-    suggestions = []
+    missing = [s for s in SKILLS if s not in found_skills]
+    return missing[:10] if missing else ["Great! You have included all key skills."]
 
-    if missing_skills:
-        suggestions.extend(missing_skills[:10])  # Show top 10 missing skills
-    else:
-        suggestions.append("Great! You have included all key skills.")
 
-    return suggestions
-
-# Analyze resume structure
 def analyze_structure(text):
+    text = text.lower()
     suggestions = []
-    text_lower = text.lower()
 
-    if not any(word in text_lower for word in ["email", "@", "phone", "contact"]):
-        suggestions.append("Add your contact information (email, phone) at the top.")
-    if "education" not in text_lower:
-        suggestions.append("Include an Education section with degrees, colleges, and years.")
-    if "experience" not in text_lower and "work history" not in text_lower:
-        suggestions.append("Add a Work Experience section detailing your roles and responsibilities.")
-    if "skills" not in text_lower:
-        suggestions.append("Include a Skills section to highlight your technical and soft skills.")
-    if "summary" not in text_lower and "objective" not in text_lower:
-        suggestions.append("Add a brief Professional Summary or Career Objective at the top.")
+    if not any(k in text for k in ["email", "@", "phone", "contact"]):
+        suggestions.append("Add your contact information at the top.")
+
+    if "education" not in text:
+        suggestions.append("Include an Education section.")
+
+    if "experience" not in text:
+        suggestions.append("Add a Work Experience section.")
+
+    if "skills" not in text:
+        suggestions.append("Include a Skills section.")
+
+    if "summary" not in text and "objective" not in text:
+        suggestions.append("Add a Professional Summary or Objective.")
+
     if len(text.splitlines()) < 10:
-        suggestions.append("Consider adding more details; a resume should be well-structured with multiple sections.")
+        suggestions.append("Add more details for better structure.")
 
     return suggestions
 
-# Analyze resume view (without skill suggestions)
+
+@login_required(login_url="login")
 def analyze_resume(request):
     if request.method == "POST":
         file = request.FILES.get("resume")
-        if not file:
-            return render(request, "upload.html", {"error": "Please upload a file"})
 
-        # Extract text from file
+        if not file:
+            return render(request, "upload.html", {
+                "error": "Please upload a resume file"
+            })
+
         if file.name.endswith(".pdf"):
             text = extract_text_from_pdf(file)
-        else:
+        elif file.name.endswith(".docx"):
             text = extract_text_from_docx(file)
+        else:
+            return render(request, "upload.html", {
+                "error": "Unsupported file format"
+            })
 
-        # ATS score calculation based on found skills (optional)
         skills_found = find_skills(text)
         ats_score = int((len(skills_found) / len(SKILLS)) * 100)
 
-        # Only analyze resume structure now
-        structure_suggestions = analyze_structure(text)
+        ResumeReport.objects.create(
+            user=request.user,
+            name=file.name,
+            score=ats_score
+        )
 
         return render(request, "analyze.html", {
             "skills": skills_found,
             "score": ats_score,
-            "structure_suggestions": structure_suggestions
+            "structure_suggestions": analyze_structure(text),
+            "skill_suggestions": generate_suggestions(skills_found)
         })
 
-    return render(request, "upload.html")
+    return redirect("upload")
 
 
+# =============================
+# Reports
+# =============================
+
+@login_required(login_url="login")
+def reports_page(request):
+    return render(request, "reports.html")
 
 
+@login_required(login_url="login")
+def reports_api(request):
+    reports = ResumeReport.objects.filter(user=request.user).order_by("-analyzed_date")
+
+    return JsonResponse({
+        "reports": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "score": r.score,
+                "status": r.status(),
+                "analyzed_date": r.analyzed_date.strftime("%d %b %Y")
+            }
+            for r in reports
+        ]
+    })
+
+
+@login_required(login_url="login")
+def delete_report(request, report_id):
+    if request.method == "POST":
+        ResumeReport.objects.filter(
+            id=report_id,
+            user=request.user
+        ).delete()
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False}, status=400)
