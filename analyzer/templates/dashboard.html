@@ -59,8 +59,8 @@
 
     <!-- Greeting -->
     <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
-      {{ greeting }} {{ request.user.username }}!
-    </h2>
+  {{ greeting }} {{ request.user.first_name|default:request.user.username }}!
+</h2>
 
     <!-- Intro -->
     <p class="text-gray-600 text-lg text-center mb-10 leading-relaxed">
