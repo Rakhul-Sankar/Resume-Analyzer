@@ -20,6 +20,7 @@ def login_page(request):
     return render(request, "login.html")
 
 
+
 def signup_view(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -34,15 +35,17 @@ def signup_view(request):
             messages.error(request, "User already exists with this email")
             return redirect("signup")
 
-        User.objects.create_user(
+        user = User.objects.create_user(
             username=email,   # email as username
             email=email,
             first_name=name,
             password=password
         )
 
-        messages.success(request, "Account created successfully. Please login.")
-        return redirect("login")
+        # ✅ AUTO LOGIN AFTER SIGNUP
+        login(request, user)
+
+        return redirect("dashboard")
 
     return render(request, "signup.html")
 

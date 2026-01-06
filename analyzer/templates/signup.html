@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="logo.avif">
+  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Signup</title>
@@ -16,18 +17,33 @@
     Create Account
   </h2>
 
-  <form onsubmit="signupUser(event)" class="space-y-4">
+  {% if messages %}
+    {% for msg in messages %}
+      <p class="text-red-600 text-sm mb-3">{{ msg }}</p>
+    {% endfor %}
+  {% endif %}
 
-    <input id="name" type="text" placeholder="Full Name"
+  <form method="POST" class="space-y-4">
+    {% csrf_token %}
+
+    <input name="name" type="text" placeholder="Full Name"
       class="w-full p-3 border rounded-lg" required>
 
-    <input id="email" type="email" placeholder="Email"
+    <input name="email" type="email" placeholder="Email"
       class="w-full p-3 border rounded-lg" required>
 
-    <input id="password" type="password" placeholder="Password"
-      class="w-full p-3 border rounded-lg" required>
+    <!-- PASSWORD WITH EYE -->
+    <div class="relative">
+      <input id="password" name="password" type="password"
+        placeholder="Password"
+        class="w-full p-3 border rounded-lg pr-10" required>
 
-    <p id="errorMsg" class="text-red-600 text-sm hidden"></p>
+      <button type="button"
+        onclick="togglePassword()"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+        👁️
+      </button>
+    </div>
 
     <button type="submit"
       class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
@@ -37,53 +53,15 @@
 
   <p class="mt-4 text-center text-sm">
     Already have an account?
-    <a href="login.html" class="text-blue-600 font-medium">Login</a>
+    <a href="{% url 'login' %}" class="text-blue-600 font-medium">Login</a>
   </p>
 
 </div>
 
 <script>
-async function signupUser(event) {
-  event.preventDefault();
-
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const errorMsg = document.getElementById("errorMsg");
-
-  errorMsg.classList.add("hidden");
-
-  if (password.length < 6) {
-    errorMsg.innerText = "Password must be at least 6 characters";
-    errorMsg.classList.remove("hidden");
-    return;
-  }
-
-  try {
-    const response = await fetch("http://127.0.0.1:8000/api/signup/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password })
-    });
-
-    const data = await response.json();
-
-    if (!data.success) {
-      errorMsg.innerText = data.message || "Signup failed";
-      errorMsg.classList.remove("hidden");
-      return;
-    }
-
-    // Save only safe user info
-    localStorage.setItem("loggedUser", JSON.stringify(data.user));
-
-    // Redirect after signup
-    window.location.href = "dashboard.html";
-
-  } catch (err) {
-    errorMsg.innerText = "Backend not reachable. Start Django server.";
-    errorMsg.classList.remove("hidden");
-  }
+function togglePassword() {
+  const pass = document.getElementById("password");
+  pass.type = pass.type === "password" ? "text" : "password";
 }
 </script>
 
