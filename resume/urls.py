@@ -19,5 +19,10 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    # Analyzer app
     path("", include("analyzer.urls")),
+
+    # ✅ Django auth (password reset, confirm, complete)
+    path("accounts/", include("django.contrib.auth.urls")),
 ]

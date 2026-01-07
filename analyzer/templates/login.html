@@ -11,68 +11,82 @@
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen p-6 flex items-center justify-center">
 
-<div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg">
-  <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
-    Login
-  </h2>
+  <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg">
 
-  <!-- 🔥 NORMAL DJANGO LOGIN FORM -->
-  <form method="POST" action="{% url 'login' %}" class="space-y-4">
-    {% csrf_token %}
+    <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
+      Login
+    </h2>
 
-    <input
-      name="username"
-      type="text"
-      placeholder="Username"
-      class="w-full p-3 border rounded-lg"
-      required
-    >
+    <!-- ✅ DJANGO LOGIN FORM -->
+    <form method="POST" action="{% url 'login' %}" class="space-y-4">
+      {% csrf_token %}
 
-    <div class="relative">
+      <!-- Username / Email -->
       <input
-        id="password"
-        name="password"
-        type="password"
-        placeholder="Password"
-        class="w-full p-3 border rounded-lg pr-10"
+        name="username"
+        type="text"
+        placeholder="Email"
+        class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
         required
       >
+
+      <!-- Password -->
+      <div class="relative">
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="Password"
+          class="w-full p-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          required
+        >
+        <button
+          type="button"
+          onclick="togglePassword()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+          👁️
+        </button>
+      </div>
+    
+      <!-- Forgot Password -->
+    <a href="{% url 'forgot_password' %}"
+   class="text-sm text-blue-600 hover:underline">
+  Forgot password?
+</a>
+
+
+
+      <!-- Django Messages -->
+      {% if messages %}
+        {% for message in messages %}
+          <p class="text-red-600 text-sm text-center">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Submit -->
       <button
-        type="button"
-        onclick="togglePassword()"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-        👁️
+        type="submit"
+        class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+        Login
       </button>
-    </div>
+    </form>
 
-    <!-- Django messages -->
-    {% if messages %}
-      {% for message in messages %}
-        <p class="text-red-600 text-sm">{{ message }}</p>
-      {% endfor %}
-    {% endif %}
+    <!-- Signup -->
+    <p class="mt-4 text-center text-sm">
+      No account?
+      <a href="{% url 'signup' %}" class="text-blue-600 font-medium hover:underline">
+        Create one
+      </a>
+    </p>
 
-    <button
-      type="submit"
-      class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
-      Login
-    </button>
-  </form>
+  </div>
 
-  <p class="mt-4 text-center text-sm">
-    No account?
-    <a href="{% url 'signup' %}" class="text-blue-600 font-medium">
-      Create one
-    </a>
-  </p>
-</div>
-
-<script>
-function togglePassword() {
-  const pass = document.getElementById("password");
-  pass.type = pass.type === "password" ? "text" : "password";
-}
-</script>
+  <script>
+    function togglePassword() {
+      const pass = document.getElementById("password");
+      pass.type = pass.type === "password" ? "text" : "password";
+    }
+  </script>
 
 </body>
 </html>
