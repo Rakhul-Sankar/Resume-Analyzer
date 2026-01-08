@@ -34,6 +34,7 @@
 <main class="flex justify-center p-6 flex-1">
   <div class="w-full max-w-4xl space-y-6">
 
+    <!-- TITLE -->
     <h1 class="text-3xl font-bold text-center text-indigo-600">
       Resume Analysis Result
     </h1>
@@ -41,6 +42,7 @@
     <!-- OVERALL SCORE -->
     <div class="bg-white p-6 rounded-xl shadow text-center">
       <h2 class="text-xl font-semibold">Overall ATS Score</h2>
+
       <p class="text-5xl font-black text-indigo-600 mt-4">
         {{ score }}%
       </p>
@@ -71,9 +73,7 @@
           <span>{{ skill_score }}/40</span>
         </div>
         <div class="w-full bg-gray-200 rounded h-3 mt-2">
-          <div class="bg-indigo-600 h-3 rounded"
-               style="width: {{ skill_pct }}%">
-          </div>
+          <div class="bg-indigo-600 h-3 rounded" style="width: {{ skill_pct }}%"></div>
         </div>
       </div>
 
@@ -84,9 +84,7 @@
           <span>{{ experience_score }}/30</span>
         </div>
         <div class="w-full bg-gray-200 rounded h-3 mt-2">
-          <div class="bg-green-600 h-3 rounded"
-               style="width: {{ experience_pct }}%">
-          </div>
+          <div class="bg-green-600 h-3 rounded" style="width: {{ experience_pct }}%"></div>
         </div>
       </div>
 
@@ -97,9 +95,7 @@
           <span>{{ education_score }}/20</span>
         </div>
         <div class="w-full bg-gray-200 rounded h-3 mt-2">
-          <div class="bg-blue-600 h-3 rounded"
-               style="width: {{ education_pct }}%">
-          </div>
+          <div class="bg-blue-600 h-3 rounded" style="width: {{ education_pct }}%"></div>
         </div>
       </div>
 
@@ -110,11 +106,21 @@
           <span>{{ structure_score }}/10</span>
         </div>
         <div class="w-full bg-gray-200 rounded h-3 mt-2">
-          <div class="bg-purple-600 h-3 rounded"
-               style="width: {{ structure_pct }}%">
-          </div>
+          <div class="bg-purple-600 h-3 rounded" style="width: {{ structure_pct }}%"></div>
         </div>
       </div>
+    </div>
+
+    <!-- EXPERIENCE & EDUCATION STATUS -->
+    <div class="bg-blue-50 p-4 rounded-lg text-sm text-gray-700">
+      <p>
+        <strong>Experience Detected:</strong>
+        {% if experience_score > 0 %} ✅ Yes {% else %} ❌ No {% endif %}
+      </p>
+      <p class="mt-1">
+        <strong>Education Detected:</strong>
+        {% if education_score > 0 %} ✅ Yes {% else %} ❌ No {% endif %}
+      </p>
     </div>
 
     <!-- SKILLS FOUND -->
@@ -132,7 +138,7 @@
       </ul>
     </div>
 
-    <!-- SUGGESTIONS -->
+    <!-- IMPROVEMENT SUGGESTIONS -->
     <div class="bg-white p-6 rounded-xl shadow">
       <h2 class="text-xl font-semibold text-red-600">
         Improvement Suggestions
@@ -140,13 +146,41 @@
 
       {% if score >= 85 %}
         <p class="mt-4 text-green-600 font-semibold">
-          ✅ Your resume is ATS optimized.
+          ✅ Your resume is ATS optimized. Only minor improvements recommended.
         </p>
       {% else %}
-        <ul class="list-disc pl-5 mt-4 text-gray-700 space-y-1">
-          {% for s in structure_suggestions %}
-            <li>{{ s }}</li>
-          {% endfor %}
+        <ul class="list-disc pl-5 mt-4 text-gray-700 space-y-2">
+
+          {% if experience_score < 20 %}
+          <li>
+            Improve <strong>Work Experience</strong> by adding:
+            <ul class="list-disc pl-6 text-sm mt-1">
+              <li>Company name & role</li>
+              <li>Duration</li>
+              <li>Key achievements with metrics</li>
+            </ul>
+          </li>
+          {% endif %}
+
+          {% if education_score < 15 %}
+          <li>
+            Strengthen <strong>Education</strong> section with:
+            <ul class="list-disc pl-6 text-sm mt-1">
+              <li>Degree / Course name</li>
+              <li>Institution</li>
+              <li>Year of passing</li>
+              <li>Relevant coursework</li>
+            </ul>
+          </li>
+          {% endif %}
+
+          {% if structure_score < 7 %}
+          <li>
+            Improve resume structure by using clear headings:
+            <strong>Summary, Skills, Experience, Education, Projects</strong>.
+          </li>
+          {% endif %}
+
           {% for s in skill_suggestions %}
             <li>{{ s }}</li>
           {% endfor %}
