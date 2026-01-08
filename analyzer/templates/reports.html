@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports</title>
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -83,7 +84,6 @@
 
 <!-- SCRIPT -->
 <script>
-/* CSRF TOKEN */
 function getCSRFToken() {
   return document.cookie
     .split("; ")
@@ -91,15 +91,20 @@ function getCSRFToken() {
     ?.split("=")[1];
 }
 
-/* LOAD REPORTS */
 async function loadReports() {
+  const grid = document.getElementById("resumeGrid");
+  grid.innerHTML = `
+    <div class="col-span-full text-center text-gray-500">
+      Loading reports...
+    </div>`;
+
   const res = await fetch("{% url 'reports_api' %}");
   const data = await res.json();
+
   updateStats(data.reports);
   renderReports(data.reports);
 }
 
-/* STATS */
 function updateStats(reports) {
   const scores = reports.map(r => r.score);
 
@@ -111,14 +116,18 @@ function updateStats(reports) {
     scores.length ? Math.max(...scores) + "%" : "0%";
 }
 
-/* RENDER */
 function renderReports(reports) {
   const box = document.getElementById("resumeGrid");
 
   if (!reports.length) {
     box.innerHTML = `
-      <div class="col-span-full bg-white p-8 text-center">
-        No reports found
+      <div class="col-span-full bg-white p-8 text-center rounded-xl shadow">
+        <p class="text-lg font-semibold text-gray-600">
+          No resumes analyzed yet
+        </p>
+        <p class="text-sm text-gray-500 mt-2">
+          Upload a resume to generate ATS reports.
+        </p>
       </div>`;
     return;
   }
@@ -143,7 +152,6 @@ function renderReports(reports) {
   `).join("");
 }
 
-/* DELETE */
 async function deleteReport(id) {
   if (!confirm("Delete this report permanently?")) return;
 
@@ -161,9 +169,9 @@ async function deleteReport(id) {
   }
 }
 
-/* INIT */
 loadReports();
 </script>
+
 
 </body>
 </html>

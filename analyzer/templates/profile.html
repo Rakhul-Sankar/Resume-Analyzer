@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profile</title>
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -16,7 +16,6 @@
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
       <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium">Upload</a>
       <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium">Past Reports</a>
@@ -24,17 +23,13 @@
 
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit" class="text-red-600 font-medium">
-          Logout
-        </button>
+        <button class="text-red-600 font-medium">Logout</button>
       </form>
     </div>
 
-    <!-- Mobile Menu Button -->
     <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
   </div>
 
-  <!-- Mobile Menu -->
   <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
     <a href="{% url 'upload' %}" class="block px-6 py-3">Upload</a>
     <a href="{% url 'reports' %}" class="block px-6 py-3">Past Reports</a>
@@ -42,59 +37,72 @@
 
     <form method="POST" action="{% url 'logout' %}">
       {% csrf_token %}
-      <button class="w-full text-left text-red-600 px-6 py-3">
-        Logout
-      </button>
+      <button class="w-full text-left text-red-600 px-6 py-3">Logout</button>
     </form>
   </div>
 </nav>
 
-<!-- PROFILE -->
-<main class="flex justify-center p-6">
-  <div class="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-xl border">
+<!-- PROFILE CONTENT -->
+<main class="max-w-6xl mx-auto p-6">
+  <div class="bg-white rounded-2xl shadow-xl p-8">
 
-    <h2 class="text-3xl font-bold text-indigo-600 mb-6">Profile</h2>
+    <h2 class="text-3xl font-bold text-indigo-600 mb-8">Profile</h2>
 
-    <!-- USER INFO -->
-    <div class="mb-6 space-y-2">
-      <p><b>Username:</b> {{ request.user.username }}</p>
-      <p><b>Email:</b> {{ request.user.email }}</p>
-    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-    <!-- STATS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      <div class="bg-gray-100 p-4 rounded text-center">
-        <p class="text-gray-500 text-sm">Total Reports</p>
-        <h3 class="text-2xl font-bold">{{ total_reports }}</h3>
-      </div>
-
-      <div class="bg-gray-100 p-4 rounded text-center">
-        <p class="text-gray-500 text-sm">Average ATS Score</p>
-        <h3 class="text-2xl font-bold">{{ avg_score }}%</h3>
-      </div>
-    </div>
-
-    <!-- HISTORY -->
-    <h3 class="text-xl font-bold mb-3">
-      Resume History ({{ reports|length }})
-    </h3>
-
-    <div class="space-y-3">
-      {% for r in reports %}
-        <div class="p-4 bg-gray-100 rounded flex justify-between items-center">
-          <div>
-            <b>{{ r.name }}</b>
-            <div class="text-xs text-gray-500">
-              {{ r.analyzed_date|date:"d M Y" }}
-            </div>
-          </div>
-          <span class="font-bold text-indigo-600">{{ r.score }}%</span>
+      <!-- LEFT -->
+      <div class="space-y-6">
+        <div class="space-y-1">
+          <p><b>Username:</b> {{ request.user.username }}</p>
+          <p><b>Email:</b> {{ request.user.email }}</p>
         </div>
-      {% empty %}
-        <p class="text-gray-500">No analyzed reports found.</p>
-      {% endfor %}
-    </div>
 
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-100 p-5 rounded-xl text-center">
+            <p class="text-gray-500 text-sm">Total Reports</p>
+            <h3 class="text-3xl font-bold text-indigo-600">
+              {{ total_reports }}
+            </h3>
+          </div>
+
+          <div class="bg-gray-100 p-5 rounded-xl text-center">
+            <p class="text-gray-500 text-sm">Average ATS Score</p>
+            <h3 class="text-3xl font-bold text-green-600">
+              {{ avg_score }}%
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <h3 class="text-xl font-bold mb-4">
+          Resume History ({{ reports|length }})
+        </h3>
+
+        <div class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+          {% for r in reports %}
+            <div class="p-4 bg-gray-100 rounded-xl flex justify-between items-center">
+              <div>
+                <p class="font-semibold truncate max-w-[220px]">
+                  {{ r.name }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ r.analyzed_date|date:"d M Y, h:i A" }}
+                </p>
+              </div>
+
+              <span class="text-lg font-bold text-indigo-600">
+                {{ r.score }}%
+              </span>
+            </div>
+          {% empty %}
+            <p class="text-gray-500">No analyzed reports found.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
   </div>
 </main>
 

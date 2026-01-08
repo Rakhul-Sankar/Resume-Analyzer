@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from datetime import datetime
+from django.utils import timezone
 
 import PyPDF2
 import docx
@@ -48,7 +48,7 @@ def signup_view(request):
             password=password
         )
 
-        login(request, user)  # ✅ auto login
+        login(request, user)
         return redirect("dashboard")
 
     return render(request, "signup.html")
@@ -91,13 +91,17 @@ def forgot_password_view(request):
 
 
 # =============================
-# DASHBOARD & PROFILE
+# DASHBOARD
 # =============================
 
 @login_required
 def dashboard_view(request):
-    hour = datetime.now().hour
-    greeting = "Good Morning" if hour < 12 else "Good Afternoon" if hour < 16 else "Good Evening"
+    hour = timezone.localtime().hour
+    greeting = (
+        "Good Morning" if hour < 12 else
+        "Good Afternoon" if hour < 16 else
+        "Good Evening"
+    )
 
     return render(request, "dashboard.html", {
         "greeting": greeting,
@@ -105,21 +109,31 @@ def dashboard_view(request):
     })
 
 
+# =============================
+# PROFILE
+# =============================
+
 @login_required
 def profile_view(request):
-    reports = ResumeReport.objects.filter(user=request.user)
-    total = reports.count()
-    avg = round(sum(r.score for r in reports) / total, 1) if total else 0
+    reports = ResumeReport.objects.filter(
+        user=request.user
+    ).order_by("-analyzed_date")
+
+    total_reports = reports.count()
+    avg_score = (
+        round(sum(r.score for r in reports) / total_reports)
+        if total_reports else 0
+    )
 
     return render(request, "profile.html", {
         "reports": reports,
-        "total_reports": total,
-        "avg_score": avg,
+        "total_reports": total_reports,
+        "avg_score": avg_score,
     })
 
 
 # =============================
-# RESUME
+# RESUME ANALYSIS
 # =============================
 
 @login_required
@@ -145,30 +159,120 @@ def extract_text_from_docx(file):
     return "\n".join(p.text for p in document.paragraphs)
 
 
+def score_skills(text):
+    found = [s for s in SKILLS if s.lower() in text]
+    score = int((len(found) / len(SKILLS)) * 40)
+    return score, found
+
+
+def score_experience(text):
+    keywords = ["experience", "intern", "project", "worked", "role"]
+    return 30 if any(k in text for k in keywords) else 10
+
+
+def score_education(text):
+    keywords = ["education", "degree", "bachelor", "master", "college", "university"]
+    return 20 if any(k in text for k in keywords) else 5
+
+
+def score_structure(text):
+    sections = ["skills", "education", "experience", "summary", "objective"]
+    return min(sum(1 for s in sections if s in text) * 2, 10)
+
+
+def analyze_structure(text):
+    suggestions = []
+    if "education" not in text:
+        suggestions.append("Add an Education section.")
+    if "experience" not in text:
+        suggestions.append("Include a Work Experience section.")
+    if "skills" not in text:
+        suggestions.append("Mention a Skills section.")
+    if "summary" not in text and "objective" not in text:
+        suggestions.append("Add a Professional Summary or Objective.")
+    return suggestions
+
+
+def generate_suggestions(found_skills):
+    missing = [s for s in SKILLS if s not in found_skills]
+    return missing[:8]
+
+
 @login_required
 def analyze_resume(request):
-    if request.method == "POST":
-        file = request.FILES.get("resume")
+    if request.method != "POST":
+        return redirect("upload")
 
-        if not file:
-            return redirect("upload")
+    file = request.FILES.get("resume")
+    if not file:
+        return redirect("upload")
 
-        text = extract_text_from_pdf(file) if file.name.endswith(".pdf") else extract_text_from_docx(file)
-        skills = [s for s in SKILLS if s.lower() in text.lower()]
-        score = int((len(skills) / len(SKILLS)) * 100)
+    if file.name.endswith(".pdf"):
+        text = extract_text_from_pdf(file)
+    elif file.name.endswith(".docx"):
+        text = extract_text_from_docx(file)
+    else:
+        messages.error(request, "Unsupported file format")
+        return redirect("upload")
 
-        ResumeReport.objects.create(
-            user=request.user,
-            name=file.name,
-            score=score
-        )
+    text_lower = text.lower()
 
-        return render(request, "analyze.html", {
-            "skills": skills,
-            "score": score
-        })
+    # =============================
+    # SECTION SCORES
+    # =============================
+    skill_score, skills_found = score_skills(text_lower)   # /40
+    experience_score = score_experience(text_lower)        # /30
+    education_score = score_education(text_lower)          # /20
+    structure_score = score_structure(text_lower)          # /10
 
-    return redirect("upload")
+    # =============================
+    # FINAL SCORE
+    # =============================
+    final_score = min(
+        skill_score + experience_score + education_score + structure_score,
+        100
+    )
+
+    # =============================
+    # SAVE REPORT
+    # =============================
+    ResumeReport.objects.create(
+        user=request.user,
+        name=file.name,
+        score=final_score
+    )
+
+    # =============================
+    # PERCENTAGES FOR UI BARS
+    # =============================
+    skill_pct = int((skill_score / 40) * 100)
+    experience_pct = int((experience_score / 30) * 100)
+    education_pct = int((education_score / 20) * 100)
+    structure_pct = int((structure_score / 10) * 100)
+
+    # =============================
+    # SEND EVERYTHING TO TEMPLATE
+    # =============================
+    return render(request, "analyze.html", {
+        "score": final_score,
+
+        # section scores
+        "skill_score": skill_score,
+        "experience_score": experience_score,
+        "education_score": education_score,
+        "structure_score": structure_score,
+
+        # percentages
+        "skill_pct": skill_pct,
+        "experience_pct": experience_pct,
+        "education_pct": education_pct,
+        "structure_pct": structure_pct,
+
+        # data
+        "skills": skills_found,
+        "structure_suggestions": analyze_structure(text_lower),
+        "skill_suggestions": generate_suggestions(skills_found),
+    })
 
 
 # =============================
@@ -182,15 +286,23 @@ def reports_page(request):
 
 @login_required
 def reports_api(request):
-    reports = ResumeReport.objects.filter(user=request.user)
+    reports = ResumeReport.objects.filter(
+        user=request.user
+    ).order_by("-analyzed_date")
+
     return JsonResponse({
-        "reports": [{
-            "id": r.id,
-            "name": r.name,
-            "score": r.score,
-            "status": r.status(),
-            "analyzed_date": r.analyzed_date.strftime("%d %b %Y")
-        } for r in reports]
+        "reports": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "score": r.score,
+                "status": r.status(),
+                "analyzed_date": timezone.localtime(
+                    r.analyzed_date
+                ).strftime("%d %b %Y, %I:%M %p")
+            }
+            for r in reports
+        ]
     })
 
 

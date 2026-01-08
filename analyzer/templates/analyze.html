@@ -2,126 +2,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="{% static 'logo.avif' %}">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analyze Resume</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Analysis</title>
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen flex flex-col">
 
-<!-- NAVIGATION -->
+<!-- ================= NAVBAR ================= -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
-      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
-      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
-      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium">Upload</a>
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium">Dashboard</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium">Profile</a>
 
-      <!-- ✅ Proper Django Logout -->
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit" class="text-red-600 font-medium px-3 py-2">
-          Logout
-        </button>
+        <button class="text-red-600 font-medium">Logout</button>
       </form>
     </div>
-
-    <!-- Mobile Hamburger -->
-    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
-      ☰
-    </button>
-  </div>
-
-  <!-- Mobile Menu -->
-  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
-    <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
-    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
-    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
-
-    <form method="POST" action="{% url 'logout' %}">
-      {% csrf_token %}
-      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
-        Logout
-      </button>
-    </form>
   </div>
 </nav>
-<!-- MAIN -->
-<main class="flex justify-center p-6">
-<div class="w-full max-w-4xl space-y-6">
 
-  <h1 class="text-3xl font-bold text-center text-indigo-600">
-    Resume Analysis Result
-  </h1>
+<!-- ================= MAIN ================= -->
+<main class="flex justify-center p-6 flex-1">
+  <div class="w-full max-w-4xl space-y-6">
 
-  <!-- ATS SCORE -->
-  <div class="bg-white p-6 rounded-xl shadow text-center">
-    <h2 class="text-xl font-semibold">ATS Score</h2>
-    <p class="text-5xl font-black text-indigo-600 mt-4">
-      {{ score }}%
-    </p>
+    <h1 class="text-3xl font-bold text-center text-indigo-600">
+      Resume Analysis Result
+    </h1>
 
-    <p class="mt-2 text-gray-600 font-medium">
-      {% if score >= 85 %}
-        Excellent ATS Match
-      {% elif score >= 70 %}
-        Good ATS Match
-      {% elif score >= 50 %}
-        Average – Needs Improvement
-      {% else %}
-        Poor ATS Match
-      {% endif %}
-    </p>
-  </div>
+    <!-- OVERALL SCORE -->
+    <div class="bg-white p-6 rounded-xl shadow text-center">
+      <h2 class="text-xl font-semibold">Overall ATS Score</h2>
+      <p class="text-5xl font-black text-indigo-600 mt-4">
+        {{ score }}%
+      </p>
 
-  <!-- SKILLS -->
-  <div class="bg-white p-6 rounded-xl shadow">
-    <h2 class="text-xl font-semibold">
-      Skills Found ({{ skills|length }})
-    </h2>
+      <p class="mt-2 text-gray-600 font-medium">
+        {% if score >= 85 %}
+          Excellent ATS Match
+        {% elif score >= 70 %}
+          Good ATS Match
+        {% elif score >= 50 %}
+          Average – Needs Improvement
+        {% else %}
+          Poor ATS Match
+        {% endif %}
+      </p>
+    </div>
 
-    <ul class="list-disc pl-5 mt-4 text-gray-700">
-      {% if skills %}
+    <!-- SECTION-WISE SCORE -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-semibold mb-6">
+        Section-wise ATS Score
+      </h2>
+
+      <!-- SKILLS -->
+      <div class="mb-5">
+        <div class="flex justify-between font-medium">
+          <span>Skills</span>
+          <span>{{ skill_score }}/40</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded h-3 mt-2">
+          <div class="bg-indigo-600 h-3 rounded"
+               style="width: {{ skill_pct }}%">
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPERIENCE -->
+      <div class="mb-5">
+        <div class="flex justify-between font-medium">
+          <span>Experience</span>
+          <span>{{ experience_score }}/30</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded h-3 mt-2">
+          <div class="bg-green-600 h-3 rounded"
+               style="width: {{ experience_pct }}%">
+          </div>
+        </div>
+      </div>
+
+      <!-- EDUCATION -->
+      <div class="mb-5">
+        <div class="flex justify-between font-medium">
+          <span>Education</span>
+          <span>{{ education_score }}/20</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded h-3 mt-2">
+          <div class="bg-blue-600 h-3 rounded"
+               style="width: {{ education_pct }}%">
+          </div>
+        </div>
+      </div>
+
+      <!-- STRUCTURE -->
+      <div>
+        <div class="flex justify-between font-medium">
+          <span>Resume Structure</span>
+          <span>{{ structure_score }}/10</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded h-3 mt-2">
+          <div class="bg-purple-600 h-3 rounded"
+               style="width: {{ structure_pct }}%">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SKILLS FOUND -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-semibold">
+        Skills Found ({{ skills|length }})
+      </h2>
+
+      <ul class="list-disc pl-5 mt-4 text-gray-700">
         {% for skill in skills %}
           <li>{{ skill }}</li>
+        {% empty %}
+          <li>No skills detected</li>
         {% endfor %}
+      </ul>
+    </div>
+
+    <!-- SUGGESTIONS -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-semibold text-red-600">
+        Improvement Suggestions
+      </h2>
+
+      {% if score >= 85 %}
+        <p class="mt-4 text-green-600 font-semibold">
+          ✅ Your resume is ATS optimized.
+        </p>
       {% else %}
-        <li>No skills detected</li>
+        <ul class="list-disc pl-5 mt-4 text-gray-700 space-y-1">
+          {% for s in structure_suggestions %}
+            <li>{{ s }}</li>
+          {% endfor %}
+          {% for s in skill_suggestions %}
+            <li>{{ s }}</li>
+          {% endfor %}
+        </ul>
       {% endif %}
-    </ul>
+    </div>
+
   </div>
-
-  <!-- SUGGESTIONS -->
-  <div class="bg-white p-6 rounded-xl shadow">
-    <h2 class="text-xl font-semibold text-red-600">
-      Improvement Suggestions
-    </h2>
-
-    <ul class="list-disc pl-5 mt-4 text-gray-700">
-      {% if structure_suggestions or skill_suggestions %}
-        {% for s in structure_suggestions %}
-          <li>{{ s }}</li>
-        {% endfor %}
-        {% for s in skill_suggestions %}
-          <li>{{ s }}</li>
-        {% endfor %}
-      {% else %}
-        <li class="text-green-600 font-medium">
-          Great job! Your resume is ATS friendly.
-        </li>
-      {% endif %}
-    </ul>
-  </div>
-
-</div>
 </main>
 
 </body>

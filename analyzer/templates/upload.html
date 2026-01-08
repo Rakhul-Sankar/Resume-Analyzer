@@ -2,96 +2,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Upload Resume</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
 
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
-<!-- NAVIGATION -->
+<!-- ================= NAVIGATION ================= -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
 
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-    <!-- Desktop Menu -->
+    <!-- Desktop -->
     <div class="hidden md:flex space-x-4 items-center">
       <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
       <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
       <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
 
-      <!-- ✅ Proper Django Logout -->
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit" class="text-red-600 font-medium px-3 py-2">
-          Logout
-        </button>
+        <button class="text-red-600 font-medium">Logout</button>
       </form>
     </div>
 
-    <!-- Mobile Hamburger -->
-    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
-      ☰
-    </button>
+    <!-- Mobile -->
+    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
   </div>
 
-  <!-- Mobile Menu -->
   <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-    <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
-    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
-    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
-
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3">Dashboard</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3">Profile</a>
     <form method="POST" action="{% url 'logout' %}">
       {% csrf_token %}
-      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
-        Logout
-      </button>
+      <button class="w-full text-left text-red-600 px-6 py-3">Logout</button>
     </form>
   </div>
 </nav>
 
-<!-- CONTENT -->
+<!-- ================= MAIN ================= -->
 <main class="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-4">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 space-y-6">
 
     <h2 class="text-2xl font-bold text-center text-indigo-600">
       Upload Your Resume
     </h2>
 
     <p class="text-sm text-center text-gray-500">
-      Supported formats: PDF, DOCX (Max 2MB)
+      Supported formats: <b>PDF</b>, <b>DOCX</b> (Max 2MB)
     </p>
 
     {% if error %}
       <p class="text-red-600 text-sm text-center">{{ error }}</p>
     {% endif %}
 
-    <!-- ✅ DJANGO FORM -->
-    <form method="POST" action="{% url 'analyze' %}" enctype="multipart/form-data" class="space-y-4">
+    <!-- ================= FORM ================= -->
+    <form method="POST"
+          action="{% url 'analyze' %}"
+          enctype="multipart/form-data"
+          onsubmit="startLoading()"
+          class="space-y-4">
       {% csrf_token %}
 
+      <!-- File Input -->
       <input
+        id="resumeInput"
         type="file"
         name="resume"
         accept=".pdf,.docx"
         required
+        onchange="showFileName()"
         class="w-full border rounded-lg p-3"
       >
 
+      <!-- Selected file -->
+      <p id="fileName" class="text-sm text-gray-600 text-center hidden"></p>
+
+      <!-- Submit -->
       <button
+        id="submitBtn"
         type="submit"
-        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700"
-      >
+        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">
         Upload & Analyze
       </button>
     </form>
 
+    <!-- ================= ATS TIPS ================= -->
+    <div class="bg-slate-50 border rounded-lg p-4 text-sm text-gray-700">
+      <h3 class="font-semibold mb-2 text-indigo-600">ATS Optimization Tips</h3>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Use clear section headings (Skills, Experience, Education)</li>
+        <li>Avoid images and tables in resumes</li>
+        <li>Match keywords with job descriptions</li>
+        <li>Use simple fonts and bullet points</li>
+      </ul>
+    </div>
+
   </div>
 </main>
 
+<!-- ================= JS ================= -->
+<script>
+function toggleMenu() {
+  document.getElementById("mobileMenu").classList.toggle("hidden");
+}
+
+function showFileName() {
+  const input = document.getElementById("resumeInput");
+  const fileName = document.getElementById("fileName");
+
+  if (input.files.length > 0) {
+    fileName.textContent = "Selected file: " + input.files[0].name;
+    fileName.classList.remove("hidden");
+  }
+}
+
+function startLoading() {
+  const btn = document.getElementById("submitBtn");
+  btn.textContent = "Analyzing...";
+  btn.disabled = true;
+  btn.classList.add("opacity-70", "cursor-not-allowed");
+}
+</script>
 </body>
 </html>

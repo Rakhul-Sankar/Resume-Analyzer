@@ -1,3 +1,4 @@
+# models.py
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -8,12 +9,10 @@ class ResumeReport(models.Model):
     analyzed_date = models.DateTimeField(auto_now_add=True)
 
     def status(self):
-        if self.score >= 80:
+        if self.score >= 85:
             return "Excellent"
-        elif self.score >= 60:
+        elif self.score >= 70:
             return "Good"
-        else:
-            return "Needs Improvement"
-
-    def __str__(self):
-        return self.name
+        elif self.score >= 50:
+            return "Average"
+        return "Poor"
