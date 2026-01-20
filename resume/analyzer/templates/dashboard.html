@@ -1,0 +1,123 @@
+{% load static %}   
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="{% static 'logo.avif' %}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+<!-- NAVIGATION -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+      <!-- ✅ Proper Django Logout -->
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
+      </form>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main class="max-w-2xl mx-auto px-6 py-12">
+  <div class="bg-white p-10 rounded-xl shadow-lg">
+
+    <!-- Greeting -->
+    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">
+  {{ greeting }} {{ request.user.first_name|default:request.user.username }}!
+</h2>
+
+    <!-- Intro -->
+    <p class="text-gray-600 text-lg text-center mb-10 leading-relaxed">
+      Resume Analyzer is a web-based application that helps students and job seekers
+      evaluate their resumes using Applicant Tracking System (ATS) principles.
+    </p>
+
+    <!-- Section -->
+    <div class="space-y-6 text-gray-700">
+
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Resume Analysis</h3>
+        <p>
+          Upload resumes in TXT, DOCX, PDF format to receive an ATS score based on
+          resume structure, keywords, and content quality.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Skill Extraction</h3>
+        <p>
+          The system automatically identifies technical skills present in the resume
+          and highlights missing or weak skill areas.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold mb-2">ATS Score & Suggestions</h3>
+        <p>
+          Users receive clear improvement suggestions to increase resume compatibility
+          with modern hiring systems.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-semibold mb-2">User Experience</h3>
+        <p>
+          The platform includes secure login, profile management, and past report tracking
+          to ensure smooth and organized usage.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="mt-12 text-center text-sm text-gray-500">
+      Use the navigation menu above to upload resumes, view reports, and manage your profile.
+    </div>
+
+  </div>
+</main>
+
+<script>
+function toggleMenu() {
+  document.getElementById("mobileMenu").classList.toggle("hidden");
+}
+</script>
+
+</body>
+</html>

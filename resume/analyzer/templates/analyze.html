@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Resume Analysis</title>
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen flex flex-col">
+
+<!-- NAVIGATION -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
+
+      <!-- ✅ Proper Django Logout -->
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
+      </form>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+     <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
+    </form>
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main class="flex justify-center p-6 flex-1">
+  <div class="w-full max-w-4xl space-y-6">
+
+    <!-- TITLE -->
+    <h1 class="text-3xl font-bold text-center text-indigo-600">
+      AI Resume Analysis Result
+    </h1>
+
+    <!-- OVERALL ATS SCORE -->
+    <div class="bg-white p-6 rounded-xl shadow text-center">
+      <h2 class="text-xl font-semibold">Overall ATS Score</h2>
+
+      <p class="text-5xl font-black text-indigo-600 mt-4">
+        {{ ats_score }}%
+      </p>
+
+      <p class="mt-2 text-gray-600 font-medium">
+        {% if ats_score >= 85 %}
+          Excellent ATS Match
+        {% elif ats_score >= 70 %}
+          Good ATS Match
+        {% elif ats_score >= 50 %}
+          Average – Needs Improvement
+        {% else %}
+          Poor ATS Match
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- KEYWORD MATCH PERCENTAGE -->
+    <div class="bg-white p-6 rounded-xl shadow text-center">
+      <h2 class="text-xl font-semibold mb-3">
+        Job Description Keyword Match
+      </h2>
+
+      <p class="text-4xl font-bold text-green-600">
+        {{ keyword_match_percentage }}%
+      </p>
+
+      <p class="text-sm text-gray-500 mt-2">
+        Based on comparison with the job description
+      </p>
+    </div>
+
+    <!-- MATCHED & MISSING KEYWORDS -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <div class="grid md:grid-cols-2 gap-6 text-sm">
+
+        <div>
+          <h3 class="font-semibold text-green-600 mb-2">
+            ✅ Matched Keywords
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            {% for k in matched_keywords %}
+              <li>{{ k }}</li>
+            {% empty %}
+              <li>No strong keyword matches found</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-red-600 mb-2">
+            ❌ Missing Keywords
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            {% for k in missing_keywords %}
+              <li>{{ k }}</li>
+            {% empty %}
+              <li>No critical keywords missing</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AI EXPLANATION -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-semibold text-indigo-600 mb-3">
+        AI Evaluation Summary
+      </h2>
+      <p class="text-gray-700 leading-relaxed">
+        {{ explanation }}
+      </p>
+    </div>
+
+    <!-- AI IMPROVEMENT SUGGESTIONS -->
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h2 class="text-xl font-semibold text-red-600 mb-3">
+        AI Improvement Suggestions
+      </h2>
+
+      {% if improvement_suggestions %}
+        <ul class="list-disc pl-5 text-gray-700 space-y-2">
+          {% for tip in improvement_suggestions %}
+            <li>{{ tip }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-green-600 font-medium">
+          ✅ Your resume is well aligned with the job description.
+        </p>
+      {% endif %}
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

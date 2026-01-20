@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resume Analyzer</title>
+
+  <!-- Small delay to allow storage read -->
+  <script>
+    (function () {
+      const user = localStorage.getItem("loggedUser");
+
+      if (user) {
+        // User already logged in
+        window.location.replace("dashboard.html");
+      } else {
+        // New or logged-out user
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <noscript>
+    <p>Please enable JavaScript to use Resume Analyzer.</p>
+  </noscript>
+</body>
+</html>

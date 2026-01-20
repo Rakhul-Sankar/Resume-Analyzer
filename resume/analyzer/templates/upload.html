@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Resume</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+
+<!-- ================= NAVBAR ================= -->
+<nav class="bg-white shadow-lg border-b sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
+    <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
+
+    <!-- Desktop -->
+    <div class="hidden md:flex space-x-4 items-center">
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium">Dashboard</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium">Past Reports</a>
+      <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium">Profile</a>
+
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="text-red-600 font-medium">Logout</button>
+      </form>
+    </div>
+
+    <!-- Mobile -->
+    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+  </div>
+
+  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3">Dashboard</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3">Past Reports</a>
+    <a href="{% url 'profile' %}" class="block px-6 py-3">Profile</a>
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button class="w-full text-left text-red-600 px-6 py-3">Logout</button>
+    </form>
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main class="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 space-y-6">
+
+    <h2 class="text-2xl font-bold text-center text-indigo-600">
+      AI Resume & Job Description Analysis
+    </h2>
+
+    <p class="text-sm text-center text-gray-500">
+      Upload your resume and paste the job description to get an AI-powered ATS score,
+      keyword match, and improvement suggestions.
+    </p>
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for msg in messages %}
+        <p class="text-red-600 text-sm text-center">{{ msg }}</p>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ================= FORM ================= -->
+    <form method="POST"
+          action="{% url 'analyze' %}"
+          enctype="multipart/form-data"
+          onsubmit="startLoading()"
+          class="space-y-4">
+      {% csrf_token %}
+
+      <!-- Resume Upload -->
+      <div>
+        <label class="block text-sm font-medium mb-1">
+          Resume (PDF or DOCX)
+        </label>
+        <input
+          id="resumeInput"
+          type="file"
+          name="resume"
+          accept=".pdf,.docx"
+          required
+          onchange="showFileName()"
+          class="w-full border rounded-lg p-3"
+        >
+        <p id="fileName" class="text-xs text-gray-600 mt-1 hidden"></p>
+      </div>
+
+      <!-- Job Description -->
+      <div>
+        <label class="block text-sm font-medium mb-1">
+          Job Description
+        </label>
+        <textarea
+          name="job_description"
+          rows="6"
+          required
+          placeholder="Paste the job description here..."
+          class="w-full border rounded-lg p-3 text-sm resize-none"
+        ></textarea>
+        <p class="text-xs text-gray-500 mt-1">
+          The AI compares your resume keywords directly with this description.
+        </p>
+      </div>
+
+      <!-- Submit -->
+      <button
+        id="submitBtn"
+        type="submit"
+        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">
+        Analyze Resume with AI
+      </button>
+    </form>
+
+    <!-- ================= AI ATS TIPS ================= -->
+    <div class="bg-slate-50 border rounded-lg p-4 text-sm text-gray-700">
+      <h3 class="font-semibold mb-2 text-indigo-600">AI ATS Optimization Tips</h3>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Match skills exactly as written in the job description</li>
+        <li>Use standard headings: Summary, Skills, Experience, Education</li>
+        <li>Avoid images, icons, tables, and graphics</li>
+        <li>Highlight achievements with numbers and impact</li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+<!-- ================= JS ================= -->
+<script>
+function toggleMenu() {
+  document.getElementById("mobileMenu").classList.toggle("hidden");
+}
+
+function showFileName() {
+  const input = document.getElementById("resumeInput");
+  const fileName = document.getElementById("fileName");
+
+  if (input.files.length > 0) {
+    fileName.textContent = "Selected file: " + input.files[0].name;
+    fileName.classList.remove("hidden");
+  }
+}
+
+function startLoading() {
+  const btn = document.getElementById("submitBtn");
+  btn.textContent = "Analyzing with AI...";
+  btn.disabled = true;
+  btn.classList.add("opacity-70", "cursor-not-allowed");
+}
+</script>
+
+</body>
+</html>
