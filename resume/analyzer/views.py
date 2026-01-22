@@ -12,19 +12,60 @@ import json
 import requests
 import os
 import time
+import re
 
 from .models import ResumeReport
 
 
 # =============================
-# OPENROUTER CONFIG
+# OPENROUTER CONFIG (OPTIONAL)
 # =============================
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = "openai/gpt-3.5-turbo"
+
+OPENROUTER_MODELS = [
+    "openai/gpt-4o-mini",
+    "google/gemma-7b-it",
+    "meta-llama/llama-3.1-8b-instruct"
+]
 
 print("OPENROUTER KEY LOADED:", bool(OPENROUTER_API_KEY))
+
+
+# =============================
+# LOCAL ATS FALLBACK (NO PAYMENT)
+# =============================
+
+def local_ats_analysis(resume_text, job_description):
+    resume_words = set(re.findall(r"\b[a-zA-Z]{3,}\b", resume_text.lower()))
+    jd_words = set(re.findall(r"\b[a-zA-Z]{3,}\b", job_description.lower()))
+
+    matched = sorted(resume_words & jd_words)
+    missing = sorted(jd_words - resume_words)
+
+    match_percentage = int((len(matched) / len(jd_words)) * 100) if jd_words else 0
+    ats_score = min(match_percentage, 95)
+
+    suggestions = []
+    if missing:
+        suggestions.append(
+            "Add these missing keywords to improve ATS score: "
+            + ", ".join(missing[:10])
+        )
+    if ats_score < 60:
+        suggestions.append(
+            "Improve skills section and align resume more closely with the job description."
+        )
+
+    return {
+        "ats_score": ats_score,
+        "keyword_match_percentage": match_percentage,
+        "matched_keywords": matched[:20],
+        "missing_keywords": missing[:20],
+        "explanation": "ATS score calculated using local keyword-matching logic (offline fallback).",
+        "improvement_suggestions": suggestions
+    }
 
 
 # =============================
@@ -106,7 +147,7 @@ def forgot_password_view(request):
 
 
 # =============================
-# DASHBOARD
+# DASHBOARD & PROFILE
 # =============================
 
 @login_required
@@ -117,16 +158,11 @@ def dashboard_view(request):
         "Good Afternoon" if hour < 16 else
         "Good Evening"
     )
-
     return render(request, "dashboard.html", {
         "greeting": greeting,
         "name": request.user.first_name
     })
 
-
-# =============================
-# PROFILE
-# =============================
 
 @login_required
 def profile_view(request):
@@ -137,7 +173,7 @@ def profile_view(request):
     return render(request, "profile.html", {
         "reports": reports,
         "total_reports": total_reports,
-        "avg_score": avg_score,
+        "avg_score": avg_score
     })
 
 
@@ -165,29 +201,23 @@ def extract_text_from_docx(file):
 
 
 # =============================
-# OPENROUTER ANALYSIS
+# AI + FALLBACK ANALYSIS
 # =============================
 
-def analyze_with_gpt(resume_text, job_description):
+def analyze_resume_text(resume_text, job_description):
 
-    if not OPENROUTER_API_KEY:
-        raise Exception("OpenRouter API key not loaded")
+    # Try AI only if key exists
+    if OPENROUTER_API_KEY:
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "Referer": "http://localhost:8000",
+            "X-Title": "AI Resume Analyzer"
+        }
 
-    resume_text = resume_text[:2500]
-    job_description = job_description[:800]
-
-    prompt = f"""
+        prompt = f"""
 Compare the RESUME with the JOB DESCRIPTION.
-
-Return STRICT JSON ONLY:
-{{
-  "ats_score": number,
-  "keyword_match_percentage": number,
-  "matched_keywords": [],
-  "missing_keywords": [],
-  "explanation": "",
-  "improvement_suggestions": []
-}}
+Return STRICT JSON ONLY.
 
 RESUME:
 {resume_text}
@@ -196,55 +226,38 @@ JOB DESCRIPTION:
 {job_description}
 """
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:8000",
-        "X-Title": "Resume Analyzer Final Year Project"
-    }
+        payload_base = {
+            "messages": [
+                {"role": "system", "content": "You are an expert ATS resume evaluator."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.2
+        }
 
-    payload = {
-        "model": OPENROUTER_MODEL,
-        "messages": [
-            {"role": "system", "content": "You are an expert ATS resume evaluator."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.2
-    }
+        for model in OPENROUTER_MODELS:
+            try:
+                payload = payload_base | {"model": model}
+                response = requests.post(
+                    OPENROUTER_URL,
+                    headers=headers,
+                    json=payload,
+                    timeout=30
+                )
 
-    for _ in range(3):
-        response = requests.post(
-            OPENROUTER_URL,
-            headers=headers,
-            json=payload,
-            timeout=60
-        )
+                if response.status_code == 200:
+                    content = response.json()["choices"][0]["message"]["content"]
+                    return json.loads(content)
 
-        print("OPENROUTER STATUS:", response.status_code)
+            except Exception:
+                pass
 
-        if response.status_code == 429:
-            time.sleep(5)
-            continue
-
-        response.raise_for_status()
-        data = response.json()
-
-        content = data["choices"][0]["message"]["content"]
-
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            start = content.find("{")
-            end = content.rfind("}") + 1
-            if start != -1 and end != -1:
-                return json.loads(content[start:end])
-            raise Exception("AI returned invalid JSON")
-
-    raise Exception("AI is busy. Please wait 1 minute and try again.")
+    # ✅ FALLBACK (ALWAYS WORKS)
+    print("Using local ATS fallback")
+    return local_ats_analysis(resume_text, job_description)
 
 
 # =============================
-# ANALYZE RESUME
+# ANALYZE RESUME VIEW
 # =============================
 
 @login_required
@@ -271,20 +284,15 @@ def analyze_resume(request):
         messages.error(request, "Unable to read resume text.")
         return redirect("upload")
 
-    try:
-        ai_result = analyze_with_gpt(resume_text, job_description)
-    except Exception as e:
-        print("AI ANALYSIS ERROR:", e)
-        messages.error(request, str(e))
-        return redirect("upload")
+    result = analyze_resume_text(resume_text, job_description)
 
     ResumeReport.objects.create(
         user=request.user,
         name=resume_file.name,
-        score=ai_result["ats_score"]
+        score=result.get("ats_score", 0)
     )
 
-    return render(request, "analyze.html", ai_result)
+    return render(request, "analyze.html", result)
 
 
 # =============================
@@ -299,7 +307,6 @@ def reports_page(request):
 @login_required
 def reports_api(request):
     reports = ResumeReport.objects.filter(user=request.user).order_by("-analyzed_date")
-
     return JsonResponse({
         "reports": [
             {

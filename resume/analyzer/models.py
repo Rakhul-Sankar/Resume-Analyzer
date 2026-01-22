@@ -16,3 +16,6 @@ class ResumeReport(models.Model):
         elif self.score >= 50:
             return "Average"
         return "Poor"
+
+    def __str__(self):
+        return f"{self.name} ({self.score}%)"
