@@ -18,23 +18,23 @@ from .models import ResumeReport
 
 
 # =============================
-# OPENROUTER CONFIG (OPTIONAL)
+# OPENROUTER CONFIG
 # =============================
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 OPENROUTER_MODELS = [
-    "openai/gpt-4o-mini",
-    "google/gemma-7b-it",
-    "meta-llama/llama-3.1-8b-instruct"
+    "openai/gpt-4o-mini",        # ✅ Fast & always available
+    "mistralai/mistral-7b-instruct",  # ✅ Good backup
 ]
+
 
 print("OPENROUTER KEY LOADED:", bool(OPENROUTER_API_KEY))
 
 
 # =============================
-# LOCAL ATS FALLBACK (NO PAYMENT)
+# LOCAL ATS (FALLBACK – ALWAYS WORKS)
 # =============================
 
 def local_ats_analysis(resume_text, job_description):
@@ -47,25 +47,115 @@ def local_ats_analysis(resume_text, job_description):
     match_percentage = int((len(matched) / len(jd_words)) * 100) if jd_words else 0
     ats_score = min(match_percentage, 95)
 
-    suggestions = []
-    if missing:
-        suggestions.append(
-            "Add these missing keywords to improve ATS score: "
-            + ", ".join(missing[:10])
-        )
-    if ats_score < 60:
-        suggestions.append(
-            "Improve skills section and align resume more closely with the job description."
-        )
+    suggestions = (
+        ["Improve skills and include more job-specific keywords."]
+        if ats_score < 60
+        else ["Your resume is well aligned with the job description."]
+    )
 
     return {
         "ats_score": ats_score,
         "keyword_match_percentage": match_percentage,
-        "matched_keywords": matched[:20],
-        "missing_keywords": missing[:20],
-        "explanation": "ATS score calculated using local keyword-matching logic (offline fallback).",
-        "improvement_suggestions": suggestions
+        "matched_keywords": matched[:15],
+        "missing_keywords": missing[:15],
+        "improvement_suggestions": suggestions,
+        "evaluation_mode": "local",
+        "analysis_status": "Completed",
+        "explanation": "ATS score calculated using local keyword-matching logic."
     }
+
+
+# =============================
+# JSON PARSER (SAFE)
+# =============================
+
+def safe_json_parse(text):
+    try:
+        text = text.replace("```json", "").replace("```", "").strip()
+        start = text.find("{")
+        end = text.rfind("}") + 1
+        if start == -1 or end == -1:
+            return None
+        return json.loads(text[start:end])
+    except Exception:
+        return None
+
+
+# =============================
+# AI ANALYSIS (WITH BACKUPS)
+# =============================
+
+def analyze_resume_text(resume_text, job_description):
+    if not OPENROUTER_API_KEY:
+        return None
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "Referer": "http://localhost:8000",   # ✅ REQUIRED
+        "X-Title": "AI Resume Analyzer"
+    }
+
+    prompt = f"""
+Return ONLY valid JSON.
+
+{{
+  "ats_score": 0-100,
+  "keyword_match_percentage": 0-100,
+  "matched_keywords": [],
+  "missing_keywords": [],
+  "improvement_suggestions": []
+}}
+
+RESUME:
+{resume_text}
+
+JOB DESCRIPTION:
+{job_description}
+"""
+
+    for model in OPENROUTER_MODELS:
+        try:
+            print("🔍 Trying AI model:", model)
+
+            response = requests.post(
+                OPENROUTER_URL,
+                headers=headers,
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": "Return valid JSON only"},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.1
+                },
+                timeout=25
+            )
+
+            if response.status_code != 200:
+                print("❌ OpenRouter error:", response.status_code, response.text)
+                continue
+
+            content = response.json()["choices"][0]["message"]["content"]
+            result = safe_json_parse(content)
+
+            if (
+                result
+                and isinstance(result.get("ats_score"), (int, float))
+                and result["ats_score"] > 0
+                ):
+                result["evaluation_mode"] = "ai"
+                result["analysis_status"] = "Completed"
+                result["explanation"] = "ATS score calculated using AI-based resume analysis."
+                print("✅ AI RESULT ACCEPTED:", result["ats_score"])
+                return result
+
+        except Exception as e:
+            print("❌ AI failed:", model, e)
+            time.sleep(1)
+
+    print("⚠️ AI unavailable → fallback to local ATS")
+    return None
 
 
 # =============================
@@ -74,10 +164,15 @@ def local_ats_analysis(resume_text, job_description):
 
 def login_view(request):
     if request.method == "POST":
-        email = request.POST.get("username")
+        email = request.POST.get("username")  # field name stays username in form
         password = request.POST.get("password")
 
-        user = authenticate(request, username=email, password=password)
+        user = authenticate(
+            request,
+            username=email,   # ✅ email used as username
+            password=password
+        )
+
         if user:
             login(request, user)
             return redirect("dashboard")
@@ -87,18 +182,19 @@ def login_view(request):
     return render(request, "login.html")
 
 
+
 def signup_view(request):
     if request.method == "POST":
         name = request.POST.get("name")
         email = request.POST.get("email")
         password = request.POST.get("password")
 
-        if User.objects.filter(username=email).exists():
-            messages.error(request, "User already exists")
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered")
             return redirect("signup")
 
         user = User.objects.create_user(
-            username=email,
+            username=email,   # ✅ username = email
             email=email,
             first_name=name,
             password=password
@@ -110,40 +206,34 @@ def signup_view(request):
     return render(request, "signup.html")
 
 
-@login_required
-def logout_view(request):
-    logout(request)
-    return redirect("login")
-
 
 def forgot_password_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
-        old = request.POST.get("old_password")
-        new = request.POST.get("new_password")
-        confirm = request.POST.get("confirm_password")
-
-        if new != confirm:
-            messages.error(request, "Passwords do not match")
-            return redirect("forgot_password")
+        old_password = request.POST.get("old_password")
+        new_password = request.POST.get("new_password")
 
         try:
             user = User.objects.get(username=email)
+            if not user.check_password(old_password):
+                messages.error(request, "Old password is incorrect")
+                return redirect("forgot_password")
+
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, "Password updated successfully")
+            return redirect("login")
+
         except User.DoesNotExist:
             messages.error(request, "User not found")
-            return redirect("forgot_password")
-
-        if not user.check_password(old):
-            messages.error(request, "Old password incorrect")
-            return redirect("forgot_password")
-
-        user.set_password(new)
-        user.save()
-
-        messages.success(request, "Password updated. Please login.")
-        return redirect("login")
 
     return render(request, "forgot_password.html")
+
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect("login")
 
 
 # =============================
@@ -154,31 +244,31 @@ def forgot_password_view(request):
 def dashboard_view(request):
     hour = timezone.localtime().hour
     greeting = (
-        "Good Morning" if hour < 12 else
-        "Good Afternoon" if hour < 16 else
-        "Good Evening"
+        "Good Morning" if hour < 12
+        else "Good Afternoon" if hour < 16
+        else "Good Evening"
     )
-    return render(request, "dashboard.html", {
-        "greeting": greeting,
-        "name": request.user.first_name
-    })
+    return render(request, "dashboard.html", {"greeting": greeting})
 
 
 @login_required
 def profile_view(request):
     reports = ResumeReport.objects.filter(user=request.user).order_by("-analyzed_date")
     total_reports = reports.count()
-    avg_score = round(sum(r.score for r in reports) / total_reports, 1) if total_reports else 0
+
+    completed = reports.filter(analysis_status="Completed")
+    avg_score = round(sum(r.score for r in completed) / completed.count(), 1) if completed else 0
 
     return render(request, "profile.html", {
         "reports": reports,
-        "total_reports": total_reports,
+        "total_reports": total_reports,   # ✅ ADD THIS
         "avg_score": avg_score
     })
 
 
+
 # =============================
-# UPLOAD PAGE
+# UPLOAD & ANALYZE
 # =============================
 
 @login_required
@@ -186,117 +276,48 @@ def upload_resume(request):
     return render(request, "upload.html")
 
 
-# =============================
-# FILE EXTRACTION
-# =============================
-
 def extract_text_from_pdf(file):
     reader = PyPDF2.PdfReader(file)
     return " ".join(page.extract_text() or "" for page in reader.pages)
 
 
 def extract_text_from_docx(file):
-    document = docx.Document(file)
-    return "\n".join(p.text for p in document.paragraphs)
+    return "\n".join(p.text for p in docx.Document(file).paragraphs)
 
-
-# =============================
-# AI + FALLBACK ANALYSIS
-# =============================
-
-def analyze_resume_text(resume_text, job_description):
-
-    # Try AI only if key exists
-    if OPENROUTER_API_KEY:
-        headers = {
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json",
-            "Referer": "http://localhost:8000",
-            "X-Title": "AI Resume Analyzer"
-        }
-
-        prompt = f"""
-Compare the RESUME with the JOB DESCRIPTION.
-Return STRICT JSON ONLY.
-
-RESUME:
-{resume_text}
-
-JOB DESCRIPTION:
-{job_description}
-"""
-
-        payload_base = {
-            "messages": [
-                {"role": "system", "content": "You are an expert ATS resume evaluator."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.2
-        }
-
-        for model in OPENROUTER_MODELS:
-            try:
-                payload = payload_base | {"model": model}
-                response = requests.post(
-                    OPENROUTER_URL,
-                    headers=headers,
-                    json=payload,
-                    timeout=30
-                )
-
-                if response.status_code == 200:
-                    content = response.json()["choices"][0]["message"]["content"]
-                    return json.loads(content)
-
-            except Exception:
-                pass
-
-    # ✅ FALLBACK (ALWAYS WORKS)
-    print("Using local ATS fallback")
-    return local_ats_analysis(resume_text, job_description)
-
-
-# =============================
-# ANALYZE RESUME VIEW
-# =============================
 
 @login_required
 def analyze_resume(request):
     if request.method != "POST":
         return redirect("upload")
 
-    resume_file = request.FILES.get("resume")
+    resume = request.FILES.get("resume")
     job_description = request.POST.get("job_description")
 
-    if not resume_file or not job_description:
-        messages.error(request, "Resume and Job Description are required")
-        return redirect("upload")
-
-    if resume_file.name.endswith(".pdf"):
-        resume_text = extract_text_from_pdf(resume_file)
-    elif resume_file.name.endswith(".docx"):
-        resume_text = extract_text_from_docx(resume_file)
+    if resume.name.endswith(".pdf"):
+        resume_text = extract_text_from_pdf(resume)
+    elif resume.name.endswith(".docx"):
+        resume_text = extract_text_from_docx(resume)
     else:
-        messages.error(request, "Unsupported file format")
+        messages.error(request, "Only PDF or DOCX supported.")
         return redirect("upload")
 
-    if len(resume_text.strip()) < 100:
-        messages.error(request, "Unable to read resume text.")
-        return redirect("upload")
-
+    # AI → Local fallback
     result = analyze_resume_text(resume_text, job_description)
+    if not result:
+        result = local_ats_analysis(resume_text, job_description)
 
     ResumeReport.objects.create(
         user=request.user,
-        name=resume_file.name,
-        score=result.get("ats_score", 0)
+        name=resume.name,
+        score=result["ats_score"],
+        analysis_status="Completed"
     )
 
     return render(request, "analyze.html", result)
 
 
 # =============================
-# REPORTS
+# REPORTS API
 # =============================
 
 @login_required
@@ -306,15 +327,34 @@ def reports_page(request):
 
 @login_required
 def reports_api(request):
-    reports = ResumeReport.objects.filter(user=request.user).order_by("-analyzed_date")
+    reports = (
+        ResumeReport.objects
+        .filter(user=request.user)
+        .order_by("-analyzed_date")
+    )
+
+    # Collect valid scores only
+    scores = [r.score for r in reports if isinstance(r.score, (int, float))]
+
+    total = len(scores)
+    average = round(sum(scores) / total, 1) if total else 0
+    best = max(scores) if total else 0
+
     return JsonResponse({
+        "stats": {
+            "total": total,
+            "average": average,
+            "best": best,
+        },
         "reports": [
             {
                 "id": r.id,
                 "name": r.name,
                 "score": r.score,
-                "status": r.status(),
-                "analyzed_date": timezone.localtime(r.analyzed_date).strftime("%d %b %Y, %I:%M %p")
+                "status": r.analysis_status,  # Completed / Pending
+                "analyzed_date": timezone.localtime(
+                    r.analyzed_date
+                ).strftime("%d %b %Y, %I:%M %p")
             }
             for r in reports
         ]

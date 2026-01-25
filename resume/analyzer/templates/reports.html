@@ -97,29 +97,41 @@ async function loadReports() {
   const grid = document.getElementById("resumeGrid");
   grid.innerHTML = `<p class="col-span-full text-center text-gray-500">Loading reports...</p>`;
 
-  const res = await fetch("{% url 'reports_api' %}");
-  const data = await res.json();
+  try {
+    const res = await fetch("{% url 'reports_api' %}");
+    const data = await res.json();
 
-  updateStats(data.reports);
-  renderReports(data.reports);
+    // ✅ Use backend-calculated stats
+    updateStatsFromBackend(data.stats);
+    renderReports(data.reports);
+
+  } catch (err) {
+    grid.innerHTML = `
+      <p class="col-span-full text-center text-red-500">
+        Failed to load reports
+      </p>`;
+    console.error(err);
+  }
 }
 
-function updateStats(reports) {
-  const scores = reports.map(r => r.score);
-
-  document.getElementById("totalCount").innerText = scores.length;
-
+/* =============================
+   STATS (FROM BACKEND ONLY)
+============================= */
+function updateStatsFromBackend(stats) {
+  document.getElementById("totalCount").innerText = stats.total ?? 0;
   document.getElementById("avgScore").innerText =
-    scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) + "%" : "0%";
-
+    stats.total ? stats.average + "%" : "0%";
   document.getElementById("bestScore").innerText =
-    scores.length ? Math.max(...scores) + "%" : "0%";
+    stats.total ? stats.best + "%" : "0%";
 }
 
+/* =============================
+   REPORT CARDS
+============================= */
 function renderReports(reports) {
   const grid = document.getElementById("resumeGrid");
 
-  if (!reports.length) {
+  if (!reports || !reports.length) {
     grid.innerHTML = `
       <div class="col-span-full bg-white p-8 rounded-xl text-center shadow">
         <p class="text-lg font-semibold text-gray-600">
@@ -135,13 +147,18 @@ function renderReports(reports) {
   grid.innerHTML = reports.map(r => `
     <div class="bg-white p-6 rounded-xl shadow space-y-4">
       <h2 class="font-bold truncate">${r.name}</h2>
-      <p class="text-xs text-gray-500">📅 ${r.analyzed_date}</p>
+
+      <p class="text-xs text-gray-500">
+        📅 ${r.analyzed_date || "—"}
+      </p>
 
       <div class="text-center text-3xl font-black text-indigo-600">
         ${r.score}%
       </div>
 
-      <p class="text-center font-semibold">${r.status}</p>
+      <p class="text-center font-semibold text-green-600">
+        ${r.status || "Completed"}
+      </p>
 
       <button
         onclick="deleteReport(${r.id})"
@@ -152,15 +169,21 @@ function renderReports(reports) {
   `).join("");
 }
 
+/* =============================
+   DELETE REPORT
+============================= */
 async function deleteReport(id) {
   if (!confirm("Delete this report permanently?")) return;
 
-  const res = await fetch("{% url 'delete_report' 0 %}".replace("0", id), {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": getCSRFToken()
+  const res = await fetch(
+    "{% url 'delete_report' 0 %}".replace("0", id),
+    {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCSRFToken()
+      }
     }
-  });
+  );
 
   if (res.ok) {
     loadReports();
@@ -170,6 +193,8 @@ async function deleteReport(id) {
 }
 
 loadReports();
+</script>
+
 </script>
 
 </body>

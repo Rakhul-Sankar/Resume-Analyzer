@@ -14,17 +14,14 @@
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
-    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
       <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
       <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
       <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
       <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Profile</a>
 
-      <!-- ✅ Proper Django Logout -->
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="text-red-600 font-medium px-3 py-2">
@@ -32,26 +29,6 @@
         </button>
       </form>
     </div>
-
-    <!-- Mobile Hamburger -->
-    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
-      ☰
-    </button>
-  </div>
-
-  <!-- Mobile Menu -->
-  <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-     <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
-    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
-    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
-    <a href="{% url 'profile' %}" class="block px-6 py-3" onclick="toggleMenu()">Profile</a>
-
-    <form method="POST" action="{% url 'logout' %}">
-      {% csrf_token %}
-      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
-        Logout
-      </button>
-    </form>
   </div>
 </nav>
 
@@ -63,6 +40,19 @@
     <h1 class="text-3xl font-bold text-center text-indigo-600">
       AI Resume Analysis Result
     </h1>
+
+    <!-- ANALYSIS MODE BADGE -->
+    <div class="text-center">
+      {% if evaluation_mode == "ai" %}
+        <span class="inline-block bg-green-100 text-green-700 px-4 py-1 rounded-full font-medium">
+          🤖 AI Analysis
+        </span>
+      {% else %}
+        <span class="inline-block bg-yellow-100 text-yellow-700 px-4 py-1 rounded-full font-medium">
+          ⚙️ Local ATS Analysis (AI Fallback)
+        </span>
+      {% endif %}
+    </div>
 
     <!-- OVERALL ATS SCORE -->
     <div class="bg-white p-6 rounded-xl shadow text-center">
@@ -85,7 +75,7 @@
       </p>
     </div>
 
-    <!-- KEYWORD MATCH PERCENTAGE -->
+    <!-- KEYWORD MATCH -->
     <div class="bg-white p-6 rounded-xl shadow text-center">
       <h2 class="text-xl font-semibold mb-3">
         Job Description Keyword Match
@@ -100,14 +90,12 @@
       </p>
     </div>
 
-    <!-- MATCHED & MISSING KEYWORDS -->
+    <!-- MATCHED & MISSING -->
     <div class="bg-white p-6 rounded-xl shadow">
       <div class="grid md:grid-cols-2 gap-6 text-sm">
 
         <div>
-          <h3 class="font-semibold text-green-600 mb-2">
-            ✅ Matched Keywords
-          </h3>
+          <h3 class="font-semibold text-green-600 mb-2">✅ Matched Keywords</h3>
           <ul class="list-disc pl-5 text-gray-700">
             {% for k in matched_keywords %}
               <li>{{ k }}</li>
@@ -118,9 +106,7 @@
         </div>
 
         <div>
-          <h3 class="font-semibold text-red-600 mb-2">
-            ❌ Missing Keywords
-          </h3>
+          <h3 class="font-semibold text-red-600 mb-2">❌ Missing Keywords</h3>
           <ul class="list-disc pl-5 text-gray-700">
             {% for k in missing_keywords %}
               <li>{{ k }}</li>
@@ -133,20 +119,28 @@
       </div>
     </div>
 
-    <!-- AI EXPLANATION -->
+    <!-- AI / ATS SUMMARY -->
     <div class="bg-white p-6 rounded-xl shadow">
       <h2 class="text-xl font-semibold text-indigo-600 mb-3">
-        AI Evaluation Summary
+        Evaluation Summary
       </h2>
-      <p class="text-gray-700 leading-relaxed">
-        {{ explanation }}
-      </p>
+
+      {% if evaluation_mode == "ai" %}
+        <p class="text-gray-700">
+          ATS score calculated using AI-powered resume analysis.
+        </p>
+      {% else %}
+        <p class="text-gray-700">
+          AI service was busy, so ATS score was calculated instantly using
+          local keyword-matching logic to ensure uninterrupted analysis.
+        </p>
+      {% endif %}
     </div>
 
-    <!-- AI IMPROVEMENT SUGGESTIONS -->
+    <!-- IMPROVEMENTS -->
     <div class="bg-white p-6 rounded-xl shadow">
       <h2 class="text-xl font-semibold text-red-600 mb-3">
-        AI Improvement Suggestions
+        Improvement Suggestions
       </h2>
 
       {% if improvement_suggestions %}

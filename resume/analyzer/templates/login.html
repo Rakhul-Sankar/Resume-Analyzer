@@ -16,42 +16,52 @@
 
   <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg">
 
+    <!-- TITLE -->
     <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
-      Login
+      Login to Your Account
     </h2>
 
-    <!-- Django Login Form -->
+    <!-- LOGIN FORM -->
     <form method="POST" action="{% url 'login' %}" class="space-y-4">
       {% csrf_token %}
 
-      <!-- Email -->
-      <input
-        name="username"
-        type="email"
-        placeholder="Email"
-        class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        required
-      >
+      <!-- EMAIL -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">
+          Email address
+        </label>
+        <input
+          name="username"
+          type="email"
+          placeholder="Enter your email"
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          required
+        >
+      </div>
 
-      <!-- Password -->
+      <!-- PASSWORD -->
       <div class="relative">
+        <label class="block text-sm font-medium text-gray-600 mb-1">
+          Password
+        </label>
+
         <input
           id="password"
           name="password"
           type="password"
-          placeholder="Password"
+          placeholder="Enter your password"
           class="w-full p-3 border rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           required
         >
 
-        <!-- Eye Toggle Button -->
+        <!-- Eye Toggle -->
         <button
           type="button"
           onclick="togglePassword()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+          class="absolute right-3 top-9 text-gray-500 hover:text-indigo-600"
           aria-label="Toggle password visibility"
         >
-          <!-- Eye (hidden password) -->
+          <!-- Eye Open -->
           <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg"
                class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                stroke="currentColor" stroke-width="2">
@@ -64,25 +74,23 @@
                  -4.477 0-8.268-2.943-9.542-7z"/>
           </svg>
 
-          <!-- Eye Off (visible password) -->
+          <!-- Eye Closed -->
           <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg"
                class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24"
                stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
-              d="M13.875 18.825A10.05 10.05 0 0112 19
-                 c-4.478 0-8.268-2.943-9.542-7
-                 a9.956 9.956 0 012.042-3.368"/>
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M6.223 6.223A9.956 9.956 0 0112 5
-                 c4.478 0 8.268 2.943 9.542 7
-                 a9.966 9.966 0 01-4.293 5.774"/>
-            <path stroke-linecap="round" stroke-linejoin="round"
               d="M3 3l18 18"/>
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M10.584 10.587a2 2 0 002.829 2.828"/>
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9.88 4.243A9.955 9.955 0 0112 4
+                 c4.478 0 8.268 2.943 9.542 7
+                 a9.97 9.97 0 01-4.293 5.774"/>
           </svg>
         </button>
       </div>
 
-      <!-- Forgot Password -->
+      <!-- FORGOT PASSWORD -->
       <div class="text-right">
         <a href="{% url 'forgot_password' %}"
            class="text-sm text-blue-600 hover:underline">
@@ -90,14 +98,16 @@
         </a>
       </div>
 
-      <!-- Django Messages -->
+      <!-- DJANGO MESSAGES -->
       {% if messages %}
         {% for message in messages %}
-          <p class="text-red-600 text-sm text-center">{{ message }}</p>
+          <p class="text-red-600 text-sm text-center">
+            {{ message }}
+          </p>
         {% endfor %}
       {% endif %}
 
-      <!-- Submit -->
+      <!-- SUBMIT -->
       <button
         type="submit"
         class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
@@ -105,9 +115,9 @@
       </button>
     </form>
 
-    <!-- Signup -->
-    <p class="mt-4 text-center text-sm">
-      No account?
+    <!-- SIGNUP -->
+    <p class="mt-4 text-center text-sm text-gray-600">
+      Don’t have an account?
       <a href="{% url 'signup' %}" class="text-blue-600 font-medium hover:underline">
         Create one
       </a>
@@ -115,7 +125,7 @@
 
   </div>
 
-  <!-- Password Toggle Script -->
+  <!-- PASSWORD TOGGLE SCRIPT -->
   <script>
     function togglePassword() {
       const password = document.getElementById("password");

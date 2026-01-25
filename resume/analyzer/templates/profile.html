@@ -6,42 +6,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profile</title>
 
-  <!-- Favicon -->
   <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
-
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
-<!-- ================= NAVBAR ================= -->
+<!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
     <h1 class="text-2xl font-bold text-indigo-600">Resume Analyzer</h1>
 
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-4 items-center">
-      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium">Dashboard</a>
-      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium">Upload</a>
-      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium">Reports</a>
+      <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Dashboard</a>
+      <a href="{% url 'upload' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Upload</a>
+      <a href="{% url 'reports' %}" class="text-gray-700 hover:text-purple-600 font-medium px-3 py-2">Past Reports</a>
 
+      <!-- ✅ Proper Django Logout -->
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button class="text-red-600 font-medium">Logout</button>
+        <button type="submit" class="text-red-600 font-medium px-3 py-2">
+          Logout
+        </button>
       </form>
     </div>
 
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <!-- Mobile Hamburger -->
+    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
+      ☰
+    </button>
   </div>
 
-  <!-- Mobile -->
+  <!-- Mobile Menu -->
   <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
-    <a href="{% url 'dashboard' %}" class="block px-6 py-3">Dashboard</a>
-    <a href="{% url 'upload' %}" class="block px-6 py-3">Upload</a>
-    <a href="{% url 'reports' %}" class="block px-6 py-3">Reports</a>
+    <a href="{% url 'dashboard' %}" class="block px-6 py-3" onclick="toggleMenu()">Dashboard</a>
+    <a href="{% url 'upload' %}" class="block px-6 py-3" onclick="toggleMenu()">Upload</a>
+    <a href="{% url 'reports' %}" class="block px-6 py-3" onclick="toggleMenu()">Past Reports</a>
 
     <form method="POST" action="{% url 'logout' %}">
       {% csrf_token %}
-      <button class="w-full text-left text-red-600 px-6 py-3">Logout</button>
+      <button type="submit" class="w-full text-left text-red-600 px-6 py-3">
+        Logout
+      </button>
     </form>
   </div>
 </nav>
@@ -60,65 +68,45 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-      <!-- LEFT: USER INFO -->
-      <div class="space-y-6">
-        <div class="bg-gray-50 p-6 rounded-xl space-y-2">
-          <p>
-            <span class="text-gray-500 text-sm">Email</span><br>
-            <span class="font-semibold">{{ request.user.email }}</span>
-          </p>
+      <!-- LEFT -->
+      <div class="bg-gray-50 p-6 rounded-xl space-y-2">
+  <p>
+    <span class="text-gray-500 text-sm">Email</span><br>
+    <span class="font-semibold">
+      {{ request.user.email }}
+    </span>
+  </p>
 
-          <p>
-            <span class="text-gray-500 text-sm">Username</span><br>
-            <span class="font-semibold">{{ request.user.username }}</span>
-          </p>
-        </div>
+  <p>
+    <span class="text-gray-500 text-sm">Username</span><br>
+    <span class="font-semibold">
+      {{ request.user.first_name|default:request.user.username }}
+    </span>
+  </p>
+</div>
 
-        <!-- STATS -->
+
         <div class="grid grid-cols-2 gap-4">
           <div class="bg-indigo-50 p-5 rounded-xl text-center">
             <p class="text-gray-500 text-sm">Total Reports</p>
-            <h3 class="text-3xl font-bold text-indigo-600">
-              {{ total_reports }}
-            </h3>
+            <h3 id="totalReports" class="text-3xl font-bold text-indigo-600">0</h3>
           </div>
 
           <div class="bg-green-50 p-5 rounded-xl text-center">
             <p class="text-gray-500 text-sm">Average ATS</p>
-            <h3 class="text-3xl font-bold text-green-600">
-              {{ avg_score }}%
-            </h3>
+            <h3 id="avgATS" class="text-3xl font-bold text-green-600">0%</h3>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT: HISTORY -->
+      <!-- RIGHT -->
       <div>
         <h3 class="text-xl font-bold mb-4">
-          Resume History ({{ reports|length }})
+          Resume History
         </h3>
 
-        <div class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
-          {% for r in reports %}
-            <div class="p-4 bg-gray-100 rounded-xl flex justify-between items-center">
-              <div>
-                <p class="font-semibold truncate max-w-[220px]">
-                  {{ r.name }}
-                </p>
-                <p class="text-xs text-gray-500">
-                  {{ r.analyzed_date|date:"d M Y, h:i A" }}
-                </p>
-              </div>
-
-              <span class="text-lg font-bold text-indigo-600">
-                {{ r.score }}%
-              </span>
-            </div>
-          {% empty %}
-            <div class="bg-gray-50 p-6 rounded-xl text-center text-gray-500">
-              No resume analysis found yet.
-            </div>
-          {% endfor %}
+        <div id="historyList" class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+          <p class="text-gray-500 text-center">Loading history...</p>
         </div>
       </div>
 
@@ -127,10 +115,39 @@
 </main>
 
 <script>
-function toggleMenu() {
-  document.getElementById("mobileMenu").classList.toggle("hidden");
+async function loadProfileData() {
+  const res = await fetch("{% url 'reports_api' %}");
+  const data = await res.json();
+
+  // Stats
+  document.getElementById("totalReports").innerText = data.stats.total;
+  document.getElementById("avgATS").innerText = data.stats.average + "%";
+
+  // History
+  const history = document.getElementById("historyList");
+
+  if (!data.reports.length) {
+    history.innerHTML = `
+      <div class="bg-gray-50 p-6 rounded-xl text-center text-gray-500">
+        No resume analysis found yet.
+      </div>`;
+    return;
+  }
+
+  history.innerHTML = data.reports.map(r => `
+    <div class="p-4 bg-gray-100 rounded-xl flex justify-between items-center">
+      <div>
+        <p class="font-semibold truncate max-w-[220px]">${r.name}</p>
+        <p class="text-xs text-gray-500">${r.analyzed_date}</p>
+      </div>
+      <span class="text-lg font-bold text-indigo-600">${r.score}%</span>
+    </div>
+  `).join("");
 }
+
+loadProfileData();
 </script>
+
 
 </body>
 </html>
