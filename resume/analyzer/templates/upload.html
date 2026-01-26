@@ -10,6 +10,21 @@
   <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
 
   <script src="https://cdn.tailwindcss.com"></script>
+
+   <!-- Smooth Card Animation -->
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      keyframes: {
+        fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' },
+                  '100%': { opacity: 1, transform: 'translateY(0)' } }
+      },
+      animation: { 'fade-in': 'fadeIn 0.5s ease-out' }
+    }
+  }
+}
+</script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
@@ -35,7 +50,7 @@
     </div>
 
     <!-- Mobile -->
-    <button onclick="toggleMenu()" class="md:hidden text-2xl">☰</button>
+    <button onclick="toggleMenu()" aria-label="Open menu" class="md:hidden text-2xl">☰</button>
   </div>
 
   <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
@@ -51,7 +66,7 @@
 
 <!-- ================= MAIN ================= -->
 <main class="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
-  <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 space-y-6">
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 space-y-6 animate-fade-in">
 
     <h2 class="text-2xl font-bold text-center text-indigo-600">
       AI Resume & Job Description Analysis
@@ -65,7 +80,7 @@
     <!-- Messages -->
     {% if messages %}
       {% for msg in messages %}
-        <p class="text-red-600 text-sm text-center">{{ msg }}</p>
+       <p class="text-red-600 text-sm text-center bg-red-50 p-2 rounded">{{ msg }}</p>
       {% endfor %}
     {% endif %}
 
@@ -89,7 +104,7 @@
           accept=".pdf,.docx"
           required
           onchange="showFileName()"
-          class="w-full border rounded-lg p-3"
+          class="w-full border-2 border-dashed rounded-lg p-3 hover:border-indigo-500 transition"
         >
         <p id="fileName" class="text-xs text-gray-600 mt-1 hidden"></p>
       </div>
@@ -115,7 +130,7 @@
       <button
         id="submitBtn"
         type="submit"
-        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">
+        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition active:scale-95">
         Analyze Resume with AI
       </button>
     </form>

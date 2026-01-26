@@ -1,26 +1,17 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Resume Analyzer</title>
-
-  <!-- Small delay to allow storage read -->
-  <script>
-    (function () {
-      const user = localStorage.getItem("loggedUser");
-
-      if (user) {
-        // User already logged in
-        window.location.replace("dashboard.html");
-      } else {
-        // New or logged-out user
-        window.location.replace("login.html");
-      }
-    })();
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
+  <script>
+    window.location.href = "{% url 'login' %}";
+  </script>
+
   <noscript>
     <p>Please enable JavaScript to use Resume Analyzer.</p>
   </noscript>

@@ -8,13 +8,28 @@
 
   <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
   <script src="https://cdn.tailwindcss.com"></script>
+
+   <!-- Smooth Card Animation -->
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      keyframes: {
+        fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' },
+                  '100%': { opacity: 1, transform: 'translateY(0)' } }
+      },
+      animation: { 'fade-in': 'fadeIn 0.5s ease-out' }
+    }
+  }
+}
+</script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
 
 <!-- NAVIGATION -->
 <nav class="bg-white shadow-lg border-b sticky top-0 z-50">
-  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center animate-fade-in">
 
      <a href="{% url 'dashboard' %}" class="text-2xl font-bold text-indigo-600 hover:text-indigo-800 transition">
   Resume Analyzer
@@ -107,7 +122,7 @@
           Resume History
         </h3>
 
-        <div id="historyList" class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+        <div id="historyList" class="space-y-3 max-h-[420px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-400">
           <p class="text-gray-500 text-center">Loading history...</p>
         </div>
       </div>
@@ -117,35 +132,44 @@
 </main>
 
 <script>
-async function loadProfileData() {
-  const res = await fetch("{% url 'reports_api' %}");
-  const data = await res.json();
-
-  // Stats
-  document.getElementById("totalReports").innerText = data.stats.total;
-  document.getElementById("avgATS").innerText = data.stats.average + "%";
-
-  // History
-  const history = document.getElementById("historyList");
-
-  if (!data.reports.length) {
-    history.innerHTML = `
-      <div class="bg-gray-50 p-6 rounded-xl text-center text-gray-500">
-        No resume analysis found yet.
-      </div>`;
-    return;
-  }
-
-  history.innerHTML = data.reports.map(r => `
-    <div class="p-4 bg-gray-100 rounded-xl flex justify-between items-center">
-      <div>
-        <p class="font-semibold truncate max-w-[220px]">${r.name}</p>
-        <p class="text-xs text-gray-500">${r.analyzed_date}</p>
-      </div>
-      <span class="text-lg font-bold text-indigo-600">${r.score}%</span>
-    </div>
-  `).join("");
+  function toggleMenu() {
+  document.getElementById("mobileMenu").classList.toggle("hidden");
 }
+async function loadProfileData() {
+  try {
+    const res = await fetch("{% url 'reports_api' %}");
+    const data = await res.json();
+
+    document.getElementById("totalReports").innerText = data.stats.total ?? 0;
+    document.getElementById("avgATS").innerText = (data.stats.average ?? 0) + "%";
+
+    const history = document.getElementById("historyList");
+
+    if (!data.reports.length) {
+      history.innerHTML = `
+        <div class="bg-gray-50 p-6 rounded-xl text-center text-gray-500">
+          No resume analysis found yet.
+        </div>`;
+      return;
+    }
+
+    history.innerHTML = data.reports.map(r => `
+      <div class="p-4 bg-gray-100 rounded-xl flex justify-between items-center hover:bg-gray-200 transition">
+        <div>
+          <p class="font-semibold truncate max-w-[220px]">${r.name}</p>
+          <p class="text-xs text-gray-500">${r.analyzed_date}</p>
+        </div>
+        <span class="text-lg font-bold text-indigo-600">${r.score}%</span>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    document.getElementById("historyList").innerHTML =
+      `<p class="text-red-500 text-center">Failed to load profile data</p>`;
+    console.error(err);
+  }
+}
+
 
 loadProfileData();
 </script>

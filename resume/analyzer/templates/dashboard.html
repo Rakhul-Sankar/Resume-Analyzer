@@ -2,12 +2,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="{% static 'logo.avif' %}">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
   <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Smooth Card Animation -->
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      keyframes: {
+        fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' },
+                  '100%': { opacity: 1, transform: 'translateY(0)' } }
+      },
+      animation: { 'fade-in': 'fadeIn 0.5s ease-out' }
+    }
+  }
+}
+</script>
+
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
@@ -36,9 +51,9 @@
     </div>
 
     <!-- Mobile Hamburger -->
-    <button onclick="toggleMenu()" class="md:hidden text-gray-700 text-2xl">
-      ☰
-    </button>
+    <button onclick="toggleMenu()" aria-label="Open menu" class="md:hidden text-gray-700 text-2xl">
+  ☰
+</button>
   </div>
 
   <!-- Mobile Menu -->
@@ -58,8 +73,7 @@
 
 <!-- ================= MAIN ================= -->
 <main class="max-w-2xl mx-auto px-6 py-12">
-  <div class="bg-white p-10 rounded-xl shadow-lg">
-
+  <div class="bg-white p-10 rounded-xl shadow-lg animate-fade-in">
    <!-- Greeting -->
 <h2 class="text-3xl font-bold mb-6 text-indigo-700 text-center">
   {{ greeting }} {{ request.user.first_name|default:request.user.username|capfirst }}

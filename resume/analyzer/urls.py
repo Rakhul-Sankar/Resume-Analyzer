@@ -1,14 +1,25 @@
 from django.urls import path
+from django.shortcuts import redirect
 from . import views
 
+# Home redirect logic (PROFESSIONAL METHOD)
+def home_redirect(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return redirect('login')
+
+
 urlpatterns = [
-    # Auth
+    # Root path
+    path('', home_redirect, name='home'),
+
+    # Authentication
     path("login/", views.login_view, name="login"),
     path("signup/", views.signup_view, name="signup"),
     path("logout/", views.logout_view, name="logout"),
     path("forgot-password/", views.forgot_password_view, name="forgot_password"),
 
-    # Pages
+    # Main Pages
     path("dashboard/", views.dashboard_view, name="dashboard"),
     path("upload/", views.upload_resume, name="upload"),
     path("analyze/", views.analyze_resume, name="analyze"),

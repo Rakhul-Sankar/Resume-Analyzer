@@ -6,21 +6,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Signup</title>
 
-  <!-- Favicon -->
   <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
-
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Smooth Card Animation -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(10px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' }
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out'
+          }
+        }
+      }
+    }
+  </script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen p-6 flex items-center justify-center">
 
-<div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg">
+<div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg animate-fade-in">
 
   <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
     Create Account
   </h2>
 
-  <!-- Messages -->
   {% if messages %}
     {% for msg in messages %}
       <p class="text-red-600 text-sm mb-3 text-center">{{ msg }}</p>
@@ -30,7 +46,6 @@
   <form method="POST" class="space-y-4">
     {% csrf_token %}
 
-    <!-- Name -->
     <input
       name="name"
       type="text"
@@ -39,7 +54,6 @@
       required
     >
 
-    <!-- Email -->
     <input
       name="email"
       type="email"
@@ -48,7 +62,7 @@
       required
     >
 
-    <!-- Password -->
+    <!-- PASSWORD -->
     <div class="relative">
       <input
         id="password"
@@ -59,38 +73,45 @@
         required
       >
 
+      <!-- Eye Toggle (SAME AS LOGIN) -->
       <button
         type="button"
         onclick="togglePassword()"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600">
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+        aria-label="Toggle password visibility"
+      >
 
-        <!-- 👁 Eye (password hidden) -->
-        <svg id="eye_open" xmlns="http://www.w3.org/2000/svg"
+        <!-- Eye Open -->
+        <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5" fill="none" viewBox="0 0 24 24"
              stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           <path stroke-linecap="round" stroke-linejoin="round"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5
-                   c4.478 0 8.268 2.943 9.542 7
-                   -1.274 4.057-5.064 7-9.542 7
-                   -4.477 0-8.268-2.943-9.542-7z"/>
+            d="M2.458 12C3.732 7.943 7.523 5 12 5
+               c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7
+               -4.477 0-8.268-2.943-9.542-7z"/>
         </svg>
 
-        <!-- 🚫 Eye Off (password visible) -->
-        <svg id="eye_closed" xmlns="http://www.w3.org/2000/svg"
+        <!-- Eye Closed -->
+        <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24"
              stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
-                d="M3 3l18 18"/>
+            d="M2.458 12C3.732 7.943 7.523 5 12 5
+               c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7
+               -4.477 0-8.268-2.943-9.542-7z"/>
           <path stroke-linecap="round" stroke-linejoin="round"
-                d="M10.584 10.587a3 3 0 004.242 4.242"/>
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 3l18 18"/>
         </svg>
 
       </button>
     </div>
 
-    <!-- Submit -->
     <button
       type="submit"
       class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
@@ -98,7 +119,6 @@
     </button>
   </form>
 
-  <!-- Login link -->
   <p class="mt-4 text-center text-sm">
     Already have an account?
     <a href="{% url 'login' %}" class="text-blue-600 font-medium hover:underline">
@@ -108,12 +128,12 @@
 
 </div>
 
-<!-- Toggle Script -->
+<!-- TOGGLE SCRIPT -->
 <script>
 function togglePassword() {
   const input = document.getElementById("password");
-  const eyeOpen = document.getElementById("eye_open");
-  const eyeClosed = document.getElementById("eye_closed");
+  const eyeOpen = document.getElementById("eyeOpen");
+  const eyeClosed = document.getElementById("eyeClosed");
 
   if (input.type === "password") {
     input.type = "text";

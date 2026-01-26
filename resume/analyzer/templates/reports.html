@@ -10,6 +10,21 @@
   <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
 
   <script src="https://cdn.tailwindcss.com"></script>
+
+   <!-- Smooth Card Animation -->
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      keyframes: {
+        fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' },
+                  '100%': { opacity: 1, transform: 'translateY(0)' } }
+      },
+      animation: { 'fade-in': 'fadeIn 0.5s ease-out' }
+    }
+  }
+}
+</script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
@@ -61,7 +76,7 @@
 
   <!-- STATS -->
   <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-xl text-center shadow">
+    <div class="bg-white p-6 rounded-xl text-center shadow animate-fade-in">
       <p class="text-gray-600">Total Analyzed</p>
       <h2 id="totalCount" class="text-3xl font-bold text-indigo-600">0</h2>
     </div>
@@ -195,8 +210,6 @@ async function deleteReport(id) {
 }
 
 loadReports();
-</script>
-
 </script>
 
 </body>
