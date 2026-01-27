@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -161,25 +162,25 @@ JOB DESCRIPTION:
 # =============================
 # AUTH
 # =============================
-
 def login_view(request):
     if request.method == "POST":
-        email = request.POST.get("username")  # field name stays username in form
+        email = request.POST.get("username", "").strip().lower()
         password = request.POST.get("password")
 
-        user = authenticate(
-            request,
-            username=email,   # ✅ email used as username
-            password=password
-        )
+        if not email or not password:
+            messages.error(request, "Please enter both email and password")
+            return redirect("login")
 
-        if user:
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
             login(request, user)
             return redirect("dashboard")
 
         messages.error(request, "Invalid email or password")
 
     return render(request, "login.html")
+
 
 
 
@@ -194,38 +195,39 @@ def signup_view(request):
             return redirect("signup")
 
         user = User.objects.create_user(
-            username=email,   # ✅ username = email
-            email=email,
-            first_name=name,
-            password=password
-        )
-
-        login(request, user)
+        username=email,
+        email=email,
+        first_name=name,
+        password=password)
+        # 🔥 tell Django which backend to use
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect("dashboard")
 
     return render(request, "signup.html")
 
 
-
 def forgot_password_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
-        old_password = request.POST.get("old_password")
         new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
 
-        try:
-            user = User.objects.get(username=email)
-            if not user.check_password(old_password):
-                messages.error(request, "Old password is incorrect")
-                return redirect("forgot_password")
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return redirect("forgot_password")
 
-            user.set_password(new_password)
-            user.save()
-            messages.success(request, "Password updated successfully")
-            return redirect("login")
+        user = User.objects.filter(email=email).first()
 
-        except User.DoesNotExist:
-            messages.error(request, "User not found")
+        if not user:
+            messages.error(request, "Email not registered")
+            return redirect("forgot_password")
+
+        user.set_password(new_password)
+        user.save()
+
+
+        messages.success(request, "Password updated successfully. Please login.")
+        return redirect("login")
 
     return render(request, "forgot_password.html")
 
