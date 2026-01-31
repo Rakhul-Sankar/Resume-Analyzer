@@ -5,15 +5,43 @@
   <meta charset="UTF-8">
   <title>Resume Analyzer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Instant redirect (works even if JS disabled) -->
+  <meta http-equiv="refresh" content="0; url={% url 'login' %}">
+
+  <link rel="icon" href="{% static 'analyzer/images/logo.avif' %}">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen flex items-center justify-center">
+
+  <div class="text-center animate-pulse">
+    <img src="{% static 'analyzer/images/logo.avif' %}" class="w-20 mx-auto mb-4" alt="Logo">
+
+    <h1 class="text-xl font-semibold text-gray-700 mb-2">
+      Resume Analyzer
+    </h1>
+
+    <div class="flex justify-center">
+      <div class="h-6 w-6 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <p class="text-gray-500 mt-3 text-sm">
+      Redirecting to login...
+    </p>
+
+    <noscript>
+      <p class="mt-4 text-red-600">
+        JavaScript is disabled.
+        <a href="{% url 'login' %}" class="underline text-blue-600">Click here</a>.
+      </p>
+    </noscript>
+  </div>
+
   <script>
-    window.location.href = "{% url 'login' %}";
+    // JS redirect (backup)
+    window.location.replace("{% url 'login' %}");
   </script>
 
-  <noscript>
-    <p>Please enable JavaScript to use Resume Analyzer.</p>
-  </noscript>
 </body>
 </html>
