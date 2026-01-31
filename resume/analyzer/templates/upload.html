@@ -127,12 +127,10 @@ tailwind.config = {
       </div>
 
       <!-- Submit -->
-      <button
-        id="submitBtn"
-        type="submit"
-        class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition active:scale-95">
-        Analyze Resume with AI
-      </button>
+   <button id="submitBtn" type="submit"
+  class="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition flex justify-center items-center gap-2">
+  <span>Analyze Resume with AI</span>
+</button>
     </form>
 
     <!-- ================= AI ATS TIPS ================= -->
@@ -167,7 +165,10 @@ function showFileName() {
 
 function startLoading() {
   const btn = document.getElementById("submitBtn");
-  btn.textContent = "Analyzing with AI...";
+  btn.innerHTML = `
+    <svg class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></svg>
+    AI is analyzing...
+  `;
   btn.disabled = true;
   btn.classList.add("opacity-70", "cursor-not-allowed");
 }

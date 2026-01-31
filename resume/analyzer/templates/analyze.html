@@ -71,41 +71,58 @@ tailwind.config = {
       {% endif %}
     </div>
 
-    <!-- OVERALL ATS SCORE -->
-    <div class="bg-white p-6 rounded-xl shadow text-center">
-      <h2 class="text-xl font-semibold">Overall ATS Score</h2>
+   <!-- OVERALL ATS SCORE -->
+<div class="bg-white p-6 rounded-xl shadow text-center">
+  <h2 class="text-xl font-semibold mb-4">Overall ATS Score</h2>
 
-      <p class="text-5xl font-black text-indigo-600 mt-4">
-        {{ ats_score }}%
-      </p>
-      
-      <p class="mt-2 text-gray-600 font-medium">
-        {% if ats_score >= 85 %}
-          Excellent ATS Match
-        {% elif ats_score >= 70 %}
-          Good ATS Match
-        {% elif ats_score >= 50 %}
-          Average – Needs Improvement
-        {% else %}
-          Poor ATS Match
-        {% endif %}
-      </p>
+  <!-- Progress Bar -->
+  <div class="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+    <div id="scoreBar"
+      class="h-6 rounded-full text-white text-sm flex items-center justify-center font-semibold transition-all duration-700
+      {% if ats_score >= 85 %} bg-green-600
+      {% elif ats_score >= 70 %} bg-indigo-600
+      {% elif ats_score >= 50 %} bg-yellow-500
+      {% else %} bg-red-500 {% endif %}"
+      style="width: 0%;">
+      {{ ats_score }}%
     </div>
+  </div>
 
-    <!-- KEYWORD MATCH -->
-    <div class="bg-white p-6 rounded-xl shadow text-center">
-      <h2 class="text-xl font-semibold mb-3">
-        Job Description Keyword Match
-      </h2>
+  <!-- Score Label -->
+  <p class="mt-3 text-gray-600 font-medium">
+    {% if ats_score >= 85 %}
+      Excellent ATS Match
+    {% elif ats_score >= 70 %}
+      Good ATS Match
+    {% elif ats_score >= 50 %}
+      Average – Needs Improvement
+    {% else %}
+      Poor ATS Match
+    {% endif %}
+  </p>
+</div>
 
-      <p class="text-4xl font-bold text-green-600">
-        {{ keyword_match_percentage }}%
-      </p>
 
-      <p class="text-sm text-gray-500 mt-2">
-        Based on comparison with the job description
-      </p>
+   <!-- KEYWORD MATCH -->
+<div class="bg-white p-6 rounded-xl shadow text-center">
+  <h2 class="text-xl font-semibold mb-4">
+    Job Description Keyword Match
+  </h2>
+
+  <!-- Progress Bar -->
+  <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+    <div id="keywordBar"
+      class="h-5 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-semibold transition-all duration-700"
+      style="width: 0%;">
+      {{ keyword_match_percentage }}%
     </div>
+  </div>
+
+  <p class="text-sm text-gray-500 mt-3">
+    Based on AI comparison with the job description
+  </p>
+</div>
+
 
     <!-- MATCHED & MISSING -->
     <div class="bg-white p-6 rounded-xl shadow">
@@ -175,6 +192,21 @@ tailwind.config = {
 
   </div>
 </main>
+
+<script>
+window.addEventListener("load", () => {
+  const bar = document.getElementById("scoreBar");
+  bar.style.width = "{{ ats_score }}%";
+});
+
+window.addEventListener("load", () => {
+  const scoreBar = document.getElementById("scoreBar");
+  if (scoreBar) scoreBar.style.width = "{{ ats_score }}%";
+
+  const keywordBar = document.getElementById("keywordBar");
+  if (keywordBar) keywordBar.style.width = "{{ keyword_match_percentage }}%";
+});
+</script>
 
 </body>
 </html>

@@ -73,7 +73,7 @@ tailwind.config = {
 
 <!-- ================= MAIN ================= -->
 <main class="max-w-2xl mx-auto px-6 py-12">
-  <div class="bg-white p-10 rounded-xl shadow-lg animate-fade-in">
+  <div class="bg-white/90 backdrop-blur-md p-10 rounded-2xl shadow-xl border border-gray-100 animate-fade-in">
    <!-- Greeting -->
 <h2 class="text-3xl font-bold mb-6 text-indigo-700 text-center">
   {{ greeting }} {{ request.user.first_name|default:request.user.username|capfirst }}
