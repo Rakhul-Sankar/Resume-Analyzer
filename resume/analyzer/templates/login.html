@@ -31,7 +31,7 @@
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen flex items-center justify-center p-6">
 
-  <div class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg animate-fade-in">
+<div class="w-full max-w-sm bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl border border-gray-100 animate-fade-in">
 
     <h2 class="text-2xl font-bold text-center mb-6 text-indigo-600">
       Login to Your Account
@@ -117,10 +117,11 @@
       {% endif %}
 
       <!-- SUBMIT -->
-      <button type="submit"
-        class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition active:scale-95">
-        Login
-      </button>
+      <button id="loginBtn" type="submit"
+  class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition active:scale-95 flex justify-center items-center gap-2">
+  <span>Login</span>
+</button>
+
 
     </form>
 
@@ -134,6 +135,13 @@
   </div>
 
   <script>
+    document.querySelector("form").addEventListener("submit", function () {
+  const btn = document.getElementById("loginBtn");
+  btn.innerHTML = `
+    <svg class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></svg>
+    Logging in...
+  `;
+});
     function togglePassword() {
       const password = document.getElementById("password");
       const eyeOpen = document.getElementById("eyeOpen");
