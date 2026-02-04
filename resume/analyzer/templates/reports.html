@@ -169,9 +169,14 @@ function renderReports(reports) {
         📅 ${r.analyzed_date || "—"}
       </p>
 
-      <div class="text-center text-3xl font-black text-indigo-600">
-        ${r.score}%
-      </div>
+     <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+ <div class="h-4 ${r.score >= 75 ? 'bg-green-600' : r.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'}
+     text-white text-xs flex items-center justify-center font-semibold"
+     style="width:${r.score}%;">
+    ${r.score}%
+  </div>
+</div>
+
 
       <p class="text-center font-semibold text-green-600">
         ${r.status || "Completed"}

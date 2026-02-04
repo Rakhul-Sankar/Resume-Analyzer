@@ -103,29 +103,39 @@ tailwind.config = {
 </div>
 
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-indigo-50 p-5 rounded-xl text-center">
-            <p class="text-gray-500 text-sm">Total Reports</p>
-            <h3 id="totalReports" class="text-3xl font-bold text-indigo-600">0</h3>
-          </div>
+       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-          <div class="bg-green-50 p-5 rounded-xl text-center">
-            <p class="text-gray-500 text-sm">Average ATS</p>
-            <h3 id="avgATS" class="text-3xl font-bold text-green-600">0%</h3>
-          </div>
-        </div>
-      </div>
+  <div class="bg-indigo-50 p-5 rounded-xl text-center">
+    <p class="text-gray-500 text-sm">Total Reports</p>
+    <h3 id="totalReports" class="text-3xl font-bold text-indigo-600">0</h3>
+  </div>
 
-      <!-- RIGHT -->
-      <div>
-        <h3 class="text-xl font-bold mb-4">
-          Resume History
-        </h3>
+  <div class="bg-green-50 p-5 rounded-xl text-center">
+    <p class="text-gray-500 text-sm">Average ATS</p>
+    <h3 id="avgATS" class="text-3xl font-bold text-green-600">0%</h3>
+  </div>
 
-        <div id="historyList" class="space-y-3 max-h-[420px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-400">
-          <p class="text-gray-500 text-center">Loading history...</p>
-        </div>
-      </div>
+  <div class="bg-yellow-50 p-5 rounded-xl text-center">
+    <p class="text-gray-500 text-sm">Best ATS</p>
+    <h3 id="bestATS" class="text-3xl font-bold text-yellow-600">0%</h3>
+  </div>
+
+</div>
+</div>
+
+     <!-- FULL WIDTH RESUME HISTORY -->
+<div class="mt-8">
+  <h3 class="text-2xl font-bold mb-6 text-indigo-600">
+    Resume History
+  </h3>
+
+  <div id="historyList"
+       class="space-y-4 max-h-[520px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-400">
+
+    <p class="text-gray-500 text-center">Loading history...</p>
+</div>
+</div>
+
 
     </div>
   </div>
@@ -142,6 +152,8 @@ async function loadProfileData() {
 
     document.getElementById("totalReports").innerText = data.stats.total ?? 0;
     document.getElementById("avgATS").innerText = (data.stats.average ?? 0) + "%";
+    document.getElementById("bestATS").innerText = (data.stats.best ?? 0) + "%";
+
 
     const history = document.getElementById("historyList");
 
@@ -159,7 +171,14 @@ async function loadProfileData() {
           <p class="font-semibold truncate max-w-[220px]">${r.name}</p>
           <p class="text-xs text-gray-500">${r.analyzed_date}</p>
         </div>
-        <span class="text-lg font-bold text-indigo-600">${r.score}%</span>
+        <span class="text-lg font-bold ${
+  r.score >= 75 ? "text-green-600" :
+  r.score >= 50 ? "text-yellow-600" :
+  "text-red-600"
+}">
+  ${r.score}%
+</span>
+
       </div>
     `).join("");
 

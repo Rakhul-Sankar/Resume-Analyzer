@@ -54,7 +54,7 @@ tailwind.config = {
   <div class="w-full max-w-4xl space-y-6 animate-fade-in">
 
     <!-- TITLE -->
-    <h1 class="text-3xl font-bold text-center text-indigo-600 :" aria-live="polite">
+    <h1 class="text-3xl font-bold text-center text-indigo-600" aria-live="polite">
       AI Resume Analysis Result
     </h1>
 
@@ -195,18 +195,17 @@ tailwind.config = {
 
 <script>
 window.addEventListener("load", () => {
-  const bar = document.getElementById("scoreBar");
-  bar.style.width = "{{ ats_score }}%";
-});
-
-window.addEventListener("load", () => {
   const scoreBar = document.getElementById("scoreBar");
-  if (scoreBar) scoreBar.style.width = "{{ ats_score }}%";
-
   const keywordBar = document.getElementById("keywordBar");
-  if (keywordBar) keywordBar.style.width = "{{ keyword_match_percentage }}%";
+
+  const ats = parseInt("{{ ats_score|default:0 }}");
+  const match = parseInt("{{ keyword_match_percentage|default:0 }}");
+
+  if (scoreBar) scoreBar.style.width = ats + "%";
+  if (keywordBar) keywordBar.style.width = match + "%";
 });
 </script>
+
 
 </body>
 </html>
