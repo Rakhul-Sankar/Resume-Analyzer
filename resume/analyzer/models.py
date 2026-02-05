@@ -35,3 +35,12 @@ class ResumeReport(models.Model):
 
     def __str__(self):
         return f"{self.name} | {self.analysis_status} | {self.score}%"
+
+
+class PasswordResetRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    is_processed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} reset request"

@@ -4,6 +4,10 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.db.models import Q
+from .models import PasswordResetRequest
 from django.http import JsonResponse
 from django.utils import timezone
 
@@ -164,20 +168,30 @@ JOB DESCRIPTION:
 # =============================
 def login_view(request):
     if request.method == "POST":
-        email = request.POST.get("username", "").strip().lower()
+        identifier = request.POST.get("username", "").strip()
         password = request.POST.get("password")
 
-        if not email or not password:
-            messages.error(request, "Please enter both email and password")
+        if not identifier or not password:
+            messages.error(request, "Please enter username/email and password")
             return redirect("login")
 
-        user = authenticate(request, username=email, password=password)
+        # 🔥 Find user by username OR email
+        user_obj = User.objects.filter(
+            Q(username__iexact=identifier) | Q(email__iexact=identifier)
+        ).first()
+
+        if not user_obj:
+            messages.error(request, "Invalid login credentials")
+            return redirect("login")
+
+        # Authenticate using the actual username stored in DB
+        user = authenticate(request, username=user_obj.username, password=password)
 
         if user is not None:
             login(request, user)
             return redirect("dashboard")
 
-        messages.error(request, "Invalid email or password")
+        messages.error(request, "Invalid login credentials")
 
     return render(request, "login.html")
 
@@ -208,25 +222,27 @@ def signup_view(request):
 
 def forgot_password_view(request):
     if request.method == "POST":
-        email = request.POST.get("email")
-        new_password = request.POST.get("new_password")
-        confirm_password = request.POST.get("confirm_password")
+        identifier = request.POST.get("identifier")
 
-        if new_password != confirm_password:
-            messages.error(request, "Passwords do not match")
-            return redirect("forgot_password")
-
-        user = User.objects.filter(email=email).first()
+        user = User.objects.filter(
+            Q(username__iexact=identifier) | Q(email__iexact=identifier)
+        ).first()
 
         if not user:
-            messages.error(request, "Email not registered")
+            messages.error(request, "User not found")
             return redirect("forgot_password")
 
-        user.set_password(new_password)
-        user.save()
+        # Prevent duplicate requests
+        if PasswordResetRequest.objects.filter(user=user, is_processed=False).exists():
+            messages.info(request, "Reset request already sent to admin.")
+            return redirect("forgot_password")
 
+        PasswordResetRequest.objects.create(user=user)
 
-        messages.success(request, "Password updated successfully. Please login.")
+        messages.success(
+            request,
+            "Password reset request sent to admin. You will receive new credentials from administrator."
+        )
         return redirect("login")
 
     return render(request, "forgot_password.html")
