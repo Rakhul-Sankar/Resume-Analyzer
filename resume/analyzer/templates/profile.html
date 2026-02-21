@@ -140,7 +140,11 @@ tailwind.config = {
     </div>
   </div>
 </main>
-
+<!-- ================= FOOTER ================= --> 
+ <footer class="bg-gray-800 text-center py-6 text-gray-300"> 
+  <p class="text-sm">&copy; <span id="year"></span> Rakhul. All rights reserved.</p>
+ </footer>
+ 
 <script>
   function toggleMenu() {
   document.getElementById("mobileMenu").classList.toggle("hidden");
@@ -191,6 +195,7 @@ async function loadProfileData() {
 
 
 loadProfileData();
+document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
 

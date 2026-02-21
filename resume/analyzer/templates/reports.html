@@ -97,6 +97,11 @@ tailwind.config = {
 
 </main>
 
+<!-- ================= FOOTER ================= --> 
+ <footer class="bg-gray-800 text-center py-6 text-gray-300"> 
+  <p class="text-sm">&copy; <span id="year"></span> Rakhul. All rights reserved.</p>
+ </footer>
+ 
 <!-- ================= SCRIPT ================= -->
 <script>
 function toggleMenu() {
@@ -215,6 +220,7 @@ async function deleteReport(id) {
 }
 
 loadReports();
+document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
 </body>

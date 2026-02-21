@@ -204,21 +204,23 @@ def signup_view(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(username=email).exists():
             messages.error(request, "Email already registered")
             return redirect("signup")
 
         user = User.objects.create_user(
-        username=email,
-        email=email,
-        first_name=name,
-        password=password)
-        # 🔥 tell Django which backend to use
+            username=email,
+            email=email,
+            first_name=name,
+            password=password
+        )
+
+        # ✅ Explicit backend (THIS FIXES YOUR ERROR)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
         return redirect("dashboard")
 
     return render(request, "signup.html")
-
 
 def forgot_password_view(request):
     if request.method == "POST":

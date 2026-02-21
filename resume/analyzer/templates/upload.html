@@ -147,6 +147,11 @@ tailwind.config = {
   </div>
 </main>
 
+<!-- ================= FOOTER ================= --> 
+ <footer class="bg-gray-800 text-center py-6 text-gray-300"> 
+  <p class="text-sm">&copy; <span id="year"></span> Rakhul. All rights reserved.</p>
+ </footer>
+ 
 <!-- ================= JS ================= -->
 <script>
 function toggleMenu() {
@@ -172,6 +177,7 @@ function startLoading() {
   btn.disabled = true;
   btn.classList.add("opacity-70", "cursor-not-allowed");
 }
+document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
 </body>

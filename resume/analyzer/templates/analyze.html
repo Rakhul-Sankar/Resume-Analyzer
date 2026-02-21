@@ -193,6 +193,11 @@ tailwind.config = {
   </div>
 </main>
 
+<!-- ================= FOOTER ================= --> 
+ <footer class="bg-gray-800 text-center py-6 text-gray-300"> 
+  <p class="text-sm">&copy; <span id="year"></span> Rakhul. All rights reserved.</p>
+ </footer>
+ 
 <script>
 window.addEventListener("load", () => {
   const scoreBar = document.getElementById("scoreBar");
@@ -204,6 +209,7 @@ window.addEventListener("load", () => {
   if (scoreBar) scoreBar.style.width = ats + "%";
   if (keywordBar) keywordBar.style.width = match + "%";
 });
+document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 
 
